@@ -74,6 +74,7 @@ def b_matching_pursuit(input_signal, atoms, args):
     if not args.p:
         p = 1. / (D * 1000)
 
+    # NOTE: Assumes signal can be expressed in terms of atoms
     while np.linalg.norm(signal) > threshold:
         candidates = np.arange(D)
         lcbs = -np.inf * np.ones(D)
@@ -89,16 +90,13 @@ def b_matching_pursuit(input_signal, atoms, args):
             dims_sampled += batch_size
             signal_sampled = signal[sample_dims]
             candidates_sampled = atoms[candidates][:, sample_dims]  # NOTE: clever indexing because atoms[candidates,sample_dims] doesn't work
-            # TODO: Broadcast this properly, see https://github.com/motiwari/BanditPAM-python/blob/master/ucb_pam.py#L129-L134
-            for c_idx, c in enumerate(candidates_sampled):
-                # TODO: Need to perform compute_exactly condition, see https://github.com/motiwari/BanditPAM-python/blob/master/ucb_pam.py#L91-L106
-                orig_idx = candidates[c_idx]
-                means[orig_idx] = \
-                    ((T[orig_idx] * means[orig_idx]) + (batch_size * np.dot(signal_sampled, c))) / (batch_size + T[orig_idx])  # Does this np.dot do implicit broadcasting?
-                T[orig_idx] += batch_size
-                deltas[orig_idx] = sigmas[orig_idx] * np.sqrt(-np.log(p) / T[orig_idx])
-                ucbs[orig_idx] = means[orig_idx] + deltas[orig_idx]
-                lcbs[orig_idx] = means[orig_idx] - deltas[orig_idx]
+            # TODO: Need to perform compute_exactly condition, see https://github.com/motiwari/BanditPAM-python/blob/master/ucb_pam.py#L91-L106
+            means[candidates] = \
+                ((T[candidates] * means[candidates]) + (batch_size * (candidates_sampled @ signal_sampled))) / (batch_size + T[candidates])  # Does this np.dot do implicit broadcasting?
+            T[candidates] += batch_size
+            deltas[candidates] = sigmas[candidates] * np.sqrt(-np.log(p) / T[candidates])
+            ucbs[candidates] = means[candidates] + deltas[candidates]
+            lcbs[candidates] = means[candidates] - deltas[candidates]
 
             counter += len(candidates) * batch_size
             candidates = np.where((ucbs >= lcbs.max()))[0]  # NOTE: May have to change this to a > ?
