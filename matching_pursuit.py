@@ -1,16 +1,5 @@
 import numpy as np
-import argparse
 import copy
-
-
-def get_args():
-    parser = argparse.ArgumentParser(description="Solve MIPS problem")
-    parser.add_argument("--get_ground_truth", default=False, action="store_true")
-    parser.add_argument("--debug", default=False, action="store_true")
-    parser.add_argument("--seed", default=0)
-    parser.add_argument("--batch_size", default=100, type=int)
-    parser.add_argument("--p", type=float)
-    return parser.parse_args()
 
 
 def matching_pursuit(input_signal, atoms):
@@ -44,6 +33,7 @@ def matching_pursuit(input_signal, atoms):
         coefs[best_idx] = max_inner_product
         signal -= coefs[best_idx]*atoms[best_idx]
     return coefs, counter
+
 
 def get_sigmas(signal, atoms, args):
     """
@@ -92,7 +82,7 @@ def b_matching_pursuit(input_signal, atoms, args):
         deltas = np.zeros(D)
         sigmas = get_sigmas(signal, atoms, args)
         # TODO: Add exact computation if total samples too big
-        # TODO: Maybe need to change this to a >0 and ucbs > lcbs.min below
+        # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
         while len(candidates) > 1:
             # For each remaining candidate:
             sample_dims = np.random.choice(np.arange(d), batch_size, replace=False)
@@ -122,59 +112,3 @@ def b_matching_pursuit(input_signal, atoms, args):
 
     return coefs, counter
 
-def main(args):
-    np.random.seed(args.seed)
-    test_case_1(args)
-    test_case_2()
-    test_case_3()
-
-
-def test_case_1(args):
-    dim = 5
-    signal = np.ones(dim)
-    atoms = np.array([
-        np.ones(dim) / np.sqrt(5),
-        [0, 1, 0, 0, 1] / np.sqrt(2),
-    ])
-    coefs, counter = matching_pursuit(signal, atoms)
-    assert np.allclose(coefs, np.array([2.23606798, 0]))
-    assert counter == 10
-
-    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
-    assert np.allclose(b_coefs, np.array([2.23606798, 0]))
-    assert b_counter == 10
-
-
-def test_case_2():
-    signal = np.array([1., 0, 1, 0, 1, 0, 1])
-    atoms = np.array([
-        np.array([1., 0, 1, 0, 1, 0, 1]) / 2,
-        np.array([0, 1., 0, 1, 0, 1, 0]) / np.sqrt(3),
-    ])
-    coefs, counter = matching_pursuit(signal, atoms)
-    assert np.allclose(coefs, np.array([2, 0]))
-    assert counter == 14
-
-    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
-    assert np.allclose(b_coefs, np.array([2, 0]))
-    assert b_counter == 14
-
-def test_case_3():
-    signal = np.array([1., 1, 1, 0, 1, 0, 1])
-    atoms = np.array([
-        np.array([1., 0, 1, 0, 1, 0, 1]) / 2,
-        np.array([0, 1., 0, 1, 0, 1, 0]) / np.sqrt(3),
-        np.array([0, 1., 0, 0, 0, 0, 0]),
-    ])
-    coefs, counter = matching_pursuit(signal, atoms)
-    assert np.allclose(coefs, np.array([2, 0, 1]))
-    assert counter == 42
-
-    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
-    assert np.allclose(b_coefs, np.array([2, 0, 1]))
-    assert b_counter == 42
-
-
-if __name__ == '__main__':
-    args = get_args()
-    main(args)
