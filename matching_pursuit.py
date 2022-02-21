@@ -1,7 +1,7 @@
 import numpy as np
-import os
 import argparse
 import copy
+
 
 def get_args():
     parser = argparse.ArgumentParser(description="Solve MIPS problem")
@@ -12,8 +12,6 @@ def get_args():
     parser.add_argument("--p", type=float)
     return parser.parse_args()
 
-def counter_function():
-    pass
 
 def matching_pursuit(input_signal, atoms):
     """
@@ -60,7 +58,6 @@ def get_sigmas(signal, atoms, args):
     batch_size = min(d, args.batch_size)
     sample_dims = np.random.choice(np.arange(d), batch_size)
     signal_sampled = signal[sample_dims]
-    atoms_sampled = atoms[:, sample_dims]
     sigmas = np.std(atoms*signal_sampled, axis=1)  # Implicit broadcasting of *sampled_signal
     return sigmas
 
@@ -95,6 +92,7 @@ def b_matching_pursuit(input_signal, atoms, args):
         deltas = np.zeros(D)
         sigmas = get_sigmas(signal, atoms, args)
         # TODO: Add exact computation if total samples too big
+        # TODO: Maybe need to change this to a >0 and ucbs > lcbs.min below
         while len(candidates) > 1:
             # For each remaining candidate:
             sample_dims = np.random.choice(np.arange(d), batch_size, replace=False)
@@ -109,11 +107,11 @@ def b_matching_pursuit(input_signal, atoms, args):
                     ((T[orig_idx] * means[orig_idx]) + (batch_size * np.dot(signal_sampled, c))) / (batch_size + T[orig_idx])  # Does this np.dot do implicit broadcasting?
                 T[orig_idx] += batch_size
                 deltas[orig_idx] = sigmas[orig_idx] * np.sqrt(-np.log(p) / T[orig_idx])
-                ucbs[orig_idx] = means[orig_idx] - deltas[orig_idx]
-                lcbs[orig_idx] = means[orig_idx] + deltas[orig_idx]
+                ucbs[orig_idx] = means[orig_idx] + deltas[orig_idx]
+                lcbs[orig_idx] = means[orig_idx] - deltas[orig_idx]
 
             counter += len(candidates) * batch_size
-            candidates = np.where((ucbs >= lcbs.min()))[0] #NOTE: May have to change this to a > ?
+            candidates = np.where((ucbs >= lcbs.max()))[0]  # NOTE: May have to change this to a > ?
 
 
         # TODO(@motiwari): There can be a problem here if the last candidate was computed exactly
@@ -127,8 +125,8 @@ def b_matching_pursuit(input_signal, atoms, args):
 def main(args):
     np.random.seed(args.seed)
     test_case_1(args)
-    #test_case_2()
-    #test_case_3()
+    test_case_2()
+    test_case_3()
 
 
 def test_case_1(args):
@@ -157,6 +155,10 @@ def test_case_2():
     assert np.allclose(coefs, np.array([2, 0]))
     assert counter == 14
 
+    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
+    assert np.allclose(b_coefs, np.array([2, 0]))
+    assert b_counter == 14
+
 def test_case_3():
     signal = np.array([1., 1, 1, 0, 1, 0, 1])
     atoms = np.array([
@@ -167,6 +169,10 @@ def test_case_3():
     coefs, counter = matching_pursuit(signal, atoms)
     assert np.allclose(coefs, np.array([2, 0, 1]))
     assert counter == 42
+
+    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
+    assert np.allclose(b_coefs, np.array([2, 0, 1]))
+    assert b_counter == 42
 
 
 if __name__ == '__main__':
