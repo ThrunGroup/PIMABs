@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import argparse
+import copy
 
 def get_args():
     parser = argparse.ArgumentParser(description="Solve MIPS problem")
@@ -14,7 +15,7 @@ def get_args():
 def counter_function():
     pass
 
-def matching_pursuit(signal, atoms):
+def matching_pursuit(input_signal, atoms):
     """
     Canonical matching pursuit algorithm. Used for ground truth
 
@@ -22,6 +23,7 @@ def matching_pursuit(signal, atoms):
     :param atoms: Atoms with which to decompose signal into
     :return: vector of length len(atoms) with coefficients produced by matching pursuit
     """
+    signal = copy.deepcopy(input_signal)
     counter = 0
     D = len(atoms)
     d = atoms.shape[1]
@@ -63,7 +65,7 @@ def get_sigmas(signal, atoms, args):
     return sigmas
 
 
-def b_matching_pursuit(signal, atoms, args):
+def b_matching_pursuit(input_signal, atoms, args):
     """
     Bandit version of matching pursuit
 
@@ -71,33 +73,34 @@ def b_matching_pursuit(signal, atoms, args):
     :param atoms: Atoms with which to decompose signal into
     :return: vector of length len(atoms) with coefficients produced by matching pursuit
     """
+    signal = copy.deepcopy(input_signal)
     counter = 0
 
     D = len(atoms)
     d = atoms.shape[1]
     coefs = np.zeros(D)
     T = np.zeros(D)
-    sigmas = np.zeros(D)
     dims_sampled = 0
     threshold = 1e-2
     batch_size = 100
     batch_size = min(d, batch_size)
     if not args.p:
-        p = 1. / D * 1000
+        p = 1. / (D * 1000)
 
     while np.linalg.norm(signal) > threshold:
         candidates = np.arange(D)
-        lcbs = -np.inf() * np.ones(D)
-        ucbs = np.inf() * np.ones(D)
+        lcbs = -np.inf * np.ones(D)
+        ucbs = np.inf * np.ones(D)
         means = np.zeros(D)
         deltas = np.zeros(D)
         sigmas = get_sigmas(signal, atoms, args)
         # TODO: Add exact computation if total samples too big
         while len(candidates) > 1:
             # For each remaining candidate:
-            sample_dims = np.random.choice(np.arange(d), batch_size)
+            sample_dims = np.random.choice(np.arange(d), batch_size, replace=False)
+            dims_sampled += batch_size
             signal_sampled = signal[sample_dims]
-            candidates_sampled = atoms[candidates, sample_dims]
+            candidates_sampled = atoms[candidates][:, sample_dims]  # NOTE: clever indexing because atoms[candidates,sample_dims] doesn't work
             # TODO: Broadcast this properly, see https://github.com/motiwari/BanditPAM-python/blob/master/ucb_pam.py#L129-L134
             for c_idx, c in enumerate(candidates_sampled):
                 # TODO: Need to perform compute_exactly condition, see https://github.com/motiwari/BanditPAM-python/blob/master/ucb_pam.py#L91-L106
@@ -105,28 +108,30 @@ def b_matching_pursuit(signal, atoms, args):
                 means[orig_idx] = \
                     ((T[orig_idx] * means[orig_idx]) + (batch_size * np.dot(signal_sampled, c))) / (batch_size + T[orig_idx])  # Does this np.dot do implicit broadcasting?
                 T[orig_idx] += batch_size
-                deltas[orig_idx] = sigmas[orig_idx] * np.sqrt(-np.log(args.p) / T[orig_idx])
+                deltas[orig_idx] = sigmas[orig_idx] * np.sqrt(-np.log(p) / T[orig_idx])
                 ucbs[orig_idx] = means[orig_idx] - deltas[orig_idx]
                 lcbs[orig_idx] = means[orig_idx] + deltas[orig_idx]
 
-            candidates = np.where((lcbs < ucbs.min()))[0]
-            counter += len(candidates)*batch_size
-            # filter candidates
+            counter += len(candidates) * batch_size
+            candidates = np.where((ucbs >= lcbs.min()))[0] #NOTE: May have to change this to a > ?
 
-        assert len(candidates) == 1  # Should be only one candidate remaining
+
+        # TODO(@motiwari): There can be a problem here if the last candidate was computed exactly
+        assert len(candidates) == 1  # Should be only one candidate remaining.
         best_idx = candidates[0]
         coefs[best_idx] = np.dot(signal, atoms[best_idx])
         signal -= coefs[best_idx] * atoms[best_idx]
+
     return coefs, counter
 
 def main(args):
     np.random.seed(args.seed)
-    test_case_1()
-    test_case_2()
-    test_case_3()
+    test_case_1(args)
+    #test_case_2()
+    #test_case_3()
 
 
-def test_case_1():
+def test_case_1(args):
     dim = 5
     signal = np.ones(dim)
     atoms = np.array([
@@ -136,6 +141,11 @@ def test_case_1():
     coefs, counter = matching_pursuit(signal, atoms)
     assert np.allclose(coefs, np.array([2.23606798, 0]))
     assert counter == 10
+
+    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
+    assert np.allclose(b_coefs, np.array([2.23606798, 0]))
+    assert b_counter == 10
+
 
 def test_case_2():
     signal = np.array([1., 0, 1, 0, 1, 0, 1])
@@ -161,4 +171,4 @@ def test_case_3():
 
 if __name__ == '__main__':
     args = get_args()
-    print(main(args))
+    main(args)
