@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 
-def matching_pursuit(input_signal, atoms):
+def matching_pursuit(input_signal, atoms, args):
     """
     Canonical matching pursuit algorithm. Used for ground truth
 
@@ -30,7 +30,7 @@ def matching_pursuit(input_signal, atoms):
                 best_idx = a_idx
 
         # TODO: Need to implement signs for negative (look at ABOSOLUTE value of dot product)
-        if max_inner_product > 0:
+        if max_inner_product > args.tol:
             coefs[best_idx] = max_inner_product
             signal -= coefs[best_idx]*atoms[best_idx]
         else:
@@ -108,7 +108,7 @@ def b_matching_pursuit(input_signal, atoms, args):
 
         # TODO(@motiwari): There can be a problem here if the last candidate was computed exactly
         assert len(candidates) == 1  # Should be only one candidate remaining
-        if ucbs[candidates][0] > 0:
+        if means[candidates][0] > args.tol:
             best_idx = candidates[0]
             coefs[best_idx] = np.dot(signal, atoms[best_idx])
             signal -= coefs[best_idx] * atoms[best_idx]
