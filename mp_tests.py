@@ -9,6 +9,8 @@ def get_args():
     parser.add_argument("--debug", default=False, action="store_true")
     parser.add_argument("--seed", default=0)
     parser.add_argument("--batch_size", default=100, type=int)
+    parser.add_argument("-N", default=1000, type=int)
+    parser.add_argument("-d", default=100, type=int)
     parser.add_argument("--p", type=float)
     return parser.parse_args()
 
@@ -28,7 +30,7 @@ def test_case_1(args):
     assert b_counter == 10
 
 
-def test_case_2():
+def test_case_2(args):
     signal = np.array([1., 0, 1, 0, 1, 0, 1])
     atoms = np.array([
         np.array([1., 0, 1, 0, 1, 0, 1]) / 2,
@@ -42,7 +44,7 @@ def test_case_2():
     assert np.allclose(b_coefs, np.array([2, 0]))
     assert b_counter == 14
 
-def test_case_3():
+def test_case_3(args):
     signal = np.array([1., 1, 1, 0, 1, 0, 1])
     atoms = np.array([
         np.array([1., 0, 1, 0, 1, 0, 1]) / 2,
@@ -57,12 +59,21 @@ def test_case_3():
     assert np.allclose(b_coefs, np.array([2, 0, 1]))
     assert b_counter == 42
 
+def test_case_4(args):
+    np.random.seed(0)
+    data = np.random.rand(args.N, args.d)
+    signal = data[0]
+    atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
+    print(matching_pursuit(signal, atoms))
+    print(b_matching_pursuit(signal, atoms))
+
 
 def main(args):
     np.random.seed(args.seed)
     test_case_1(args)
-    test_case_2()
-    test_case_3()
+    test_case_2(args)
+    test_case_3(args)
+    # test_case_4(args)
 
 
 if __name__ == '__main__':

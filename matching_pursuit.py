@@ -16,12 +16,11 @@ def matching_pursuit(input_signal, atoms):
     d = atoms.shape[1]
     coefs = np.zeros(D)
     assert np.allclose(np.linalg.norm(atoms, axis=1), np.ones(D))
-    threshold = 1e-2
     # Find maximum inner product atom
-    while np.linalg.norm(signal) > threshold:
+    norm_decreased = True
+    while norm_decreased and np.linalg.norm(signal) > 0:
         max_inner_product = -float("inf")
         best_idx = -1
-
         for a_idx, a in enumerate(atoms):
             # NOTE: We get an extra count of d for atoms that have ALREADY been used
             ip = np.dot(signal, a)
@@ -30,8 +29,12 @@ def matching_pursuit(input_signal, atoms):
                 max_inner_product = ip
                 best_idx = a_idx
 
-        coefs[best_idx] = max_inner_product
-        signal -= coefs[best_idx]*atoms[best_idx]
+        # TODO: Need to implement signs for negative (look at ABOSOLUTE value of dot product)
+        if max_inner_product > 0:
+            coefs[best_idx] = max_inner_product
+            signal -= coefs[best_idx]*atoms[best_idx]
+        else:
+            norm_decreased = False
     return coefs, counter
 
 
@@ -73,9 +76,10 @@ def b_matching_pursuit(input_signal, atoms, args):
     batch_size = min(d, batch_size)
     if not args.p:
         p = 1. / (D * 1000)
+    norm_decreased = True
 
     # NOTE: Assumes signal can be expressed in terms of atoms
-    while np.linalg.norm(signal) > threshold:
+    while norm_decreased and np.linalg.norm(signal) > 0:
         candidates = np.arange(D)
         lcbs = -np.inf * np.ones(D)
         ucbs = np.inf * np.ones(D)
@@ -103,10 +107,12 @@ def b_matching_pursuit(input_signal, atoms, args):
 
 
         # TODO(@motiwari): There can be a problem here if the last candidate was computed exactly
-        assert len(candidates) == 1  # Should be only one candidate remaining.
-        best_idx = candidates[0]
-        coefs[best_idx] = np.dot(signal, atoms[best_idx])
-        signal -= coefs[best_idx] * atoms[best_idx]
-
+        assert len(candidates) == 1  # Should be only one candidate remaining
+        if ucbs[candidates][0] > 0:
+            best_idx = candidates[0]
+            coefs[best_idx] = np.dot(signal, atoms[best_idx])
+            signal -= coefs[best_idx] * atoms[best_idx]
+        else:
+            norm_decreased = False
     return coefs, counter
 
