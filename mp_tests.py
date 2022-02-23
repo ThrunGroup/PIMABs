@@ -68,8 +68,8 @@ def test_case_4(args):
     coefs, counter = matching_pursuit(signal, atoms, args)
     print(np.where(coefs > 0))
     print(coefs[np.where(coefs > 0)])
-    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
-    import ipdb; ipdb.set_trace()
+    print()
+    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args, verbosity=1)
     print(np.where(b_coefs > args.tol))
     print(coefs[np.where(b_coefs > args.tol)])
 

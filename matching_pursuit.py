@@ -55,7 +55,7 @@ def get_sigmas(signal, atoms, args):
     return sigmas
 
 
-def b_matching_pursuit(input_signal, atoms, args):
+def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     """
     Bandit version of matching pursuit
 
@@ -108,6 +108,8 @@ def b_matching_pursuit(input_signal, atoms, args):
 
         # TODO(@motiwari): There can be a problem here if the last candidate was computed exactly
         assert len(candidates) == 1  # Should be only one candidate remaining
+        if verbosity > 0:
+            print(max(T))
         if means[candidates][0] > args.tol:
             best_idx = candidates[0]
             coefs[best_idx] = np.dot(signal, atoms[best_idx])
