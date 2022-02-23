@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 
-def matching_pursuit(input_signal, atoms, args):
+def matching_pursuit(input_signal, atoms, args, verbosity=0):
     """
     Canonical matching pursuit algorithm. Used for ground truth
 
@@ -19,20 +19,17 @@ def matching_pursuit(input_signal, atoms, args):
     # Find maximum inner product atom
     norm_decreased = True
     while norm_decreased and np.linalg.norm(signal) > 0:
-        max_inner_product = -float("inf")
-        best_idx = -1
-        for a_idx, a in enumerate(atoms):
-            # NOTE: We get an extra count of d for atoms that have ALREADY been used
-            ip = np.dot(signal, a)
-            counter += d
-            if ip > max_inner_product:
-                max_inner_product = ip
-                best_idx = a_idx
+        # if verbosity > 0:
+        #     import ipdb; ipdb.set_trace()
+        ips = np.abs(atoms @ signal)
+        best_idx = np.argmax(ips)
 
+        coef = np.dot(atoms[best_idx], signal)
+        counter += D*d
         # TODO: Need to implement signs for negative (look at ABOSOLUTE value of dot product)
-        if max_inner_product > args.tol:
-            coefs[best_idx] = max_inner_product
-            signal -= coefs[best_idx]*atoms[best_idx]
+        if coef > args.tol:
+            coefs[best_idx] = coef
+            signal -= coef*atoms[best_idx]
         else:
             norm_decreased = False
     return coefs, counter
@@ -96,7 +93,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
             candidates_sampled = atoms[candidates][:, sample_dims]  # NOTE: clever indexing because atoms[candidates,sample_dims] doesn't work
             # TODO: Need to perform compute_exactly condition, see https://github.com/motiwari/BanditPAM-python/blob/master/ucb_pam.py#L91-L106
             means[candidates] = \
-                ((T[candidates] * means[candidates]) + (batch_size * (candidates_sampled @ signal_sampled))) / (batch_size + T[candidates])  # Does this np.dot do implicit broadcasting?
+                ((T[candidates] * means[candidates]) + (batch_size * np.abs(candidates_sampled @ signal_sampled))) / (batch_size + T[candidates])  # Does this np.dot do implicit broadcasting?
             T[candidates] += batch_size
             deltas[candidates] = sigmas[candidates] * np.sqrt(-np.log(p) / T[candidates])
             ucbs[candidates] = means[candidates] + deltas[candidates]
@@ -109,12 +106,16 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
         # TODO(@motiwari): There can be a problem here if the last candidate was computed exactly
         assert len(candidates) == 1  # Should be only one candidate remaining
         if verbosity > 0:
-            print(max(T))
-        if means[candidates][0] > args.tol:
-            best_idx = candidates[0]
-            coefs[best_idx] = np.dot(signal, atoms[best_idx])
-            signal -= coefs[best_idx] * atoms[best_idx]
-        else:
-            norm_decreased = False
+            print("Maximum samples drawn for any candidate:", max(T))
+            if max(T) == 31500.: import ipdb; ipdb.set_trace()
+        best_idx = candidates[0]
+        norm_decreased = False
+        if np.abs(means[candidates][0]) > args.tol:  # Verify that the estimated dot product is nontrivial
+            coef = np.dot(atoms[best_idx], signal)
+            if np.abs(coef) > args.tol:  # Verify that the *actual* (not estimated) dot product is nontrivial
+                coefs[best_idx] = coef
+                signal -= coef * atoms[best_idx]
+                norm_decreased = True
+
     return coefs, counter
 

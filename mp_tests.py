@@ -65,7 +65,7 @@ def test_case_4(args):
     data = np.random.rand(args.N, args.d)
     signal = data[0]
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
-    coefs, counter = matching_pursuit(signal, atoms, args)
+    coefs, counter = matching_pursuit(signal, atoms, args, verbosity=0)
     print(np.where(coefs > 0))
     print(coefs[np.where(coefs > 0)])
     print()
