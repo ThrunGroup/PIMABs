@@ -66,11 +66,8 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     D = len(atoms)
     d = atoms.shape[1]
     coefs = np.zeros(D)
-    T = np.zeros(D)
     dims_sampled = 0
-    threshold = 1e-2
-    batch_size = 100
-    batch_size = min(d, batch_size)
+    batch_size = min(d, args.batch_size)
     if not args.p:
         p = 1. / (D * 1000)
     norm_decreased = True
@@ -78,15 +75,31 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     # NOTE: Assumes signal can be expressed in terms of atoms
     while norm_decreased and np.linalg.norm(signal) > 0:
         candidates = np.arange(D)
+        T = np.zeros(D)
         lcbs = -np.inf * np.ones(D)
         ucbs = np.inf * np.ones(D)
         means = np.zeros(D)
         deltas = np.zeros(D)
+        exact_mask = np.zeros(D)
         sigmas = get_sigmas(signal, atoms, args)
+
         # TODO: Add exact computation if total samples too big
         # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
         while len(candidates) > 1:
-            # For each remaining candidate:
+            compute_exactly = np.where((T + batch_size >= d) & (exact_mask == 0))[0]
+            if len(compute_exactly) > 0:
+                if verbosity > 0:
+                    print("Computing exactly")
+
+                means[compute_exactly] = atoms[compute_exactly] @ signal
+                lcbs[compute_exactly] = ucbs[compute_exactly] = means[compute_exactly]
+                exact_mask[compute_exactly] = 1
+                T[compute_exactly] += d
+                candidates = np.setdiff1d(candidates, compute_exactly)  # Remove compute_exactly points from candidates so they're bounds don't get updated below
+
+            if len(candidates) == 0:
+                break  # The last remaining candidates were computed exactly
+
             sample_dims = np.random.choice(np.arange(d), batch_size, replace=False)
             dims_sampled += batch_size
             signal_sampled = signal[sample_dims]
@@ -99,23 +112,23 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
             ucbs[candidates] = means[candidates] + deltas[candidates]
             lcbs[candidates] = means[candidates] - deltas[candidates]
 
-            counter += len(candidates) * batch_size
             candidates = np.where((ucbs >= lcbs.max()))[0]  # NOTE: May have to change this to a > ?
 
-
         # TODO(@motiwari): There can be a problem here if the last candidate was computed exactly
-        assert len(candidates) == 1  # Should be only one candidate remaining
+        counter += np.sum(T)
+
         if verbosity > 0:
             print("Maximum samples drawn for any candidate:", max(T))
-            if max(T) == 31500.: import ipdb; ipdb.set_trace()
-        best_idx = candidates[0]
+
+        # Breaks exact ties with first. Also converts array to int.
+        best_idx = np.arange(D)[np.where(ucbs == ucbs.max())][0]  # TODO(@motiwari): Should this be mean?
+
         norm_decreased = False
-        if np.abs(means[candidates][0]) > args.tol:  # Verify that the estimated dot product is nontrivial
-            coef = np.dot(atoms[best_idx], signal)
-            if np.abs(coef) > args.tol:  # Verify that the *actual* (not estimated) dot product is nontrivial
-                coefs[best_idx] = coef
-                signal -= coef * atoms[best_idx]
-                norm_decreased = True
+        coef = np.dot(atoms[best_idx], signal)
+        if np.abs(coef) > args.tol:  # Verify that the *actual* (not estimated) dot product is nontrivial
+            coefs[best_idx] = coef
+            signal -= coef * atoms[best_idx]
+            norm_decreased = True
 
     return coefs, counter
 
