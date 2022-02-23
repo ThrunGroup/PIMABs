@@ -11,7 +11,7 @@ def get_args():
     parser.add_argument("--tol", default=1e-3, type=float)
     parser.add_argument("--batch_size", default=100, type=int)
     parser.add_argument("-N", default=1000, type=int)
-    parser.add_argument("-d", default=100, type=int)
+    parser.add_argument("-d", default=1000, type=int)
     parser.add_argument("--p", type=float)
     return parser.parse_args()
 
@@ -66,12 +66,16 @@ def test_case_4(args):
     signal = data[0]
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
     coefs, counter = matching_pursuit(signal, atoms, args, verbosity=0)
+    print("Test Case 4 MP solution:")
     print(np.where(coefs > 0))
     print(coefs[np.where(coefs > 0)])
+    print(counter)
     print()
+    print("Test Case 4 BMP solution:")
     b_coefs, b_counter = b_matching_pursuit(signal, atoms, args, verbosity=1)
     print(np.where(b_coefs > args.tol))
     print(coefs[np.where(b_coefs > args.tol)])
+    print(b_counter)
 
 
 def main(args):

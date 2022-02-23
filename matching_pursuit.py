@@ -19,8 +19,6 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
     # Find maximum inner product atom
     norm_decreased = True
     while norm_decreased and np.linalg.norm(signal) > 0:
-        # if verbosity > 0:
-        #     import ipdb; ipdb.set_trace()
         ips = np.abs(atoms @ signal)
         best_idx = np.argmax(ips)
 
@@ -48,7 +46,7 @@ def get_sigmas(signal, atoms, args):
     batch_size = min(d, args.batch_size)
     sample_dims = np.random.choice(np.arange(d), batch_size)
     signal_sampled = signal[sample_dims]
-    sigmas = np.std(atoms*signal_sampled, axis=1)  # Implicit broadcasting of *sampled_signal
+    sigmas = np.std(np.abs(atoms[:, sample_dims]*signal_sampled), axis=1)  # Implicit broadcasting of *sampled_signal
     return sigmas
 
 
@@ -88,9 +86,6 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
         while len(candidates) > 1:
             compute_exactly = np.where((T + batch_size >= d) & (exact_mask == 0))[0]
             if len(compute_exactly) > 0:
-                if verbosity > 0:
-                    print("Computing exactly")
-
                 means[compute_exactly] = atoms[compute_exactly] @ signal
                 lcbs[compute_exactly] = ucbs[compute_exactly] = means[compute_exactly]
                 exact_mask[compute_exactly] = 1
@@ -104,7 +99,6 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
             dims_sampled += batch_size
             signal_sampled = signal[sample_dims]
             candidates_sampled = atoms[candidates][:, sample_dims]  # NOTE: clever indexing because atoms[candidates,sample_dims] doesn't work
-            # TODO: Need to perform compute_exactly condition, see https://github.com/motiwari/BanditPAM-python/blob/master/ucb_pam.py#L91-L106
             means[candidates] = \
                 ((T[candidates] * means[candidates]) + (batch_size * np.abs(candidates_sampled @ signal_sampled))) / (batch_size + T[candidates])  # Does this np.dot do implicit broadcasting?
             T[candidates] += batch_size
@@ -114,12 +108,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
 
             candidates = np.where((ucbs >= lcbs.max()))[0]  # NOTE: May have to change this to a > ?
 
-        # TODO(@motiwari): There can be a problem here if the last candidate was computed exactly
         counter += np.sum(T)
-
-        if verbosity > 0:
-            print("Maximum samples drawn for any candidate:", max(T))
-
         # Breaks exact ties with first. Also converts array to int.
         best_idx = np.arange(D)[np.where(ucbs == ucbs.max())][0]  # TODO(@motiwari): Should this be mean?
 
