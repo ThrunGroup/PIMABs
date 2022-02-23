@@ -8,7 +8,7 @@ def get_args():
     parser.add_argument("--get_ground_truth", default=False, action="store_true")
     parser.add_argument("--debug", default=False, action="store_true")
     parser.add_argument("--seed", default=0)
-    parser.add_argument("--tol", default=1e-3, type=float)
+    parser.add_argument("--tol", default=1e-2, type=float)
     parser.add_argument("--batch_size", default=100, type=int)
     parser.add_argument("-N", default=1000, type=int)
     parser.add_argument("-d", default=1000, type=int)

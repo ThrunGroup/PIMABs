@@ -25,7 +25,7 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
         coef = np.dot(atoms[best_idx], signal)
         counter += D*d
         # TODO: Need to implement signs for negative (look at ABOSOLUTE value of dot product)
-        if coef > args.tol:
+        if np.abs(coef) > args.tol:
             coefs[best_idx] = coef
             signal -= coef*atoms[best_idx]
         else:
