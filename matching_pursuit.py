@@ -21,7 +21,7 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
     while norm_decreased and np.linalg.norm(signal) > 0:
         ips = np.abs(atoms @ signal)
         best_idx = np.argmax(ips)
-
+        print("Best Candidate:", best_idx)
         coef = np.dot(atoms[best_idx], signal)
         counter += D*d
         # TODO: Need to implement signs for negative (look at ABOSOLUTE value of dot product)
@@ -110,8 +110,8 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
 
         counter += np.sum(T)
         # Breaks exact ties with first. Also converts array to int.
-        best_idx = np.arange(D)[np.where(ucbs == ucbs.max())][0]  # TODO(@motiwari): Should this be mean?
-
+        best_idx = np.arange(D)[np.where(means == means.max())][0]  # TODO(@motiwari): Should this be mean?
+        print("Best Candidate:", best_idx)
         norm_decreased = False
         coef = np.dot(atoms[best_idx], signal)
         if np.abs(coef) > args.tol:  # Verify that the *actual* (not estimated) dot product is nontrivial

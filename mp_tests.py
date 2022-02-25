@@ -80,9 +80,9 @@ def test_case_4(args):
 
 def main(args):
     np.random.seed(args.seed)
-    test_case_1(args)
-    test_case_2(args)
-    test_case_3(args)
+    # test_case_1(args)
+    # test_case_2(args)
+    # test_case_3(args)
     test_case_4(args)
 
 
