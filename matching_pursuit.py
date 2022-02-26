@@ -1,6 +1,6 @@
 import numpy as np
 import copy
-
+import matplotlib.pyplot as plt
 
 def matching_pursuit(input_signal, atoms, args, verbosity=0):
     """
@@ -19,7 +19,7 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
     # Find maximum inner product atom
     norm_decreased = True
     #while norm_decreased and np.linalg.norm(signal) > 0:
-    for _iter in range(10):
+    for _iter in range(1):
         ips = np.abs(atoms @ signal)
         best_idx = np.argmax(ips)
         print("Best Candidate:", best_idx)
@@ -48,7 +48,10 @@ def get_sigmas(signal, atoms, args):
     batch_size = min(d, args.batch_size)
     sample_dims = np.random.choice(np.arange(d), batch_size)
     signal_sampled = signal[sample_dims]
-    sigmas = np.std(np.abs(atoms[:, sample_dims]*signal_sampled), axis=1)  # Implicit broadcasting of *sampled_signal
+    # NOTE: EXTREMELY IMPORTANT: We multiply by a np.sqrt(d) here because the np.std(...) expression assumes
+    # the r.v. under consideration is the COORDINATE-WISE product, whereas in the b_matching_pursuit algorithm,
+    # the r.v. under consideration is the TOTAL inner product.
+    sigmas = np.sqrt(d) * np.std(np.abs(atoms[:, sample_dims]*signal_sampled), axis=1)  # Implicit broadcasting of *sampled_signal
     return sigmas
 
 
@@ -69,12 +72,12 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     dims_sampled = 0
     batch_size = min(d, args.batch_size)
     if not args.p:
-        p = 1. / (D * 1000)
+        p = 1. / (D * 10000)
     norm_decreased = True
 
     # NOTE: Assumes signal can be expressed in terms of atoms
     #while norm_decreased and np.linalg.norm(signal) > 0:
-    for _iter in range(10):
+    for _iter in range(1):
         candidates = np.arange(D)
         T = np.zeros(D)
         lcbs = -np.inf * np.ones(D)
