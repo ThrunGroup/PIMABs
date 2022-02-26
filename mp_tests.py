@@ -1,7 +1,6 @@
 import numpy as np
-from matching_pursuit import matching_pursuit, b_matching_pursuit
 import argparse
-import os
+from matching_pursuit import matching_pursuit, b_matching_pursuit
 
 
 def get_args():
@@ -10,10 +9,12 @@ def get_args():
     parser.add_argument("-d", default=1000, type=int)
     parser.add_argument("--seed", default=1, type=int)
     parser.add_argument("--p", type=float)
-    parser.add_argument("--batch_size", default=100, type=int)
+    parser.add_argument("--batch_size", default=1000, type=int)
     parser.add_argument("--max_iter", default=10, type=int)
     parser.add_argument("--tol", default=1e-2, type=float)
+    parser.add_argument("--residue", default=1e-3, type=float)
     return parser.parse_args()
+
 
 def test_case_1(args):
     dim = 5
@@ -76,13 +77,15 @@ def test_case_4(args):
     print(np.where(np.abs(b_coefs) > args.tol))
     print(b_coefs[np.where(np.abs(b_coefs) > args.tol)])
     print(b_counter)
+    #assert np.allclose(coefs, b_coefs)
+    #print("Asserted all coefficients are close in Test Case 4")
 
 
 def main(args):
     np.random.seed(args.seed)
-    # test_case_1(args)
-    # test_case_2(args)
-    # test_case_3(args)
+    test_case_1(args)
+    test_case_2(args)
+    test_case_3(args)
     test_case_4(args)
 
 

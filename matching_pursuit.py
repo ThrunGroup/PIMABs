@@ -1,20 +1,21 @@
-import numpy as np
 import copy
-import matplotlib.pyplot as plt
 import os
+import numpy as np
+import matplotlib.pyplot as plt
 
 def get_logfile_name(args, bandit=True):
     suffix = '-b' if bandit else ''
     return os.path.join('logs',
-                 'N-' + str(args.N) +
-                 '-d-' + str(args.d) +
-                 '-s-' + str(args.seed) +
-                 '-p-' + str(args.p) +
-                 '-b-' + str(args.batch_size) +
+                'N-' + str(args.N) +
+                '-d-' + str(args.d) +
+                '-s-' + str(args.seed) +
+                '-p-' + str(args.p) +
+                '-b-' + str(args.batch_size) +
                 '-m-' + str(args.max_iter) +
-                 '-t-' + str(args.tol) +
-                 suffix
-                 )
+                '-r-' + str(args.residue) +
+                '-t-' + str(args.tol) +
+                suffix
+                )
 
 def conv_to_str(input_):
     return ', '.join(map(str, map(lambda num: np.round(num, decimals=5), input_)))
@@ -53,6 +54,10 @@ def matching_pursuit(input_signal, atoms, args):
     norm_decreased = True
     #while norm_decreased and np.linalg.norm(signal) > 0:
     for _iter in range(args.max_iter):
+        # Stop if the signal is ~0
+        if np.linalg.norm(signal) < args.residue:
+            break
+
         ips = np.abs(atoms @ signal)
         best_idx = np.argmax(ips)
         coef = np.dot(atoms[best_idx], signal)
@@ -106,12 +111,16 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     dims_sampled = 0
     batch_size = min(d, args.batch_size)
     if not args.p:
-        p = 1. / (D * d * D *d )
+        p = 1. / ((D * d)**10)
     norm_decreased = True
 
     # NOTE: Assumes signal can be expressed in terms of atoms
     #while norm_decreased and np.linalg.norm(signal) > 0:
     for _iter in range(args.max_iter):
+        # Stop if the signal is ~0
+        if np.linalg.norm(signal) < args.residue:
+            break
+
         candidates = np.arange(D)
         T = np.zeros(D)
         lcbs = -np.inf * np.ones(D)
@@ -159,6 +168,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
             norm_decreased = True
         stat = [np.linalg.norm(signal), best_idx, coef, coefs[best_idx]]
         stats.append(stat)
-    write_log(args, stats, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), counter, bandit=True)
+    counter = int(counter)  # The np.sum() promotes it to double above
+    write_log(args, stats, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), int(counter), bandit=True)
     return coefs, counter
 
