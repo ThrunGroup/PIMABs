@@ -11,6 +11,7 @@ def get_logfile_name(args, bandit=True):
                  '-s-' + str(args.seed) +
                  '-p-' + str(args.p) +
                  '-b-' + str(args.batch_size) +
+                '-m-' + str(args.max_iter) +
                  '-t-' + str(args.tol) +
                  suffix
                  )

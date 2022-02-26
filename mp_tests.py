@@ -6,14 +6,13 @@ import os
 
 def get_args():
     parser = argparse.ArgumentParser(description="Solve matching pursuit problems")
-    parser.add_argument("--seed", default=0)
-    parser.add_argument("--tol", default=1e-2, type=float)
-    parser.add_argument("--batch_size", default=100, type=int)
-    parser.add_argument("--max_iter", default=10, type=int)
     parser.add_argument("-N", default=1000, type=int)
     parser.add_argument("-d", default=1000, type=int)
+    parser.add_argument("--seed", default=0)
     parser.add_argument("--p", type=float)
-
+    parser.add_argument("--batch_size", default=100, type=int)
+    parser.add_argument("--max_iter", default=10, type=int)
+    parser.add_argument("--tol", default=1e-2, type=float)
     return parser.parse_args()
 
 def test_case_1(args):
