@@ -8,7 +8,7 @@ def get_args():
     parser = argparse.ArgumentParser(description="Solve matching pursuit problems")
     parser.add_argument("-N", default=1000, type=int)
     parser.add_argument("-d", default=1000, type=int)
-    parser.add_argument("--seed", default=0)
+    parser.add_argument("--seed", default=1, type=int)
     parser.add_argument("--p", type=float)
     parser.add_argument("--batch_size", default=100, type=int)
     parser.add_argument("--max_iter", default=10, type=int)
@@ -61,8 +61,8 @@ def test_case_3(args):
     assert b_counter == 42
 
 def test_case_4(args):
-    np.random.seed(0)
-    data = np.random.rand(args.N, args.d)
+    np.random.seed(args.seed)
+    data = np.random.rand(args.N + 1, args.d) # + 1 to generate the signal
     signal = data[0]
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
     coefs, counter = matching_pursuit(signal, atoms, args)
