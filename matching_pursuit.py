@@ -89,7 +89,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
         while len(candidates) > 1:
             compute_exactly = np.where((T + batch_size >= d) & (exact_mask == 0))[0]
             if len(compute_exactly) > 0:
-                means[compute_exactly] = atoms[compute_exactly] @ signal
+                means[compute_exactly] = np.abs(atoms[compute_exactly] @ signal)
                 lcbs[compute_exactly] = ucbs[compute_exactly] = means[compute_exactly]
                 exact_mask[compute_exactly] = 1
                 T[compute_exactly] += d
