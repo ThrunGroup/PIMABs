@@ -1,14 +1,27 @@
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
+import os
+
+def get_logfile_name(args, bandit=True):
+    suffix = '-b' if bandit else ''
+    return os.path.join('logs',
+                 'N-' + str(args.N) +
+                 '-d-' + str(args.d) +
+                 '-s-' + str(args.seed) +
+                 '-p-' + str(args.p) +
+                 '-b-' + str(args.batch_size) +
+                 '-t-' + str(args.tol) +
+                 suffix
+                 )
 
 def conv_to_str(input_):
     return ', '.join(map(str, map(lambda num: np.round(num, decimals=5), input_)))
 
-def write_log(stats, logfile, coefs, init_signal_norm, final_signal_norm, total_cost):
+def write_log(args, stats, coefs, init_signal_norm, final_signal_norm, total_cost, bandit):
     nonzero_coefs = list(np.where(np.abs(coefs) > 0)[0])
     nonzero_weights = list(coefs[nonzero_coefs])
-    with open(logfile, 'w+') as fout:
+    with open(get_logfile_name(args, bandit), 'w+') as fout:
         fout.write("Total cost: " + str(total_cost) + "\n")
         fout.write("Final answer:\n")
         fout.write("Nonzero indcs: " + conv_to_str(nonzero_coefs) + "\n")
@@ -51,7 +64,7 @@ def matching_pursuit(input_signal, atoms, args):
             norm_decreased = False
         stat = [np.linalg.norm(signal), best_idx, coef, coefs[best_idx]]
         stats.append(stat)
-    write_log(stats, args.logfile, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), counter)
+    write_log(args, stats, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), counter, bandit=False)
     return coefs, counter
 
 
@@ -145,6 +158,6 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
             norm_decreased = True
         stat = [np.linalg.norm(signal), best_idx, coef, coefs[best_idx]]
         stats.append(stat)
-    write_log(stats, args.logfile + "b", coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), counter)
+    write_log(args, stats, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), counter, bandit=True)
     return coefs, counter
 

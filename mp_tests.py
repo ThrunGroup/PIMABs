@@ -5,9 +5,7 @@ import os
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Solve MIPS problem")
-    parser.add_argument("--get_ground_truth", default=False, action="store_true")
-    parser.add_argument("--debug", default=False, action="store_true")
+    parser = argparse.ArgumentParser(description="Solve matching pursuit problems")
     parser.add_argument("--seed", default=0)
     parser.add_argument("--tol", default=1e-2, type=float)
     parser.add_argument("--batch_size", default=100, type=int)
@@ -15,7 +13,7 @@ def get_args():
     parser.add_argument("-N", default=1000, type=int)
     parser.add_argument("-d", default=1000, type=int)
     parser.add_argument("--p", type=float)
-    parser.add_argument("--logfile", default=os.path.join('logs', 'logfile.csv'), type=str)
+
     return parser.parse_args()
 
 def test_case_1(args):
