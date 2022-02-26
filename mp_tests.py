@@ -1,6 +1,7 @@
 import numpy as np
 from matching_pursuit import matching_pursuit, b_matching_pursuit
 import argparse
+import os
 
 
 def get_args():
@@ -10,9 +11,11 @@ def get_args():
     parser.add_argument("--seed", default=0)
     parser.add_argument("--tol", default=1e-2, type=float)
     parser.add_argument("--batch_size", default=100, type=int)
+    parser.add_argument("--max_iter", default=10, type=int)
     parser.add_argument("-N", default=1000, type=int)
     parser.add_argument("-d", default=1000, type=int)
     parser.add_argument("--p", type=float)
+    parser.add_argument("--logfile", default=os.path.join('logs', 'logfile.csv'), type=str)
     return parser.parse_args()
 
 def test_case_1(args):
@@ -65,7 +68,7 @@ def test_case_4(args):
     data = np.random.rand(args.N, args.d)
     signal = data[0]
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
-    coefs, counter = matching_pursuit(signal, atoms, args, verbosity=0)
+    coefs, counter = matching_pursuit(signal, atoms, args)
     print("Test Case 4 MP solution:")
     print(np.where(np.abs(coefs) > 0))
     print(coefs[np.where(np.abs(coefs) > 0)])

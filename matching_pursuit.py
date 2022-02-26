@@ -2,7 +2,25 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 
-def matching_pursuit(input_signal, atoms, args, verbosity=0):
+def conv_to_str(input_):
+    return ', '.join(map(str, map(lambda num: np.round(num, decimals=5), input_)))
+
+def write_log(stats, logfile, coefs, init_signal_norm, final_signal_norm, total_cost):
+    nonzero_coefs = list(np.where(np.abs(coefs) > 0)[0])
+    nonzero_weights = list(coefs[nonzero_coefs])
+    with open(logfile, 'w+') as fout:
+        fout.write("Total cost: " + str(total_cost) + "\n")
+        fout.write("Final answer:\n")
+        fout.write("Nonzero indcs: " + conv_to_str(nonzero_coefs) + "\n")
+        fout.write("Nonzero coefs: " + conv_to_str(nonzero_weights) + "\n")
+        fout.write("Initial signal norm: " + str(init_signal_norm) + "\n")
+        for row_i, row in enumerate(stats):
+            fout.write("Iteration: " + str(row_i + 1) + "\n")
+            fout.write(conv_to_str(row))
+            fout.write("\n")
+        fout.write("Final signal norm: " + str(final_signal_norm) + "\n")
+
+def matching_pursuit(input_signal, atoms, args):
     """
     Canonical matching pursuit algorithm. Used for ground truth
 
@@ -10,6 +28,7 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
     :param atoms: Atoms with which to decompose signal into
     :return: vector of length len(atoms) with coefficients produced by matching pursuit
     """
+    stats = []
     signal = copy.deepcopy(input_signal)
     counter = 0
     D = len(atoms)
@@ -19,12 +38,10 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
     # Find maximum inner product atom
     norm_decreased = True
     #while norm_decreased and np.linalg.norm(signal) > 0:
-    for _iter in range(10):
+    for _iter in range(args.max_iter):
         ips = np.abs(atoms @ signal)
         best_idx = np.argmax(ips)
-        print("Best Candidate:", best_idx)
         coef = np.dot(atoms[best_idx], signal)
-        print(np.linalg.norm(signal))
         counter += D*d
         # TODO: Need to implement signs for negative (look at ABOSOLUTE value of dot product)
         if np.abs(coef) > args.tol:
@@ -32,6 +49,9 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
             signal -= coef*atoms[best_idx]
         else:
             norm_decreased = False
+        stat = [np.linalg.norm(signal), best_idx, coef, coefs[best_idx]]
+        stats.append(stat)
+    write_log(stats, args.logfile, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), counter)
     return coefs, counter
 
 
@@ -63,9 +83,9 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     :param atoms: Atoms with which to decompose signal into
     :return: vector of length len(atoms) with coefficients produced by matching pursuit
     """
+    stats = []
     signal = copy.deepcopy(input_signal)
     counter = 0
-
     D = len(atoms)
     d = atoms.shape[1]
     coefs = np.zeros(D)
@@ -77,7 +97,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
 
     # NOTE: Assumes signal can be expressed in terms of atoms
     #while norm_decreased and np.linalg.norm(signal) > 0:
-    for _iter in range(10):
+    for _iter in range(args.max_iter):
         candidates = np.arange(D)
         T = np.zeros(D)
         lcbs = -np.inf * np.ones(D)
@@ -117,14 +137,14 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
         counter += np.sum(T)
         # Breaks exact ties with first. Also converts array to int.
         best_idx = np.arange(D)[np.where(means == means.max())][0]  # TODO(@motiwari): Should this be mean?
-        print("Best Candidate:", best_idx)
-        print(np.linalg.norm(signal))
         norm_decreased = False
         coef = np.dot(atoms[best_idx], signal)
         if np.abs(coef) > args.tol:  # Verify that the *actual* (not estimated) dot product is nontrivial
             coefs[best_idx] += coef
             signal -= coef * atoms[best_idx]
             norm_decreased = True
-
+        stat = [np.linalg.norm(signal), best_idx, coef, coefs[best_idx]]
+        stats.append(stat)
+    write_log(stats, args.logfile + "b", coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), counter)
     return coefs, counter
 
