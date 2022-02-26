@@ -19,7 +19,7 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
     # Find maximum inner product atom
     norm_decreased = True
     #while norm_decreased and np.linalg.norm(signal) > 0:
-    for _iter in range(1):
+    for _iter in range(10):
         ips = np.abs(atoms @ signal)
         best_idx = np.argmax(ips)
         print("Best Candidate:", best_idx)
@@ -72,12 +72,12 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     dims_sampled = 0
     batch_size = min(d, args.batch_size)
     if not args.p:
-        p = 1. / (D * 10000)
+        p = 1. / (D * d * D *d )
     norm_decreased = True
 
     # NOTE: Assumes signal can be expressed in terms of atoms
     #while norm_decreased and np.linalg.norm(signal) > 0:
-    for _iter in range(1):
+    for _iter in range(10):
         candidates = np.arange(D)
         T = np.zeros(D)
         lcbs = -np.inf * np.ones(D)
