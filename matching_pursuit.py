@@ -28,7 +28,7 @@ def matching_pursuit(input_signal, atoms, args, verbosity=0):
         counter += D*d
         # TODO: Need to implement signs for negative (look at ABOSOLUTE value of dot product)
         if np.abs(coef) > args.tol:
-            coefs[best_idx] = coef
+            coefs[best_idx] += coef
             signal -= coef*atoms[best_idx]
         else:
             norm_decreased = False
@@ -122,7 +122,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
         norm_decreased = False
         coef = np.dot(atoms[best_idx], signal)
         if np.abs(coef) > args.tol:  # Verify that the *actual* (not estimated) dot product is nontrivial
-            coefs[best_idx] = coef
+            coefs[best_idx] += coef
             signal -= coef * atoms[best_idx]
             norm_decreased = True
 
