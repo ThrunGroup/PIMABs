@@ -67,14 +67,14 @@ def test_case_4(args):
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
     coefs, counter = matching_pursuit(signal, atoms, args, verbosity=0)
     print("Test Case 4 MP solution:")
-    print(np.where(coefs > 0))
-    print(coefs[np.where(coefs > 0)])
+    print(np.where(np.abs(coefs) > 0))
+    print(coefs[np.where(np.abs(coefs) > 0)])
     print(counter)
     print()
     print("Test Case 4 BMP solution:")
     b_coefs, b_counter = b_matching_pursuit(signal, atoms, args, verbosity=1)
-    print(np.where(b_coefs > args.tol))
-    print(coefs[np.where(b_coefs > args.tol)])
+    print(np.where(np.abs(b_coefs) > args.tol))
+    print(b_coefs[np.where(np.abs(b_coefs) > args.tol)])
     print(b_counter)
 
 
