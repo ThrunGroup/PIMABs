@@ -15,6 +15,7 @@ import traceback
 import os
 
 from utils import get_args, get_logfile_name
+from matching_pursuit import matching_pursuit, b_matching_pursuit
 
 
 def remap_args(args, exp):
@@ -31,7 +32,7 @@ def remap_args(args, exp):
     args.residue = exp[7]
     return args
 
-def run_exp(args, method_name, medoids_fname, B_prof_fname, S_prof_fname):
+def run_exp(args, method_name, prof_name):
     '''
     Runs an experiment with the given parameters, and writes the results to the
     files.
@@ -41,7 +42,7 @@ def run_exp(args, method_name, medoids_fname, B_prof_fname, S_prof_fname):
     '''
     prof = cProfile.Profile()
     _ = prof.runcall(method_name, args)
-    prof.dump_stats(B_prof_fname)
+    prof.dump_stats(prof_name)
 
 
 def main():
@@ -74,18 +75,13 @@ def main():
         sequentially)
         '''
         try:
-            if exp[0] == 'naive_v1':
+
+            if exp[0] == 'MP':
                 # pool.apply_async(run_exp, args=(copy.deepcopy(args), naive_pam_v1.naive_build_and_swap, copy.deepcopy(medoids_fname), copy.deepcopy(B_prof_fname), copy.deepcopy(S_prof_fname))) # Copy inline to copy OTF
-                run_exp(args, naive_pam_v1.naive_build_and_swap, medoids_fname, B_prof_fname, S_prof_fname)
-            elif exp[0] == 'ucb':
+                run_exp(args, matching_pursuit, logfile + '-profile')
+            elif exp[0] == 'B_MP':
                 # pool.apply_async(run_exp, args=(copy.deepcopy(args), ucb_pam.UCB_build_and_swap, copy.deepcopy(medoids_fname), copy.deepcopy(B_prof_fname), copy.deepcopy(S_prof_fname)))
-                run_exp(args, ucb_pam.UCB_build_and_swap, medoids_fname, B_prof_fname, S_prof_fname)
-            elif exp[0] == 'clarans':
-                # pool.apply_async(run_loss_exp, args=(copy.deepcopy(args), clarans.CLARANS_build_and_swap, copy.deepcopy(medoids_fname)))
-                run_loss_exp(copy.deepcopy(args), clarans.CLARANS_build_and_swap, copy.deepcopy(medoids_fname))
-            elif exp[0] == 'em_style':
-                # pool.apply_async(run_loss_exp, args=(copy.deepcopy(args), em_style.EM_build_and_swap, copy.deepcopy(medoids_fname)))
-                run_loss_exp(copy.deepcopy(args), em_style.EM_build_and_swap, copy.deepcopy(medoids_fname))
+                run_exp(args, b_matching_pursuit, logfile + '-profile-b')
             else:
                 raise Exception('Invalid algorithm specified')
         except Exception as _e:
