@@ -17,6 +17,37 @@ def get_args():
     return parser.parse_args()
 
 
+def remap_args(args, exp):
+    '''
+    Parses a config line (as a list) into an args variable (a Namespace).
+    '''
+    args.N = exp[1]
+    args.d = exp[2]
+    args.seed = exp[3]
+    args.p = None  # To compute on the fly
+    args.batch_size = None  # To compute on the fly
+    args.max_iter = exp[6]
+    args.tol = exp[7]
+    args.residue = exp[8]
+    return args
+
+
+def q(str_):
+    """
+    Puts quotes around a string
+    """
+    return '"' + str_ + '"'
+
+
+def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue):
+    '''
+    Takes the experiment variables and outputs a string description
+    '''
+
+    # Can compute p and batch_size here if necessary
+    return "\t[" + ', '.join(map(str, [q(algo), N, d, seed, p, batch_size, max_iter, tol, residue])) + "],\n"
+
+
 def get_logfile_name(args, bandit=True):
     suffix = '-bmp' if bandit else ''
     return os.path.join('logs',

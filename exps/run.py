@@ -17,23 +17,9 @@ import copy  # Do not delete, used when doing things asynchronously below
 
 import sys
 sys.path.append('..')
-from utils import get_args, get_logfile_name
+from utils import get_args, get_logfile_name, remap_args
 from matching_pursuit import matching_pursuit, b_matching_pursuit
 
-
-def remap_args(args, exp):
-    '''
-    Parses a config line (as a list) into an args variable (a Namespace).
-    '''
-    args.N = exp[1]
-    args.d = exp[2]
-    args.seed = exp[3]
-    args.p = None  # To compute on the fly
-    args.batch_size = None  # To compute on the fly
-    args.max_iter = exp[6]
-    args.tol = exp[7]
-    args.residue = exp[8]
-    return args
 
 def run_exp(args, method_name, prof_name):
     '''

@@ -5,19 +5,9 @@ Default output is to auto_exp_config.py.
 
 import itertools
 
-def q(str_):
-    """
-    Puts quotes around a string
-    """
-    return '"' + str_ + '"'
-
-def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue):
-    '''
-    Takes the experiment variables and outputs a string description
-    '''
-
-    # Can compute p and batch_size here if necessary
-    return "\t[" + ', '.join(map(str, [q(algo), N, d, seed, p, batch_size, max_iter, tol, residue])) + "],\n"
+import sys
+sys.path.append('..')
+from utils import write_exp
 
 def main():
     algos = ["B_MP"]#, "MP"]
