@@ -10,10 +10,12 @@ by using the pool.apply_async calls instead of the explicit run_exp calls.
 import cProfile
 import importlib
 import multiprocessing as mp
-import copy
 import traceback
 import os
+import copy  # Do not delete, used when doing things asynchronously below
 
+import sys
+sys.path.append('..')
 from utils import get_args, get_logfile_name
 from matching_pursuit import matching_pursuit, b_matching_pursuit
 
@@ -75,12 +77,11 @@ def main():
         sequentially)
         '''
         try:
-
             if exp[0] == 'MP':
-                # pool.apply_async(run_exp, args=(copy.deepcopy(args), naive_pam_v1.naive_build_and_swap, copy.deepcopy(medoids_fname), copy.deepcopy(B_prof_fname), copy.deepcopy(S_prof_fname))) # Copy inline to copy OTF
+                # pool.apply_async(run_exp, args=(copy.deepcopy(args), matching_pursuit, copy.deepcopy(logfile)+'-profile'))  # Copy inline to copy OTF
                 run_exp(args, matching_pursuit, logfile + '-profile')
             elif exp[0] == 'B_MP':
-                # pool.apply_async(run_exp, args=(copy.deepcopy(args), ucb_pam.UCB_build_and_swap, copy.deepcopy(medoids_fname), copy.deepcopy(B_prof_fname), copy.deepcopy(S_prof_fname)))
+                # pool.apply_async(run_exp, args=(copy.deepcopy(args), b_matching_pursuit, copy.deepcopy(logfile)+'-profile-b'))  # Copy inline to copy OTF
                 run_exp(args, b_matching_pursuit, logfile + '-profile-b')
             else:
                 raise Exception('Invalid algorithm specified')
