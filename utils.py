@@ -28,7 +28,7 @@ def get_logfile_name(args, bandit=True):
                 '-m-' + str(args.max_iter) +
                 '-r-' + str(args.residue) +
                 '-t-' + str(args.tol) +
-                suffix
-                )
+                        suffix
+                        )
 
 

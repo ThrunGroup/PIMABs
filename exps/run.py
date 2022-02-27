@@ -12,6 +12,7 @@ import importlib
 import multiprocessing as mp
 import traceback
 import os
+import numpy as np
 import copy  # Do not delete, used when doing things asynchronously below
 
 import sys
@@ -24,14 +25,14 @@ def remap_args(args, exp):
     '''
     Parses a config line (as a list) into an args variable (a Namespace).
     '''
-    args.N = exp[0]
-    args.d = exp[1]
-    args.seed = exp[2]
-    args.p = exp[3]
-    args.batch_size = exp[4]
-    args.max_iter = exp[5]
-    args.tol = exp[6]
-    args.residue = exp[7]
+    args.N = exp[1]
+    args.d = exp[2]
+    args.seed = exp[3]
+    args.p = exp[4]
+    args.batch_size = exp[5]
+    args.max_iter = exp[6]
+    args.tol = exp[7]
+    args.residue = exp[8]
     return args
 
 def run_exp(args, method_name, prof_name):
@@ -42,8 +43,12 @@ def run_exp(args, method_name, prof_name):
     Note that the approach below to profiling is undocumented.
     See https://stackoverflow.com/questions/1584425/return-value-while-using-cprofile
     '''
+    np.random.seed(args.seed)
+    data = np.random.rand(args.N + 1, args.d)  # + 1 to generate the signal
+    signal = data[0]
+    atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
     prof = cProfile.Profile()
-    _ = prof.runcall(method_name, args)
+    _ = prof.runcall(method_name, input_signal=signal, atoms=atoms, args=args)
     prof.dump_stats(prof_name)
 
 
