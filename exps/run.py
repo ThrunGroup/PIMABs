@@ -68,7 +68,7 @@ def main():
     pool = mp.Pool()
     for exp in imported_config.experiments:
         args = remap_args(args, exp)
-        logfile = os.path.join('..', get_logfile_name(args, bandit=False))
+        logfile = os.path.join(get_logfile_name(args, bandit=True))
         if os.path.exists(logfile) and not args.force:
             print("Warning: already have data for experiment", logfile)
             continue

@@ -18,7 +18,7 @@ def get_args():
 
 
 def get_logfile_name(args, bandit=True):
-    suffix = '-b' if bandit else ''
+    suffix = '-bmp' if bandit else ''
     return os.path.join('logs',
                 'N-' + str(args.N) +
                 '-d-' + str(args.d) +
