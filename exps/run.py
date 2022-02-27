@@ -49,6 +49,10 @@ def run_exp(args, method_name, prof_name):
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
     prof = cProfile.Profile()
     _ = prof.runcall(method_name, input_signal=signal, atoms=atoms, args=args)
+
+    # Change the leading subdir from logs/ to profiles/
+    prof_name = os.path.split(prof_name)
+    prof_name = os.path.join('profiles', *prof_name[1:])
     prof.dump_stats(prof_name)
 
 
