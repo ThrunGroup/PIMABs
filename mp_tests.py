@@ -1,20 +1,7 @@
 import numpy as np
-import argparse
 from matching_pursuit import matching_pursuit, b_matching_pursuit
 
-
-def get_args():
-    parser = argparse.ArgumentParser(description="Solve matching pursuit problems")
-    parser.add_argument("-N", default=100, type=int)
-    parser.add_argument("-d", default=1000, type=int)
-    parser.add_argument("--seed", default=1, type=int)
-    parser.add_argument("--p", type=float)
-    parser.add_argument("--batch_size", default=1000, type=int)
-    parser.add_argument("--max_iter", default=10, type=int)
-    parser.add_argument("--tol", default=1e-2, type=float)
-    parser.add_argument("--residue", default=1e-3, type=float)
-    return parser.parse_args()
-
+from utils import get_args
 
 def test_case_1(args):
     dim = 5
@@ -46,6 +33,7 @@ def test_case_2(args):
     assert np.allclose(b_coefs, np.array([2, 0]))
     assert b_counter == 14
 
+
 def test_case_3(args):
     signal = np.array([1., 1, 1, 0, 1, 0, 1])
     atoms = np.array([
@@ -61,9 +49,10 @@ def test_case_3(args):
     assert np.allclose(b_coefs, np.array([2, 0, 1]))
     assert b_counter == 42
 
+
 def test_case_4(args):
     np.random.seed(args.seed)
-    data = np.random.rand(args.N + 1, args.d) # + 1 to generate the signal
+    data = np.random.rand(args.N + 1, args.d)  # + 1 to generate the signal
     signal = data[0]
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
     coefs, counter = matching_pursuit(signal, atoms, args)

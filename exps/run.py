@@ -12,137 +12,56 @@ import importlib
 import multiprocessing as mp
 import copy
 import traceback
+import os
+
+from utils import get_args, get_logfile_name
 
 
 def remap_args(args, exp):
     '''
     Parses a config line (as a list) into an args variable (a Namespace).
     '''
-    args.build_ao_swap = exp[1]
-    args.verbose = exp[2]
-    args.num_medoids = exp[3]
-    args.sample_size = exp[4]
-    args.seed = exp[5]
-    args.dataset = exp[6]
-    args.metric = exp[7]
-    args.warm_start_medoids = exp[8]
-    args.cache_computed = None
+    args.N = exp[0]
+    args.d = exp[1]
+    args.seed = exp[2]
+    args.p = exp[3]
+    args.batch_size = exp[4]
+    args.max_iter = exp[5]
+    args.tol = exp[6]
+    args.residue = exp[7]
     return args
-
-
-def parse_logstring(logstring):
-    '''
-    Helper method to parse the logstrings (dictionaries) that are passed by the
-    different algorithms. Used to write the logs to file (e.g. for debugging)
-    '''
-    output = "\n"
-    for k in sorted(logstring):  # Sort keys so they're consistently ordered
-        output += "\t" + str(k) + ":\n"
-        for round in logstring[k]:
-            output += "\t\t" + str(round) + ": " + str(logstring[k][round]) + "\n"
-    return output
-
-
-def write_medoids(medoids_fname, built_medoids, swapped_medoids, B_logstring, S_logstring, num_swaps, final_loss,
-                  uniq_d):
-    '''
-    Write results of an experiment to the given file, including:
-    medoids after BUILD step, medoids after SWAP step, etc.
-    '''
-    with open(medoids_fname, 'w+') as fout:
-        fout.write("Built:" + ','.join(map(str, built_medoids)))
-        fout.write("\nSwapped:" + ','.join(map(str, swapped_medoids)))
-        fout.write("\nNum Swaps: " + str(num_swaps))
-        fout.write("\nFinal Loss: " + str(final_loss))
-        fout.write("\nUnique Distance Computations: " + str(uniq_d))
-        fout.write("\nBuild Logstring:" + parse_logstring(B_logstring))
-        fout.write("\nSwap Logstring:" + parse_logstring(S_logstring))
-
 
 def run_exp(args, method_name, medoids_fname, B_prof_fname, S_prof_fname):
     '''
     Runs an experiment with the given parameters, and writes the results to the
-    files (arguments ending in _fname). We run the BUILD step and SWAP step
-    separately, so as to get different profiles for each step (so we can
-    measure the number of distance calls in the BUILD step and SWAP step
-    individually)
+    files.
 
     Note that the approach below to profiling is undocumented.
     See https://stackoverflow.com/questions/1584425/return-value-while-using-cprofile
     '''
-
-    tmp = args.build_ao_swap  # Store as tmp variable because we modify below
-    computed_B = False
-    if 'B' in tmp:
-        args.build_ao_swap = 'B'
-        prof = cProfile.Profile()
-        built_medoids, _1, B_logstring, _2, _3, _4, _5 = prof.runcall(method_name, args)
-        prof.dump_stats(B_prof_fname)
-        computed_B = True
-    if 'S' in tmp:
-        args.build_ao_swap = 'S'
-        assert computed_B, "ERROR: BUILD step was not run, Using warm start medoids from a previous experiment"
-        args.warm_start_medoids = ','.join(map(str, list(built_medoids)))
-        prof = cProfile.Profile()
-        _1, swapped_medoids, _2, S_logstring, num_swaps, final_loss, uniq_d = prof.runcall(method_name, args)
-        prof.dump_stats(S_prof_fname)
-    write_medoids(medoids_fname, built_medoids, swapped_medoids, B_logstring, S_logstring, num_swaps, final_loss,
-                  uniq_d)
+    prof = cProfile.Profile()
+    _ = prof.runcall(method_name, args)
+    prof.dump_stats(B_prof_fname)
 
 
-def write_loss(medoids_fname, final_medoids, final_loss):
-    '''
-    Write the final medoids and final loss to a file.
-
-    For some strange reason, this needs to be broken into a separate
-    function or it sometimes doesn't write to the logfile correctly when using
-    async calls.
-    '''
-    try:
-        with open(medoids_fname, 'w+') as fout:
-            print(final_medoids)
-            fout.write("Swapped:" + ','.join(map(str, final_medoids)))
-            fout.write("\nFinal Loss: " + str(final_loss))
-    except:
-        print("An exception occurred!")
-
-
-def run_loss_exp(args, method_name, medoids_fname):
-    '''
-    This is the same function as run_exp, but only writes the loss and medoids
-    instead of the profiles, full logstrings, etc. Used for Figure 1(a).
-    '''
-    final_medoids, final_loss = method_name(args)
-    write_loss(medoids_fname, final_medoids, final_loss)
-
-
-def main(sys_args):
+def main():
     '''
     Run all the experiments in the experiments lists specified by the -e
     argument, and write the final results (including logstrings) to files. Can
     run multiple experiments in parallel by using the pool.apply_async calls
     below instead of the explicit run_exp calls.
-
-    Note that clarans and em_style experiments are only run for loss comparison
-    (in Figure 1(a)).
     '''
-    args = get_args(sys.argv[1:])  # Uses default values for now as placeholder to instantiate args
-
+    args = get_args()  # Uses default values for now as placeholder to instantiate args
     imported_config = importlib.import_module(args.exp_config.strip('.py'))
     pool = mp.Pool()
     for exp in imported_config.experiments:
         args = remap_args(args, exp)
-        B_prof_fname = os.path.join('profiles', 'p-B-' + get_filename(exp, args))
-        S_prof_fname = os.path.join('profiles', 'p-S-' + get_filename(exp, args))
-        medoids_fname = os.path.join('profiles', 'L-' + get_filename(exp, args))
-
-        if os.path.exists(medoids_fname) and not args.force:
-            # Experiments have already been conducted
-            print("Warning: already have data for experiment", B_prof_fname)
-            print("Warning: already have data for experiment", S_prof_fname)
+        logfile = os.path.join('..', get_logfile_name(args, bandit=False))
+        if os.path.exists(logfile) and not args.force:
+            print("Warning: already have data for experiment", logfile)
             continue
         else:
-            print("Running exp:", B_prof_fname, S_prof_fname)
+            print("Running exp:", logfile)
 
         '''
         WARNING: The apply_async calls below are NOT threadsafe. In particular,
@@ -169,9 +88,8 @@ def main(sys_args):
                 run_loss_exp(copy.deepcopy(args), em_style.EM_build_and_swap, copy.deepcopy(medoids_fname))
             else:
                 raise Exception('Invalid algorithm specified')
-        except Exception as e:
-            track = traceback.format_exc()
-            print(track)
+        except Exception as _e:
+            print(traceback.format_exc())
 
     pool.close()
     pool.join()
@@ -179,4 +97,4 @@ def main(sys_args):
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
