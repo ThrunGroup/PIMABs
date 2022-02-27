@@ -91,7 +91,7 @@ def main():
                 run_exp(args, matching_pursuit, logfile + '-profile')
             elif exp[0] == 'B_MP':
                 # pool.apply_async(run_exp, args=(copy.deepcopy(args), b_matching_pursuit, copy.deepcopy(logfile)+'-profile-b'))  # Copy inline to copy OTF
-                run_exp(args, b_matching_pursuit, logfile + '-profile-b')
+                run_exp(args, b_matching_pursuit, logfile + '-profile-bmp')
             else:
                 raise Exception('Invalid algorithm specified')
         except Exception as _e:
