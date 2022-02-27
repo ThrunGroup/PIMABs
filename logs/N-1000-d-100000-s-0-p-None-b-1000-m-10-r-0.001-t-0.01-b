@@ -1,0 +1,10 @@
+Total cost: 42
+Final answer:
+Nonzero indcs: 0, 2
+Nonzero coefs: 2.0, 1.0
+Initial signal norm: 2.23606797749979
+Iteration: 1
+1.0, 0, 2.0, 2.0
+Iteration: 2
+0.0, 2, 1.0, 1.0
+Final signal norm: 0.0

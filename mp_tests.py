@@ -5,7 +5,7 @@ from matching_pursuit import matching_pursuit, b_matching_pursuit
 
 def get_args():
     parser = argparse.ArgumentParser(description="Solve matching pursuit problems")
-    parser.add_argument("-N", default=1000, type=int)
+    parser.add_argument("-N", default=100, type=int)
     parser.add_argument("-d", default=1000, type=int)
     parser.add_argument("--seed", default=1, type=int)
     parser.add_argument("--p", type=float)
