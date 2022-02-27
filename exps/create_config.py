@@ -20,18 +20,17 @@ def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue):
     return "\t[" + ', '.join(map(str, [q(algo), N, d, seed, p, batch_size, max_iter, tol, residue])) + "],\n"
 
 def main():
-    algos = ["B_MP", "MP"]
+    algos = ["B_MP"]#, "MP"]
     Ns = [100]
-    ds = [100, 1000, 1000]
+    ds = [3000, 10000, 30000, 100000, 300000]
     seeds = range(10)
-    ps = [1e-2]
-    batch_sizes = [1000]
+    ps = [1e-2]  # This is unused by the experiments and recomputed in-method
+    batch_sizes = [1000]  # This is unused by the experiments and recomputed in-method
     max_iters = [10]
     tols = [1e-2]
     residues = [1e-2]
 
     exps = itertools.product(algos, Ns, ds, seeds, ps, batch_sizes, max_iters, tols, residues)
-
     with open('auto_exp_config.py', 'w+') as fout:
         fout.write("experiments = [\n")
         for e in exps:

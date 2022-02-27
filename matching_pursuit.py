@@ -69,7 +69,11 @@ def get_sigmas(signal, atoms, args):
     :return: Sigmas, the dispersion parameter for each arm, of length len(candidates_sampled)
     """
     d = atoms.shape[1]
-    batch_size = min(d, args.batch_size)
+
+    if args.batch_size is None:
+        batch_size = round(.05*d)
+    batch_size = min(d, batch_size)
+
     sample_dims = np.random.choice(np.arange(d), batch_size)
     signal_sampled = signal[sample_dims]
     # NOTE: EXTREMELY IMPORTANT: We multiply by a np.sqrt(d) here because the np.std(...) expression assumes
@@ -94,7 +98,11 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     d = atoms.shape[1]
     coefs = np.zeros(D)
     dims_sampled = 0
-    batch_size = min(d, args.batch_size)
+
+    if args.batch_size is None:
+        batch_size = round(.05*d)
+    batch_size = min(d, batch_size)
+
     if not args.p:
         p = 1. / ((D * d)**10)
     norm_decreased = True

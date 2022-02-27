@@ -29,7 +29,7 @@ def bandit_solve(root, data):
 
 def main(args):
     cwd = os.getcwd()
-    fname = os.path.join(cwd, "data", "data.npy")
+    fname = os.path.join(cwd, "../data", "data.npy")
     data = load_data(fname)
 
     if args.debug:

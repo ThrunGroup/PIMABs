@@ -28,8 +28,8 @@ def remap_args(args, exp):
     args.N = exp[1]
     args.d = exp[2]
     args.seed = exp[3]
-    args.p = exp[4]
-    args.batch_size = exp[5]
+    args.p = None  # To compute on the fly
+    args.batch_size = None  # To compute on the fly
     args.max_iter = exp[6]
     args.tol = exp[7]
     args.residue = exp[8]
