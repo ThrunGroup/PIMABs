@@ -74,8 +74,10 @@ def plot_slice_sns(dcalls_array, ds, seeds, take_log=True):
     # To show y = log(x), plot y vs logx and show linear relationship
     if take_log:
         xs = np.log10(ds)
+        log_prefix = "LOG"
     else:
         xs = np.array(ds)
+        log_prefix = "LINEAR"
 
     np_data = dcalls_array
     sns.set()
@@ -107,7 +109,7 @@ def plot_slice_sns(dcalls_array, ds, seeds, take_log=True):
                  mew=1.5,
                  label="95% confidence interval")
 
-    plt.title("Total cost vs. dimensionality of vectors")
+    plt.title("Total cost vs. dimensionality of vectors: " + log_prefix)
     plt.xlabel("$\log_{10}(d)$")
     plt.ylabel("$\log_{10}$(# of coordinate-wise distance computations per step)")
 
@@ -126,7 +128,7 @@ def plot_slice_sns(dcalls_array, ds, seeds, take_log=True):
     #plt.plot([x_min, x_max], [sl*np.exp(x_min), sl*np.exp(x_max)], color='red', linestyle=':', label='$O(d)$ linear scaling')
 
     # Modify filename depending on dataset
-    plt.savefig('figures/HOC4-with-FP1.pdf')
+    plt.savefig('figures/' + log_prefix + '.pdf')
 
 
 def show_plots():
@@ -149,21 +151,18 @@ def show_plots():
     ### Decide which experiments to plot
     algos = ["B_MP"]  # , "MP"]
     Ns = [100]
-    ds = [
-        10000,
-        30000,
-        100000,
-        300000,
-    #    1000000,
-    #    3000000,
-    ]
+    ds = [3000, 10000, 20000, 30000, 60000, 100000, 200000, 300000, 600000, 1000000]
     dmap = {
-        10000: 0,
-        30000: 1,
-        100000: 2,
-        300000: 3,
-        #1000000: 4,
-        #3000000: 5,
+        3000: 0,
+        10000: 1,
+        20000: 2,
+        30000: 3,
+        60000: 4,
+        100000: 5,
+        200000: 6,
+        300000: 7,
+        600000: 8,
+        1000000: 9,
     }
     seeds = range(10)
     ps = [1e-2]  # This is unused by the experiments and recomputed in-method
@@ -189,6 +188,7 @@ def show_plots():
 
     print(dcalls_array)
     print(np.mean(dcalls_array, axis=1))
+    plot_slice_sns(dcalls_array, ds, seeds, take_log=False)
     plot_slice_sns(dcalls_array, ds, seeds, take_log=True)
 
 def main():
