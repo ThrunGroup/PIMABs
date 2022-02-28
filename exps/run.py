@@ -36,8 +36,11 @@ def run_exp(args, method_name, mnist_imgs):
     '''
     np.random.seed(args.seed)
     # data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
-    data = mnist_imgs[np.random.choice(range(60000), args.N + 1, replace=False)]  # + 1 to generate the signal
-    data = data[:, np.random.choice(range(784), args.d, replace=False)] # Select random dimensions
+
+    data = np.transpose(mnist_imgs) / 255
+    data = data[np.random.choice(range(784), args.N + 1, replace=False)]  # Select random dimensions
+    data = data[:, np.random.choice(range(60000), args.d, replace=False)]  # + 1 to generate the signal
+
     data /= np.linalg.norm(data, axis=1).reshape(-1, 1)  # Normalize signal too?
     signal = data[0]
     atoms = data[1:]

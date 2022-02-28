@@ -11,13 +11,18 @@ from utils import write_exp
 
 def main():
     algos = ["B_MP"]#], "MP"]
-    Ns = [25]
+    Ns = [783]
     ds = [
-        80,
-        160,
-        320,
-        640,
-        784,
+        100,
+        200,
+        400,
+        800,
+        1600,
+        3200,
+        6400,
+        12800,
+        25600,
+        51200,
     ]
     seeds = range(10)
     ps = [1e-2]  # This is unused by the experiments and recomputed in-method
