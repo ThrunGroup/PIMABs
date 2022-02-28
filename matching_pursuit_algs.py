@@ -73,7 +73,7 @@ def get_sigmas(signal, atoms, args):
 
     batch_size = args.batch_size
     if batch_size is None:
-        batch_size = round(.05*d)
+        batch_size = 1000
     batch_size = min(d, batch_size)
 
     sample_dims = np.random.choice(np.arange(d), batch_size)
@@ -103,7 +103,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
 
     batch_size = args.batch_size
     if batch_size is None:
-        batch_size = round(.05*d)
+        batch_size = 1000
     batch_size = min(d, batch_size)
 
     if args.p is None:

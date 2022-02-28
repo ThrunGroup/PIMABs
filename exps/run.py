@@ -25,21 +25,12 @@ def run_exp(args, method_name, prof_name):
     '''
     Runs an experiment with the given parameters, and writes the results to the
     files.
-
-    Note that the approach below to profiling is undocumented.
-    See https://stackoverflow.com/questions/1584425/return-value-while-using-cprofile
     '''
     np.random.seed(args.seed)
     data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
     signal = data[0]
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
-    prof = cProfile.Profile()
-    _ = prof.runcall(method_name, input_signal=signal, atoms=atoms, args=args)
-
-    # Change the leading subdir from logs/ to profiles/
-    prof_name = os.path.split(prof_name)
-    prof_name = os.path.join('profiles', *prof_name[1:])
-    prof.dump_stats(prof_name)
+    method_name(input_signal=signal, atoms=atoms, args=args)
 
 
 def main():
@@ -54,7 +45,8 @@ def main():
     pool = mp.Pool()
     for exp in imported_config.experiments:
         args = remap_args(args, exp)
-        logfile = os.path.join(get_logfile_name(args, bandit=True))
+        bandit = (exp[0] == 'B_MP')
+        logfile = os.path.join(get_logfile_name(args, bandit=bandit))
         if os.path.exists(logfile) and not args.force:
             print("Warning: already have data for experiment", logfile)
             continue

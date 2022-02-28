@@ -75,7 +75,7 @@ def plot_slice_sns(dcalls_array, ds, seeds, take_log=True):
     if take_log:
         xs = np.log10(ds)
     else:
-        xs = ds
+        xs = np.array(ds)
 
     np_data = dcalls_array
     sns.set()
@@ -149,14 +149,21 @@ def show_plots():
     ### Decide which experiments to plot
     algos = ["B_MP"]  # , "MP"]
     Ns = [100]
-    ds = [10000, 30000, 100000, 300000, 1000000, 3000000]
+    ds = [
+        10000,
+        30000,
+        100000,
+        300000,
+    #    1000000,
+    #    3000000,
+    ]
     dmap = {
         10000: 0,
         30000: 1,
         100000: 2,
         300000: 3,
-        1000000: 4,
-        3000000: 5,
+        #1000000: 4,
+        #3000000: 5,
     }
     seeds = range(10)
     ps = [1e-2]  # This is unused by the experiments and recomputed in-method
