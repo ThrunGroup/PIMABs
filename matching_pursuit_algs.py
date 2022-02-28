@@ -70,7 +70,8 @@ def get_sigmas(signal, atoms, args):
     """
     d = atoms.shape[1]
 
-    if args.batch_size is None:
+    batch_size = args.batch_size
+    if batch_size is None:
         batch_size = round(.05*d)
     batch_size = min(d, batch_size)
 
@@ -99,12 +100,13 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     coefs = np.zeros(D)
     dims_sampled = 0
 
-    if args.batch_size is None:
+    batch_size = args.batch_size
+    if batch_size is None:
         batch_size = round(.05*d)
     batch_size = min(d, batch_size)
 
-    if not args.p:
-        p = 1. / ((D * d)**10)
+    if args.p is None:
+        p = 1. / ((D * d)**50)
     norm_decreased = True
 
     # NOTE: Assumes signal can be expressed in terms of atoms

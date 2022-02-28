@@ -1,5 +1,5 @@
 import numpy as np
-from matching_pursuit import matching_pursuit, b_matching_pursuit
+from matching_pursuit_algs import matching_pursuit, b_matching_pursuit
 
 from utils import get_args
 
@@ -52,7 +52,7 @@ def test_case_3(args):
 
 def test_case_4(args):
     np.random.seed(args.seed)
-    data = np.random.rand(args.N + 1, args.d)  # + 1 to generate the signal
+    data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
     signal = data[0]
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
     coefs, counter = matching_pursuit(signal, atoms, args)
@@ -72,9 +72,9 @@ def test_case_4(args):
 
 def main(args):
     np.random.seed(args.seed)
-    test_case_1(args)
-    test_case_2(args)
-    test_case_3(args)
+    # test_case_1(args)
+    # test_case_2(args)
+    # test_case_3(args)
     test_case_4(args)
 
 

@@ -18,7 +18,7 @@ import copy  # Do not delete, used when doing things asynchronously below
 import sys
 sys.path.append('..')
 from utils import get_args, get_logfile_name, remap_args
-from matching_pursuit import matching_pursuit, b_matching_pursuit
+from matching_pursuit_algs import matching_pursuit, b_matching_pursuit
 
 
 def run_exp(args, method_name, prof_name):
@@ -30,7 +30,7 @@ def run_exp(args, method_name, prof_name):
     See https://stackoverflow.com/questions/1584425/return-value-while-using-cprofile
     '''
     np.random.seed(args.seed)
-    data = np.random.rand(args.N + 1, args.d)  # + 1 to generate the signal
+    data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
     signal = data[0]
     atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
     prof = cProfile.Profile()
