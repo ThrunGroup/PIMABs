@@ -163,5 +163,6 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
         stats.append(stat)
     counter = int(counter)  # The np.sum() promotes it to double above
     write_log(args, stats, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), int(counter), bandit=True)
+    print("Finished:", args)
     return coefs, counter
 
