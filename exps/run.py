@@ -14,21 +14,31 @@ import traceback
 import os
 import numpy as np
 import copy  # Do not delete, used when doing things asynchronously below
+from mnist import MNIST
+
+
 
 import sys
 sys.path.append('..')
 from utils import get_args, get_logfile_name, remap_args
 from matching_pursuit_algs import matching_pursuit, b_matching_pursuit
 
+def get_minst_data():
+    mnist_data = MNIST('/Users/motiwari/PycharmProjects/PIMABs/data/samples')
+    images, labels = mnist_data.load_training()
+    images = np.array(images, dtype=np.float32)
+    return images
 
-def run_exp(args, method_name, prof_name):
+def run_exp(args, method_name, mnist_imgs):
     '''
     Runs an experiment with the given parameters, and writes the results to the
     files.
     '''
     np.random.seed(args.seed)
-    data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
-    data /= np.linalg.norm(data, axis=1).reshape(-1, 1)
+    # data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
+    data = mnist_imgs[np.random.choice(range(60000), args.N + 1, replace=False)]  # + 1 to generate the signal
+    data = data[:, np.random.choice(range(784), args.d, replace=False)] # Select random dimensions
+    data /= np.linalg.norm(data, axis=1).reshape(-1, 1)  # Normalize signal too?
     signal = data[0]
     atoms = data[1:]
     method_name(input_signal=signal, atoms=atoms, args=args)
@@ -43,6 +53,8 @@ def main():
     '''
     args = get_args()  # Uses default values for now as placeholder to instantiate args
     imported_config = importlib.import_module(args.exp_config.strip('.py'))
+    mnist_imgs = get_minst_data()
+
     pool = mp.Pool()
     for exp in imported_config.experiments:
         args = remap_args(args, exp)
@@ -67,10 +79,10 @@ def main():
         try:
             if exp[0] == 'MP':
                 # pool.apply_async(run_exp, args=(copy.deepcopy(args), matching_pursuit, copy.deepcopy(logfile)+'-profile'))  # Copy inline to copy OTF
-                run_exp(args, matching_pursuit, logfile + '-profile')
+                run_exp(args, matching_pursuit, mnist_imgs)
             elif exp[0] == 'B_MP':
                 # pool.apply_async(run_exp, args=(copy.deepcopy(args), b_matching_pursuit, copy.deepcopy(logfile)+'-profile-b'))  # Copy inline to copy OTF
-                run_exp(args, b_matching_pursuit, logfile + '-profile-bmp')
+                run_exp(args, b_matching_pursuit, mnist_imgs)
             else:
                 raise Exception('Invalid algorithm specified')
         except Exception as _e:

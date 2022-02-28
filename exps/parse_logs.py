@@ -150,20 +150,24 @@ def show_plots():
 
     ### Decide which experiments to plot
     algos = ["B_MP"]  # , "MP"]
-    Ns = [100]
-    ds = [1000, 3000, 10000, 30000, 100000]#, 300000, 1000000]
+    Ns = [25]
+    ds = [
+        80,
+        160,
+        320,
+        640,
+        784,
+    ]
     dmap = {
-        1000: 0,
-        3000: 1,
-        10000: 2,
-        30000: 3,
-        100000: 4,
-        #300000: 5,
-        #1000000: 6,
+        80: 0,
+        160: 1,
+        320: 2,
+        640: 3,
+        784: 4,
     }
     seeds = range(10)
     ps = [1e-2]  # This is unused by the experiments and recomputed in-method
-    batch_sizes = [100]  # This is unused by the experiments and recomputed in-method
+    batch_sizes = [10]  # This is unused by the experiments and recomputed in-method
     max_iters = [1]
     tols = [1e-2]
     residues = [1e-2]

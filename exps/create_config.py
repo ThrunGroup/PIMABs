@@ -10,22 +10,18 @@ sys.path.append('..')
 from utils import write_exp
 
 def main():
-    algos = ["B_MP", "MP"]
-    Ns = [100]
+    algos = ["B_MP"]#], "MP"]
+    Ns = [25]
     ds = [
-        1000,
-        3000,
-        10000,
-        30000,
-        100000,
-        300000,
-        1000000,
-        #3000000,
-        #10000000,
+        80,
+        160,
+        320,
+        640,
+        784,
     ]
     seeds = range(10)
     ps = [1e-2]  # This is unused by the experiments and recomputed in-method
-    batch_sizes = [100]  # This is unused by the experiments and recomputed in-method
+    batch_sizes = [10]  # This is unused by the experiments and recomputed in-method
     max_iters = [1]
     tols = [1e-2]
     residues = [1e-2]
