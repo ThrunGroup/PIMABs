@@ -13,18 +13,20 @@ def main():
     algos = ["B_MP", "MP"]
     Ns = [100]
     ds = [
+        1000,
+        3000,
         10000,
         30000,
         100000,
         300000,
-        #1000000,
+        1000000,
         #3000000,
         #10000000,
     ]
     seeds = range(10)
     ps = [1e-2]  # This is unused by the experiments and recomputed in-method
-    batch_sizes = [1000]  # This is unused by the experiments and recomputed in-method
-    max_iters = [10]
+    batch_sizes = [100]  # This is unused by the experiments and recomputed in-method
+    max_iters = [1]
     tols = [1e-2]
     residues = [1e-2]
 

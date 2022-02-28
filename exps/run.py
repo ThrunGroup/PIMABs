@@ -28,8 +28,9 @@ def run_exp(args, method_name, prof_name):
     '''
     np.random.seed(args.seed)
     data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
+    data /= np.linalg.norm(data, axis=1).reshape(-1, 1)
     signal = data[0]
-    atoms = data[1:] / np.linalg.norm(data[1:], axis=1).reshape(-1, 1)
+    atoms = data[1:]
     method_name(input_signal=signal, atoms=atoms, args=args)
 
 
