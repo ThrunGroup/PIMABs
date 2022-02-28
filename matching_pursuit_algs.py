@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 from utils import get_logfile_name
+from constants import NUM_STDS
 
 def conv_to_str(input_):
     return ', '.join(map(str, map(lambda num: np.round(num, decimals=5), input_)))
@@ -106,7 +107,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     batch_size = min(d, batch_size)
 
     if args.p is None:
-        p = 1. / ((D * d)**50)
+        p = 1 / (D*d)
     norm_decreased = True
 
     # NOTE: Assumes signal can be expressed in terms of atoms
@@ -146,7 +147,7 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
             means[candidates] = \
                 ((T[candidates] * means[candidates]) + (batch_size * np.abs(candidates_sampled @ signal_sampled))) / (batch_size + T[candidates])  # Does this np.dot do implicit broadcasting?
             T[candidates] += batch_size
-            deltas[candidates] = sigmas[candidates] * np.sqrt(-np.log(p) / T[candidates])
+            deltas[candidates] = NUM_STDS*sigmas[candidates] * np.sqrt(-np.log(p) / T[candidates])
             ucbs[candidates] = means[candidates] + deltas[candidates]
             lcbs[candidates] = means[candidates] - deltas[candidates]
 
