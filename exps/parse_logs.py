@@ -15,6 +15,7 @@ import pandas as pd
 import seaborn as sns
 import itertools
 import snakevizcode
+from sklearn.linear_model import LinearRegression
 
 import sys
 sys.path.append('..')
@@ -63,23 +64,22 @@ def verify_correctness():
                     print("OK: Results for", bmp_lfile, mp_lfile, "agree")
 
 
-def plot_slice_sns(dcalls_array, ds, costs, algo, seeds, take_log=True):
+def plot_slice_sns(dcalls_array, ds, seeds, take_log=True):
     '''
     Plots the number of coordinate-wise distance calls vs. d, for various algorithms and seeds
 
     :param: dcalls_array, an array of d, seed, calls
     '''
 
+    # To show y = log(x), plot y vs logx and show linear relationship
     if take_log:
-        np_data = np.log10(dcalls_array)
         xs = np.log10(ds)
     else:
-        np_data = dcalls_array
         xs = ds
 
+    np_data = dcalls_array
     sns.set()
     sns.set_style('white')
-
     fig, ax = plt.subplots(figsize=(7, 7))
 
     # Make a dataframe with the relevant data, for plotting with seaborn
@@ -90,44 +90,42 @@ def plot_slice_sns(dcalls_array, ds, costs, algo, seeds, take_log=True):
     print(df)
 
     # Combine the different seeds into 1 column
-    melt_df = df.melt('N', var_name='cols', value_name='vals')
-    melt_df['N'] += np.random.randn(melt_df['N'].shape[0]) * 0.01 # Add jitter
-    sns.scatterplot(x="N", y="vals", data = melt_df, ax = ax, alpha = 0.6)
+    melt_df = df.melt('d', var_name='seeds', value_name='cost')
+    sns.scatterplot(x='d', y='cost', data=melt_df, ax=ax, alpha=0.6)
 
     # Plot means and error bars
-    bars = (1.96/(10**0.5)) * np.std(np_data[kN_idx, :, :], axis = 1) # Slice a specific k, get a 2D array
-    means = np.mean(np_data[kN_idx, :, :], axis = 1)
-    plt.errorbar(Nks_plot, means, yerr = bars, fmt = '+', capsize = 5, ecolor='black', elinewidth = 1.5, zorder = 100, mec='black', mew = 1.5, label="95% confidence interval")
+    bars = (1.96/(10**0.5)) * np.std(np_data, axis=1)
+    means = np.mean(np_data, axis=1)
+    plt.errorbar(xs, means,
+                 yerr=bars,
+                 fmt='+',
+                 capsize=5,
+                 ecolor='black',
+                 elinewidth=1.5,
+                 zorder=100,
+                 mec='black',
+                 mew=1.5,
+                 label="95% confidence interval")
 
-    # Plot line of best fit
-    sl, icpt, r_val, p_val, _ = sp.stats.linregress(Nks_plot, means)
-    x_min, x_max = plt.xlim()
-    y_min, y_max = plt.ylim()
-    plt.plot([x_min, x_max], [x_min * sl + icpt, x_max * sl + icpt], color='black', label='Linear fit, slope=%0.3f'%(sl))
-
-    # Plot reference kN^2 line here in build step for PAM
-    plt.plot([x_min, x_max], [np.log10(kN) + x_min * 2, np.log10(kN) + x_max * 2], color='red', label='$kn^2$ PAM scaling')
-    # Plot reference N^2 line here in build step for PAM + FP1
-    # (no dependence on k)
-    plt.plot([x_min, x_max], [x_min * 2, x_max * 2], color='red', label='$kn^2$ PAM scaling')
-    # weighted reference line for
-    plt.plot([x_min, x_max], [(x_min) * 2, (x_max) * 2], color='#f781bf', linestyle=':', label='$n^2$ FastPAM1 scaling')
-    plt.plot([x_min, x_max], [np.log10(kN) + (x_min) * 2, np.log10(kN) + (x_max) * 2], color='#4daf4a', linestyle='-.', label='$kn^2$ PAM scaling')
-
-    print("Slope is:", sl)
-
-    # Manually modify legend labels for prettiness
-    handles, labels = ax.get_legend_handles_labels()
-    labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
-    ax.legend(handles[::-1], labels[::-1], loc="upper left")
-
-
-    plt.xlabel("$\log_{10}(n)$")
+    plt.title("Total cost vs. dimensionality of vectors")
+    plt.xlabel("$\log_{10}(d)$")
     plt.ylabel("$\log_{10}$(# of coordinate-wise distance computations per step)")
 
-    # Modify these lines based on dataset
-    plt.title("HOC4, $d =$ tree edit distance, $k = 2$")
-    plt.show()
+    # Plot line of best fit
+    LR = LinearRegression(fit_intercept=True)
+    reg = LR.fit(xs.reshape(-1, 1), means)  # Need the reshape since there's only 1 feature
+    sl = reg.coef_[0]
+    icpt = reg.intercept_
+    x_min, x_max = plt.xlim()
+    plt.plot([x_min, x_max], [x_min * sl + icpt, x_max * sl + icpt], color='black', label='Linear fit, slope=%0.3f'%(sl))
+    print("Slope is:", sl)
+    print("Intercept is is:", icpt)
+    print("R^2 is is: ", reg.score(xs.reshape(-1, 1), means))
+
+    # Plot guideline
+    #plt.plot([x_min, x_max], [sl*np.exp(x_min), sl*np.exp(x_max)], color='red', linestyle=':', label='$O(d)$ linear scaling')
+
+    # Modify filename depending on dataset
     plt.savefig('figures/HOC4-with-FP1.pdf')
 
 
@@ -151,13 +149,12 @@ def show_plots():
     ### Decide which experiments to plot
     algos = ["B_MP"]  # , "MP"]
     Ns = [100]
-    ds = [3000, 10000, 30000, 100000, 300000]
+    ds = [10000, 30000, 100000, 300000]
     dmap = {
-        3000: 0,
-        10000: 1,
-        30000: 2,
-        100000: 3,
-        300000: 4,
+        10000: 0,
+        30000: 1,
+        100000: 2,
+        300000: 3,
     }
     seeds = range(10)
     ps = [1e-2]  # This is unused by the experiments and recomputed in-method
@@ -182,10 +179,8 @@ def show_plots():
             dcalls_array[dmap[args.d], args.seed] = int(cost)
 
     print(dcalls_array)
-
-
-
-
+    print(np.mean(dcalls_array, axis=1))
+    plot_slice_sns(dcalls_array, ds, seeds, take_log=True)
 
 def main():
     #verify_correctness()
