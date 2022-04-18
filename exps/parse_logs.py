@@ -1,5 +1,5 @@
 """
-Code to automatically parse the profiles produced from running experiments.
+Code to automatically parse the logfiles produced from running experiments.
 In particular, plots the scaling of B_MP vs. d for various dimension sizes d.
 Used to demonstrate O(dlogd) scaling.
 """
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import itertools
+from typing import List
 from sklearn.linear_model import LinearRegression
 
 import sys
@@ -17,29 +18,31 @@ sys.path.append("..")
 from utils import get_args, get_logfile_name, remap_args
 
 
-def verify_correctness():
+def verify_correctness() -> None:
     """
-    Verifies that BanditPAM returns the same BUILD and SWAP medoid assignments
-    as PAM, by parsing the logfiles.
-    """
+    Verifies that Matching Pursuit and Bandit Matching Pursuit verify the same decomposition of signal into atoms.
+    Works by comparing logfiles, in all of the parent_dirs
 
+    TODO(@motiwari): make parent_dirs an argument
+    """
     parent_dirs = [
         "logs",
     ]
 
     for parent_dir in parent_dirs:
+        # List comprehension to find relevant logfiles
         bmp_logfiles = [
             os.path.join(parent_dir, x)
             for x in os.listdir(parent_dir)
             if os.path.isfile(os.path.join(parent_dir, x))
             and x != ".DS_Store"
-            and x[-4:] == "-bmp"
+            and x[-4:] == "-bmp"  # Check that the suffix is -bmp
         ]
 
         for bmp_lfile in sorted(bmp_logfiles):
-            mp_lfile = bmp_lfile.replace("-bmp", "")
+            mp_lfile = bmp_lfile.replace("-bmp", "")  # Find the corresponding MP logfile
             if not os.path.exists(mp_lfile):
-                print("Warning: no naive experiment", mp_lfile)
+                print("Warning: no MP experiment logfile", mp_lfile)
             else:
                 disagreement = False
                 with open(bmp_lfile, "r") as fin1:
@@ -48,6 +51,7 @@ def verify_correctness():
                         bmp_l = fin1.readline().strip()
                         mp_l = fin2.readline().strip()
 
+                        # If the MP and BMP logfiles diverge at all, this implies a disagreement
                         while bmp_l and mp_l:
                             bmp_l = fin1.readline().strip()
                             mp_l = fin2.readline().strip()
@@ -60,20 +64,27 @@ def verify_correctness():
                     print("OK: Results for", bmp_lfile, mp_lfile, "agree")
 
 
-def plot_slice_sns(dcalls_array, ds, seeds, take_log=True):
+def plot_slice_sns(dcalls_array: np.ndarray, ds: List, seeds: List, take_log: bool = True) -> None:
     """
     Plots the number of coordinate-wise distance calls vs. d, for various algorithms and seeds
 
-    :param: dcalls_array, an array of d, seed, calls
+    :param dcalls_array: an array containing the number of coordinate-wise distance computations for each experiment
+    :param ds: dimensionalities of experiments to analyze
+    :param seeds: seeds of epxeriments to analyze
+    :param take_log: whether to plot on a log axis (True) or linear axis (False)
+    :return: None
     """
-
     # To show y = log(x), plot y vs logx and show linear relationship
     if take_log:
         xs = np.log10(ds)
         log_prefix = "LOG"
+        x_label = "$\log_{10}(d)$"
+        y_label = "$\log_{10}$(# of coordinate-wise distance computations per step)"
     else:
         xs = np.array(ds)
         log_prefix = "LINEAR"
+        x_label = "$d$"
+        y_label = "Number of coordinate-wise distance computations per step"
 
     np_data = dcalls_array
     sns.set()
@@ -109,8 +120,8 @@ def plot_slice_sns(dcalls_array, ds, seeds, take_log=True):
     )
 
     plt.title("Total cost vs. dimensionality of vectors: " + log_prefix)
-    plt.xlabel("$\log_{10}(d)$")
-    plt.ylabel("$\log_{10}$(# of coordinate-wise distance computations per step)")
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
 
     # Plot line of best fit
     LR = LinearRegression(fit_intercept=True)
@@ -130,33 +141,33 @@ def plot_slice_sns(dcalls_array, ds, seeds, take_log=True):
     print("Intercept is is:", icpt)
     print("R^2 is is: ", reg.score(xs.reshape(-1, 1), means))
 
-    # Plot guideline
+    # Plot guideline, which should appear exponential on a y vs. logx graph
     # plt.plot([x_min, x_max], [sl*np.exp(x_min), sl*np.exp(x_max)], color='red', linestyle=':', label='$O(d)$ linear scaling')
 
     # Modify filename depending on dataset
     plt.savefig("figures/" + log_prefix + ".pdf")
 
 
-def show_plots():
+def show_plots() -> None:
     """
-    A function which mines the number of distance calls for each experiment,
-    from the dumped profiles. Creates a numpy array with the distance call
-    counts.
+    A function which mines the number of distance calls for each experiment, from the dumped logfiles.
+    Creates a numpy array with the distance call counts, retrieved by parsing the logfiles.
 
     It does this by:
-        - first, identifying the filenames where the experiment profiles and
-            logfiles are stored (the logfile is used for the number of swap
-            steps)
-        - searching each profile (build and swap) for the number of distance
-            calls
-        - weighting the distance calls between the build step and swap step as
-            necessary
+        - identifying the filenames where the experiment logfiles are stored
+        - searching each logfile for the number of distance calls
+        - storing this information in the d_calls array and calling plot_slice_sns
     """
-    args = get_args()  # Uses default values for now as placeholder to instantiate args
+    args = get_args()  # Uses default values for now as placeholder to instantiate args.Namespace object
 
-    ### Decide which experiments to plot
+    # Decide which experiments to plot. Similar parameters to create_config.py
+    # Algorithms to run: Bandit Matching Pursuit (B_MP) and/or Matching Pursuit (MP)
     algos = ["B_MP"]  # , "MP"]
+
+    # Number of atoms to use
     Ns = [25]
+
+    # Dimensionalities of vectors to use
     ds = [
         80,
         160,
@@ -164,24 +175,34 @@ def show_plots():
         640,
         784,
     ]
-    dmap = {
-        80: 0,
-        160: 1,
-        320: 2,
-        640: 3,
-        784: 4,
-    }
+
+    # Create an dict from size to size_index (ranking of size)
+    # Need this to figure out where to put each experiment, based on size, in d_calls_array
+    dmap = {}
+    for d_idx, d in enumerate(ds):
+        dmap[d] = d_idx
+
+    # Seeds to use
     seeds = range(10)
+
+    # Maximum number of matching pursuit iterations (iterations of MIPS)
+    max_iters = [1]
+
+    # Placeholder variables to generate the args
     ps = [1e-2]  # This is unused by the experiments and recomputed in-method
     batch_sizes = [10]  # This is unused by the experiments and recomputed in-method
-    max_iters = [1]
+
+    # Tolerance levels to use
     tols = [1e-2]
+
+    # Maximum residual values to use
     residues = [1e-2]
+
     exps = itertools.product(
         algos, Ns, ds, seeds, ps, batch_sizes, max_iters, tols, residues
     )
 
-    ### Gather data
+    # Gather data from logfiles
     dcalls_array = np.zeros((len(ds), len(seeds)))
     for exp in exps:
         args = remap_args(args, exp)
@@ -201,8 +222,8 @@ def show_plots():
     plot_slice_sns(dcalls_array, ds, seeds, take_log=True)
 
 
-def main():
-    # verify_correctness()
+def main() -> None:
+    verify_correctness()
     print("FILES VERIFIED\n\n")
     show_plots()
 
