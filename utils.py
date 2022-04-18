@@ -1,5 +1,6 @@
 import os
 import argparse
+import numpy as np
 from typing import List
 
 
@@ -80,6 +81,53 @@ def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue) -> str:
         )
         + "],\n"
     )
+
+
+def conv_to_str(input_: List[int]) -> str:
+    """
+    Convenience function for printing an array of numbers to the same number of decimal places. Return a string
+    representation of the given input array for easy printing.
+    :param input_: input array to convert to a string
+    :return: string representation of the array
+    """
+    return ", ".join(map(str, map(lambda num: np.round(num, decimals=5), input_)))
+
+
+def write_log(
+    args: argparse.Namespace,
+    stats: List,  # Actually a List[List[np.ndarray, int, int, float]]
+    coefs: np.ndarray,
+    init_signal_norm: float,
+    final_signal_norm: float,
+    total_cost: int,
+    bandit: bool,
+):
+    """
+    Writes a logfile containing information about the experiment. The logfile contains information that is very useful
+    for debugging, such as exactly which atoms were chosen at each step and the total cost of the algorithm.
+
+    :param args: arguments about the experiment.
+    :param stats: statistics about the experiments
+    :param coefs: coefficients (inner products) with each atom at each iteration of MP
+    :param init_signal_norm: initial norm of the input signal
+    :param final_signal_norm: final norm of the residual (should be very small) - useful for debugging
+    :param total_cost: cost of the experiment, measured in number of coordinate-wise multiplications performed
+    :param bandit: whether the experiment used BanditMP (True) or MP (False)
+    :return: None
+    """
+    nonzero_coefs = list(np.where(np.abs(coefs) > 0)[0])
+    nonzero_weights = list(coefs[nonzero_coefs])
+    with open(get_logfile_name(args, bandit), "w+") as fout:
+        fout.write("Total cost: " + str(total_cost) + "\n")
+        fout.write("Final answer:\n")
+        fout.write("Nonzero indcs: " + conv_to_str(nonzero_coefs) + "\n")
+        fout.write("Nonzero coefs: " + conv_to_str(nonzero_weights) + "\n")
+        fout.write("Initial signal norm: " + str(init_signal_norm) + "\n")
+        for row_i, row in enumerate(stats):
+            fout.write("Iteration: " + str(row_i + 1) + "\n")
+            fout.write(conv_to_str(row))
+            fout.write("\n")
+        fout.write("Final signal norm: " + str(final_signal_norm) + "\n")
 
 
 def get_logfile_name(args: argparse.Namespace, bandit=True) -> str:
