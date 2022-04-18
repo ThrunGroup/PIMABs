@@ -19,6 +19,7 @@ from mnist import MNIST
 
 
 import sys
+
 sys.path.append("..")
 from utils import get_args, get_logfile_name, remap_args
 from matching_pursuit_algs import matching_pursuit, bandit_matching_pursuit
@@ -29,7 +30,9 @@ def get_minst_data() -> np.ndarray:
     Load the MNIST images as a numpy array
     :return: numpy array containing the images
     """
-    mnist_data = MNIST("/Users/motiwari/PycharmProjects/PIMABs/data/samples")  # Dear Apratim, I am so sorry for hardcoding this
+    mnist_data = MNIST(
+        "/Users/motiwari/PycharmProjects/PIMABs/data/samples"
+    )  # Dear Apratim, I am so sorry for hardcoding this
     images, labels = mnist_data.load_training()
     images = np.array(images, dtype=np.float32)
     return images

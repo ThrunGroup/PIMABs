@@ -23,7 +23,6 @@ sys.path.append("..")
 from utils import get_args, get_logfile_name, remap_args
 
 
-
 def verify_correctness():
     """
     Verifies that BanditPAM returns the same BUILD and SWAP medoid assignments

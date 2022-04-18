@@ -11,14 +11,37 @@ def get_args() -> argparse.Namespace:
     :return: Namespace object from argparse containing each argument
     """
     parser = argparse.ArgumentParser(description="Solve matching pursuit problems")
-    parser.add_argument("-N", default=100, type=int)
-    parser.add_argument("-d", default=1000, type=int)
-    parser.add_argument("--seed", default=1, type=int)
-    parser.add_argument("--p", type=float)
-    parser.add_argument("--batch_size", default=1000, type=int)
-    parser.add_argument("--max_iter", default=10, type=int)
-    parser.add_argument("--tol", default=1e-2, type=float)
-    parser.add_argument("--residue", default=1e-3, type=float)
+    parser.add_argument("-N", help="Number of atoms to use", default=100, type=int)
+    parser.add_argument("-d", help="Dimensionality of data", default=1000, type=int)
+    parser.add_argument(
+        "--seed", help="Random seed for experiments", default=1, type=int
+    )
+    parser.add_argument(
+        "--p",
+        help="Confidence parameter that governs the width of the confidence intervals",
+        type=float,
+    )
+    parser.add_argument(
+        "--batch_size",
+        help="Number of coordinates to sample at once",
+        default=1000,
+        type=int,
+    )
+    parser.add_argument(
+        "--max_iter", help="Maximum number of atoms to identify", default=10, type=int
+    )
+    parser.add_argument(
+        "--tol",
+        help="Minimum absolute value of inner product between atom and signal",
+        default=1e-2,
+        type=float,
+    )
+    parser.add_argument(
+        "--residue",
+        help="Threshold for norm of residue by which to terminate iterative algorithm.",
+        default=1e-3,
+        type=float,
+    )
     parser.add_argument(
         "-e",
         "--exp_config",
