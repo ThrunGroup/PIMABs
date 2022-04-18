@@ -21,7 +21,7 @@ import sys
 
 sys.path.append("..")
 from utils import get_args, get_logfile_name, remap_args
-from matching_pursuit_algs import matching_pursuit, b_matching_pursuit
+from matching_pursuit_algs import matching_pursuit, bandit_matching_pursuit
 
 
 def get_minst_data():
@@ -90,8 +90,8 @@ def main():
                 # pool.apply_async(run_exp, args=(copy.deepcopy(args), matching_pursuit, copy.deepcopy(logfile)+'-profile'))  # Copy inline to copy OTF
                 run_exp(args, matching_pursuit, mnist_imgs)
             elif exp[0] == "B_MP":
-                # pool.apply_async(run_exp, args=(copy.deepcopy(args), b_matching_pursuit, copy.deepcopy(logfile)+'-profile-b'))  # Copy inline to copy OTF
-                run_exp(args, b_matching_pursuit, mnist_imgs)
+                # pool.apply_async(run_exp, args=(copy.deepcopy(args), bandit_matching_pursuit, copy.deepcopy(logfile)+'-profile-b'))  # Copy inline to copy OTF
+                run_exp(args, bandit_matching_pursuit, mnist_imgs)
             else:
                 raise Exception("Invalid algorithm specified")
         except Exception as _e:

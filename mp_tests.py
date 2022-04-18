@@ -1,10 +1,15 @@
 import numpy as np
-from matching_pursuit_algs import matching_pursuit, b_matching_pursuit
+from matching_pursuit_algs import matching_pursuit, bandit_matching_pursuit
 
 from utils import get_args
 
 
-def test_case_1(args):
+def test_case_1(args) -> None:
+    """
+
+    :param args:
+    :return:
+    """
     dim = 5
     signal = np.ones(dim)
     atoms = np.array(
@@ -17,12 +22,12 @@ def test_case_1(args):
     assert np.allclose(coefs, np.array([2.23606798, 0]))
     assert counter == 10
 
-    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
+    b_coefs, b_counter = bandit_matching_pursuit(signal, atoms, args)
     assert np.allclose(b_coefs, np.array([2.23606798, 0]))
     assert b_counter == 10
 
 
-def test_case_2(args):
+def test_case_2(args) -> None:
     signal = np.array([1.0, 0, 1, 0, 1, 0, 1])
     atoms = np.array(
         [
@@ -34,12 +39,12 @@ def test_case_2(args):
     assert np.allclose(coefs, np.array([2, 0]))
     assert counter == 14
 
-    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
+    b_coefs, b_counter = bandit_matching_pursuit(signal, atoms, args)
     assert np.allclose(b_coefs, np.array([2, 0]))
     assert b_counter == 14
 
 
-def test_case_3(args):
+def test_case_3(args) -> None:
     signal = np.array([1.0, 1, 1, 0, 1, 0, 1])
     atoms = np.array(
         [
@@ -52,12 +57,12 @@ def test_case_3(args):
     assert np.allclose(coefs, np.array([2, 0, 1]))
     assert counter == 42
 
-    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args)
+    b_coefs, b_counter = bandit_matching_pursuit(signal, atoms, args)
     assert np.allclose(b_coefs, np.array([2, 0, 1]))
     assert b_counter == 42
 
 
-def test_case_4(args):
+def test_case_4(args) -> None:
     np.random.seed(args.seed)
     data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
     signal = data[0]
@@ -69,7 +74,7 @@ def test_case_4(args):
     print(counter)
     print()
     print("Test Case 4 BMP solution:")
-    b_coefs, b_counter = b_matching_pursuit(signal, atoms, args, verbosity=1)
+    b_coefs, b_counter = bandit_matching_pursuit(signal, atoms, args, verbosity=1)
     print(np.where(np.abs(b_coefs) > args.tol))
     print(b_coefs[np.where(np.abs(b_coefs) > args.tol)])
     print(b_counter)
@@ -79,9 +84,9 @@ def test_case_4(args):
 
 def main(args):
     np.random.seed(args.seed)
-    # test_case_1(args)
-    # test_case_2(args)
-    # test_case_3(args)
+    test_case_1(args)
+    test_case_2(args)
+    test_case_3(args)
     test_case_4(args)
 
 

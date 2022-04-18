@@ -1,8 +1,14 @@
 import os
 import argparse
+from typing import List
 
 
-def get_args():
+def get_args() -> argparse.Namespace:
+    """
+    Gather the experimental arguments from the command line.
+
+    :return: Namespace object from argparse containing each argument
+    """
     parser = argparse.ArgumentParser(description="Solve matching pursuit problems")
     parser.add_argument("-N", default=100, type=int)
     parser.add_argument("-d", default=1000, type=int)
@@ -24,9 +30,12 @@ def get_args():
     return parser.parse_args()
 
 
-def remap_args(args, exp):
+def remap_args(args: argparse.Namespace, exp: List):
     """
-    Parses a config line (as a list) into an args variable (a Namespace).
+    Parses an experiment config line (as a list) into an args variable (a Namespace).
+
+    :param args: Namespace object whose args are to be modified
+    :param exp: Experiment configuration (list of arguments)
     """
     args.N = exp[1]
     args.d = exp[2]
@@ -39,19 +48,31 @@ def remap_args(args, exp):
     return args
 
 
-def q(str_):
+def q(str_: str) -> str:
     """
-    Puts quotes around a string
+    Helper function that prepends and appends double quotes to a string.
+
+    :param str_: string to put double quotes around
     """
     return '"' + str_ + '"'
 
 
-def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue):
+def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue) -> str:
     """
-    Takes the experiment variables and outputs a string description
-    """
+    Given a set of experimental arguments, produce a string representing the list of arguments (to be stored in a text
+    file)
 
-    # Can compute p and batch_size here if necessary
+    :param algo: algorithm to use, e.g., MP BanditMP
+    :param N: dataset size
+    :param d: dimensionality
+    :param seed: random seed
+    :param p: confidence parameter
+    :param batch_size: batch size to use when sampling
+    :param max_iter: maximum number of iterations
+    :param tol: tolerance
+    :param residue: residue minimum
+    :return: string representation of list of arguments
+    """
     return (
         "\t["
         + ", ".join(
@@ -61,7 +82,14 @@ def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue):
     )
 
 
-def get_logfile_name(args, bandit=True):
+def get_logfile_name(args: argparse.Namespace, bandit=True) -> str:
+    """
+    Returns the name of the logfile with the given arguments.
+
+    :param args: arguments of the experiment
+    :param bandit: whether to use BanditMP (True) or MP (False)
+    :return: string representing the logfile's name
+    """
     suffix = "-bmp" if bandit else ""
     return os.path.join(
         "logs",

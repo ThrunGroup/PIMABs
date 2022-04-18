@@ -1,16 +1,44 @@
 import copy
 import numpy as np
+import argparse
+from typing import List, Tuple
+
 from utils import get_logfile_name
 from constants import NUM_STDS
 
 
-def conv_to_str(input_):
+def conv_to_str(input_: List[int]) -> str:
+    """
+    Convenience function for printing an array of numbers to the same number of decimal places. Return a string
+    representation of the given input array for easy printing.
+    :param input_: input array to convert to a string
+    :return: string representation of the array
+    """
     return ", ".join(map(str, map(lambda num: np.round(num, decimals=5), input_)))
 
 
 def write_log(
-    args, stats, coefs, init_signal_norm, final_signal_norm, total_cost, bandit
+    args: argparse.Namespace,
+    stats: List,  # Actually a List[List[np.ndarray, int, int, float]]
+    coefs: np.ndarray,
+    init_signal_norm: float,
+    final_signal_norm: float,
+    total_cost: int,
+    bandit: bool,
 ):
+    """
+    Writes a logfile containing information about the experiment. The logfile contains information that is very useful
+    for debugging, such as exactly which atoms were chosen at each step and the total cost of the algorithm.
+
+    :param args: arguments about the experiment.
+    :param stats: statistics about the experiments
+    :param coefs: coefficients (inner products) with each atom at each iteration of MP
+    :param init_signal_norm: initial norm of the input signal
+    :param final_signal_norm: final norm of the residual (should be very small) - useful for debugging
+    :param total_cost: cost of the experiment, measured in number of coordinate-wise multiplications performed
+    :param bandit: whether the experiment used BanditMP (True) or MP (False)
+    :return: None
+    """
     nonzero_coefs = list(np.where(np.abs(coefs) > 0)[0])
     nonzero_weights = list(coefs[nonzero_coefs])
     with open(get_logfile_name(args, bandit), "w+") as fout:
@@ -26,11 +54,14 @@ def write_log(
         fout.write("Final signal norm: " + str(final_signal_norm) + "\n")
 
 
-def matching_pursuit(input_signal, atoms, args):
+def matching_pursuit(
+    input_signal: np.ndarray, atoms: np.ndarray, args: argparse.Namespace,
+) -> Tuple[np.ndarray, int]:
     """
-    Canonical matching pursuit algorithm. Used for ground truth
+    Canonical matching pursuit algorithm. Used for ground truth. Expected complexity is O(kd), where k = len(atoms)
+    and d = len(input_signal).
 
-    :param signal: Input vector to decompose into atoms
+    :param input_signal: Input vector to decompose into atoms
     :param atoms: Atoms with which to decompose signal into
     :return: vector of length len(atoms) with coefficients produced by matching pursuit
     """
@@ -73,14 +104,20 @@ def matching_pursuit(input_signal, atoms, args):
     return coefs, counter
 
 
-def get_sigmas(signal, atoms, args):
+def get_sigmas(
+    signal: np.ndarray, atoms: np.ndarray, args: argparse.Namespace,
+) -> np.ndarray:
     """
-    Gets sigmas for confidence bound computation
+    Get standard deviations for each arm returns. Works by sampling a batch of coordinates, computing the
+    coordinate-wise inner product for thoose coordinates between the signal and each atom, and measuring the empirical
+    standard deviation.
 
-    :param signal_sampled: Sampled signal (should be of dimension batch_size)
-    :param candidates_sampled: Sampled candidates (each should be of dimension batch_size)
-    :param args: Experiment arguments
-    :return: Sigmas, the dispersion parameter for each arm, of length len(candidates_sampled)
+    Note: this can likely be replaced with the more statistsically correct empirical Bernstein inequality.
+
+    :param signal: sampled signal (should be of dimension batch_size)
+    :param atoms: sampled candidates (each should be of dimension batch_size)
+    :param args: experiment arguments
+    :return: standard eviations, the dispersion parameter for each arm, of length len(candidates_sampled)
     """
     d = atoms.shape[1]
 
@@ -92,7 +129,7 @@ def get_sigmas(signal, atoms, args):
     sample_dims = np.random.choice(np.arange(d), batch_size)
     signal_sampled = signal[sample_dims]
     # NOTE: EXTREMELY IMPORTANT: We multiply by a np.sqrt(d) here because the np.std(...) expression assumes
-    # the r.v. under consideration is the COORDINATE-WISE product, whereas in the b_matching_pursuit algorithm,
+    # the r.v. under consideration is the COORDINATE-WISE product, whereas in the bandit_matching_pursuit algorithm,
     # the r.v. under consideration is the TOTAL inner product.
     sigmas = np.sqrt(d) * np.std(
         np.abs(atoms[:, sample_dims] * signal_sampled), axis=1
@@ -100,9 +137,17 @@ def get_sigmas(signal, atoms, args):
     return sigmas
 
 
-def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
+def bandit_matching_pursuit(
+    input_signal: np.ndarray,
+    atoms: np.ndarray,
+    args: argparse.Namespace,
+    verbosity: int = 0,
+) -> Tuple[np.ndarray, int]:
     """
-    Bandit version of matching pursuit
+    Bandit version of matching pursuit. Solves a best-arm identification problem in the multi-armed bandit framework.
+    The arms correspond to different atoms. The arm returns correspond to the true inner product of each atom with the
+    signal (or residual). Pulling an arm corresponds to computing a single coordinate's inner product with the signal
+    (or residual).
 
     :param signal: Input vector to decompose into atoms
     :param atoms: Atoms with which to decompose signal into
