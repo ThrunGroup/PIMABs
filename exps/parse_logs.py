@@ -22,10 +22,6 @@ import sys
 sys.path.append("..")
 from utils import get_args, get_logfile_name, remap_args
 
-# Possible line numbers for the empty_counter fn
-# FN_NAME_1 = 'data_utils.py:129(empty_counter)'
-# FN_NAME_2 = 'data_utils.py:141(empty_counter)'
-# FN_NAME_3 = 'data_utils.py:142(empty_counter)'
 
 
 def verify_correctness():

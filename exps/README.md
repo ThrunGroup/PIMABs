@@ -1,6 +1,6 @@
 # Exps
 
-Contains code for running and analyzing a large number of experiments.
+Contains code for running and analyzing a large number of experiments. This subdir is not fully documented yet.
 
 ## Usage
 

@@ -12,29 +12,38 @@ import importlib
 import multiprocessing as mp
 import traceback
 import os
+import argparse
 import numpy as np
 import copy  # Do not delete, used when doing things asynchronously below
 from mnist import MNIST
 
 
 import sys
-
 sys.path.append("..")
 from utils import get_args, get_logfile_name, remap_args
 from matching_pursuit_algs import matching_pursuit, bandit_matching_pursuit
 
 
-def get_minst_data():
-    mnist_data = MNIST("/Users/motiwari/PycharmProjects/PIMABs/data/samples")
+def get_minst_data() -> np.ndarray:
+    """
+    Load the MNIST images as a numpy array
+    :return: numpy array containing the images
+    """
+    mnist_data = MNIST("/Users/motiwari/PycharmProjects/PIMABs/data/samples")  # Dear Apratim, I am so sorry for hardcoding this
     images, labels = mnist_data.load_training()
     images = np.array(images, dtype=np.float32)
     return images
 
 
-def run_exp(args, method_name, mnist_imgs):
+def run_exp(args: argparse.Namespace, method_name: str, mnist_imgs: np.ndarray) -> None:
     """
     Runs an experiment with the given parameters, and writes the results to the
-    files.
+    files. I seem to have modified this to play around with MNIST images?
+    It looks like it can be used to generate random data by uncommenting/commenting some of the lines
+
+    :param args: arguments of experiments to run
+    :param method_name: which method to call, bandit_matching_pursuit or matching_pursuit
+    :param mnist_imgs: numpy array of MNIST images
     """
     np.random.seed(args.seed)
     # data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
@@ -53,7 +62,7 @@ def run_exp(args, method_name, mnist_imgs):
     method_name(input_signal=signal, atoms=atoms, args=args)
 
 
-def main():
+def main() -> None:
     """
     Run all the experiments in the experiments lists specified by the -e
     argument, and write the final results (including logstrings) to files. Can
