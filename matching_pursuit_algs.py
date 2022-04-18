@@ -1,9 +1,9 @@
 import copy
 import numpy as np
 import argparse
-from typing import List, Tuple
+from typing import Tuple
 
-from utils import get_logfile_name, write_log, conv_to_str
+from utils import write_log
 from constants import NUM_STDS
 
 
