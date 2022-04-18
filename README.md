@@ -8,7 +8,7 @@ that Bandit Matching Pursuit is returning the correct results.
 ## Description of files
 
 - `matching_pursuit_algs.py`: Contains the two algorithms for the matching pursuit problem, canonical Matching Pursuit and Bandit Matching Pursuit
-- `mp_tests.py`: 
+- `mp_tests.py`: Runs a variety of tests comparing Bandit Matching Pursuit to Matching Pursuit
 - `utils.py`: some helper functions used to run experiments
 - `constants.py`: for some constants used in the various algorithms
 - `Book1.xlsx`: I'm not really sure, but it looks like this contained some experimental results for running BanditMP for
