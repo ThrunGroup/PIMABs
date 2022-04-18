@@ -18,13 +18,13 @@ def main() -> None:
 
     :return: None
     """
-    # Algorithms to run: Bandit Matching Pursuit and/or Matching Pursuit
+    # Algorithms to run: Bandit Matching Pursuit (B_MP) and/or Matching Pursuit (MP)
     algos = ["B_MP"]  # ], "MP"]
 
     # Number of atoms to use
     Ns = [783]
 
-    # Dimensionality of vectors to use
+    # Dimensionalities of vectors to use
     ds = [
         100,
         200,

@@ -4,21 +4,15 @@ In particular, plots the scaling of B_MP vs. d for various dimension sizes d.
 Used to demonstrate O(dlogd) scaling.
 """
 
-import sys
 import os
-import pstats
 import numpy as np
-import scipy as sp
-import scipy.stats
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import itertools
-import snakevizcode
 from sklearn.linear_model import LinearRegression
 
 import sys
-
 sys.path.append("..")
 from utils import get_args, get_logfile_name, remap_args
 

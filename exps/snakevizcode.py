@@ -3,8 +3,6 @@ Code to parse the profile stats dumped by cProfile.Profile()'s dump_stats method
 Taken from https://github.com/jiffyclub/snakeviz/blob/4b5ffeec596db4462d4ff219151832951d273bf4/snakeviz/stats.py
 """
 
-from __future__ import division
-
 import os.path
 
 from itertools import chain
