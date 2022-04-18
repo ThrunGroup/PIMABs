@@ -3,13 +3,17 @@ import numpy as np
 from utils import get_logfile_name
 from constants import NUM_STDS
 
-def conv_to_str(input_):
-    return ', '.join(map(str, map(lambda num: np.round(num, decimals=5), input_)))
 
-def write_log(args, stats, coefs, init_signal_norm, final_signal_norm, total_cost, bandit):
+def conv_to_str(input_):
+    return ", ".join(map(str, map(lambda num: np.round(num, decimals=5), input_)))
+
+
+def write_log(
+    args, stats, coefs, init_signal_norm, final_signal_norm, total_cost, bandit
+):
     nonzero_coefs = list(np.where(np.abs(coefs) > 0)[0])
     nonzero_weights = list(coefs[nonzero_coefs])
-    with open(get_logfile_name(args, bandit), 'w+') as fout:
+    with open(get_logfile_name(args, bandit), "w+") as fout:
         fout.write("Total cost: " + str(total_cost) + "\n")
         fout.write("Final answer:\n")
         fout.write("Nonzero indcs: " + conv_to_str(nonzero_coefs) + "\n")
@@ -20,6 +24,7 @@ def write_log(args, stats, coefs, init_signal_norm, final_signal_norm, total_cos
             fout.write(conv_to_str(row))
             fout.write("\n")
         fout.write("Final signal norm: " + str(final_signal_norm) + "\n")
+
 
 def matching_pursuit(input_signal, atoms, args):
     """
@@ -38,7 +43,7 @@ def matching_pursuit(input_signal, atoms, args):
     assert np.allclose(np.linalg.norm(atoms, axis=1), np.ones(D))
     # Find maximum inner product atom
     norm_decreased = True
-    #while norm_decreased and np.linalg.norm(signal) > 0:
+    # while norm_decreased and np.linalg.norm(signal) > 0:
     for _iter in range(args.max_iter):
         # Stop if the signal is ~0
         if np.linalg.norm(signal) < args.residue:
@@ -47,16 +52,24 @@ def matching_pursuit(input_signal, atoms, args):
         ips = np.abs(atoms @ signal)
         best_idx = np.argmax(ips)
         coef = np.dot(atoms[best_idx], signal)
-        counter += D*d
+        counter += D * d
         # TODO: Need to implement signs for negative (look at ABOSOLUTE value of dot product)
         if np.abs(coef) > args.tol:
             coefs[best_idx] += coef
-            signal -= coef*atoms[best_idx]
+            signal -= coef * atoms[best_idx]
         else:
             norm_decreased = False
         stat = [np.linalg.norm(signal), best_idx, coef, coefs[best_idx]]
         stats.append(stat)
-    write_log(args, stats, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), counter, bandit=False)
+    write_log(
+        args,
+        stats,
+        coefs,
+        np.linalg.norm(input_signal),
+        np.linalg.norm(signal),
+        counter,
+        bandit=False,
+    )
     return coefs, counter
 
 
@@ -81,7 +94,9 @@ def get_sigmas(signal, atoms, args):
     # NOTE: EXTREMELY IMPORTANT: We multiply by a np.sqrt(d) here because the np.std(...) expression assumes
     # the r.v. under consideration is the COORDINATE-WISE product, whereas in the b_matching_pursuit algorithm,
     # the r.v. under consideration is the TOTAL inner product.
-    sigmas = np.sqrt(d) * np.std(np.abs(atoms[:, sample_dims]*signal_sampled), axis=1)  # Implicit broadcasting of *sampled_signal
+    sigmas = np.sqrt(d) * np.std(
+        np.abs(atoms[:, sample_dims] * signal_sampled), axis=1
+    )  # Implicit broadcasting of *sampled_signal
     return sigmas
 
 
@@ -107,11 +122,11 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
     batch_size = min(d, batch_size)
 
     if args.p is None:
-        p = 1 / (D*d)
+        p = 1 / (D * d)
     norm_decreased = True
 
     # NOTE: Assumes signal can be expressed in terms of atoms
-    #while norm_decreased and np.linalg.norm(signal) > 0:
+    # while norm_decreased and np.linalg.norm(signal) > 0:
     for _iter in range(args.max_iter):
         # Stop if the signal is ~0
         if np.linalg.norm(signal) < args.residue:
@@ -135,7 +150,9 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
                 lcbs[compute_exactly] = ucbs[compute_exactly] = means[compute_exactly]
                 exact_mask[compute_exactly] = 1
                 T[compute_exactly] += d
-                candidates = np.setdiff1d(candidates, compute_exactly)  # Remove compute_exactly points from candidates so they're bounds don't get updated below
+                candidates = np.setdiff1d(
+                    candidates, compute_exactly
+                )  # Remove compute_exactly points from candidates so they're bounds don't get updated below
 
             if len(candidates) == 0:
                 break  # The last remaining candidates were computed exactly
@@ -143,28 +160,49 @@ def b_matching_pursuit(input_signal, atoms, args, verbosity=0):
             sample_dims = np.random.choice(np.arange(d), batch_size, replace=False)
             dims_sampled += batch_size
             signal_sampled = signal[sample_dims]
-            candidates_sampled = atoms[candidates][:, sample_dims]  # NOTE: clever indexing because atoms[candidates,sample_dims] doesn't work
-            means[candidates] = \
-                ((T[candidates] * means[candidates]) + (batch_size * np.abs(candidates_sampled @ signal_sampled))) / (batch_size + T[candidates])  # Does this np.dot do implicit broadcasting?
+            candidates_sampled = atoms[candidates][
+                :, sample_dims
+            ]  # NOTE: clever indexing because atoms[candidates,sample_dims] doesn't work
+            means[candidates] = (
+                (T[candidates] * means[candidates])
+                + (batch_size * np.abs(candidates_sampled @ signal_sampled))
+            ) / (
+                batch_size + T[candidates]
+            )  # Does this np.dot do implicit broadcasting?
             T[candidates] += batch_size
-            deltas[candidates] = NUM_STDS*sigmas[candidates] * np.sqrt(-np.log(p) / T[candidates])
+            deltas[candidates] = (
+                NUM_STDS * sigmas[candidates] * np.sqrt(-np.log(p) / T[candidates])
+            )
             ucbs[candidates] = means[candidates] + deltas[candidates]
             lcbs[candidates] = means[candidates] - deltas[candidates]
 
-            candidates = np.where((ucbs >= lcbs.max()))[0]  # NOTE: May have to change this to a > ?
+            candidates = np.where((ucbs >= lcbs.max()))[
+                0
+            ]  # NOTE: May have to change this to a > ?
 
         counter += np.sum(T)
         # Breaks exact ties with first. Also converts array to int.
-        best_idx = np.arange(D)[np.where(means == means.max())][0]  # TODO(@motiwari): Should this be mean?
+        best_idx = np.arange(D)[np.where(means == means.max())][
+            0
+        ]  # TODO(@motiwari): Should this be mean?
         norm_decreased = False
         coef = np.dot(atoms[best_idx], signal)
-        if np.abs(coef) > args.tol:  # Verify that the *actual* (not estimated) dot product is nontrivial
+        if (
+            np.abs(coef) > args.tol
+        ):  # Verify that the *actual* (not estimated) dot product is nontrivial
             coefs[best_idx] += coef
             signal -= coef * atoms[best_idx]
             norm_decreased = True
         stat = [np.linalg.norm(signal), best_idx, coef, coefs[best_idx]]
         stats.append(stat)
     counter = int(counter)  # The np.sum() promotes it to double above
-    write_log(args, stats, coefs, np.linalg.norm(input_signal), np.linalg.norm(signal), int(counter), bandit=True)
+    write_log(
+        args,
+        stats,
+        coefs,
+        np.linalg.norm(input_signal),
+        np.linalg.norm(signal),
+        int(counter),
+        bandit=True,
+    )
     return coefs, counter
-

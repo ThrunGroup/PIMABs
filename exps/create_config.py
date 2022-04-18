@@ -1,16 +1,18 @@
-'''
+"""
 Convenience code to automatically generate a list of experiments to run.
 Default output is to auto_exp_config.py.
-'''
+"""
 
 import itertools
 
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 from utils import write_exp
 
+
 def main():
-    algos = ["B_MP"]#], "MP"]
+    algos = ["B_MP"]  # ], "MP"]
     Ns = [783]
     ds = [
         100,
@@ -31,8 +33,10 @@ def main():
     tols = [1e-2]
     residues = [1e-2]
 
-    exps = itertools.product(algos, Ns, ds, seeds, ps, batch_sizes, max_iters, tols, residues)
-    with open('auto_exp_config.py', 'w+') as fout:
+    exps = itertools.product(
+        algos, Ns, ds, seeds, ps, batch_sizes, max_iters, tols, residues
+    )
+    with open("auto_exp_config.py", "w+") as fout:
         fout.write("experiments = [\n")
         for e in exps:
             exp = write_exp(*e)

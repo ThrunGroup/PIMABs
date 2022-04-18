@@ -1,11 +1,11 @@
-'''
+"""
 This script contains scaffolding to run many experiments, listed in a config
 file such as auto_exp_config.py.
 
 This script will parse each line (= exp configuration) from the config file and
 run the corresponding experiment. It can also run many experiments in parallel
 by using the pool.apply_async calls instead of the explicit run_exp calls.
-'''
+"""
 
 import cProfile
 import importlib
@@ -17,29 +17,35 @@ import copy  # Do not delete, used when doing things asynchronously below
 from mnist import MNIST
 
 
-
 import sys
-sys.path.append('..')
+
+sys.path.append("..")
 from utils import get_args, get_logfile_name, remap_args
 from matching_pursuit_algs import matching_pursuit, b_matching_pursuit
 
+
 def get_minst_data():
-    mnist_data = MNIST('/Users/motiwari/PycharmProjects/PIMABs/data/samples')
+    mnist_data = MNIST("/Users/motiwari/PycharmProjects/PIMABs/data/samples")
     images, labels = mnist_data.load_training()
     images = np.array(images, dtype=np.float32)
     return images
 
+
 def run_exp(args, method_name, mnist_imgs):
-    '''
+    """
     Runs an experiment with the given parameters, and writes the results to the
     files.
-    '''
+    """
     np.random.seed(args.seed)
     # data = 2 * np.random.rand(args.N + 1, args.d) - 1  # + 1 to generate the signal
 
     data = np.transpose(mnist_imgs) / 255
-    data = data[np.random.choice(range(784), args.N + 1, replace=False)]  # Select random dimensions
-    data = data[:, np.random.choice(range(60000), args.d, replace=False)]  # + 1 to generate the signal
+    data = data[
+        np.random.choice(range(784), args.N + 1, replace=False)
+    ]  # Select random dimensions
+    data = data[
+        :, np.random.choice(range(60000), args.d, replace=False)
+    ]  # + 1 to generate the signal
 
     data /= np.linalg.norm(data, axis=1).reshape(-1, 1)  # Normalize signal too?
     signal = data[0]
@@ -48,20 +54,20 @@ def run_exp(args, method_name, mnist_imgs):
 
 
 def main():
-    '''
+    """
     Run all the experiments in the experiments lists specified by the -e
     argument, and write the final results (including logstrings) to files. Can
     run multiple experiments in parallel by using the pool.apply_async calls
     below instead of the explicit run_exp calls.
-    '''
+    """
     args = get_args()  # Uses default values for now as placeholder to instantiate args
-    imported_config = importlib.import_module(args.exp_config.strip('.py'))
+    imported_config = importlib.import_module(args.exp_config.strip(".py"))
     mnist_imgs = get_minst_data()
 
     pool = mp.Pool()
     for exp in imported_config.experiments:
         args = remap_args(args, exp)
-        bandit = (exp[0] == 'B_MP')
+        bandit = exp[0] == "B_MP"
         logfile = os.path.join(get_logfile_name(args, bandit=bandit))
         if os.path.exists(logfile) and not args.force:
             print("Warning: already have data for experiment", logfile)
@@ -69,7 +75,7 @@ def main():
         else:
             print("Running exp:", logfile)
 
-        '''
+        """
         WARNING: The apply_async calls below are NOT threadsafe. In particular,
         strings in python are lists, which means they are passed by reference.
         This means that if a NEW thread gets the SAME reference as the other
@@ -78,16 +84,16 @@ def main():
         all the arguments. Don't need to do this for the explicit run_exp calls
         though since those references are used appropriately (executed
         sequentially)
-        '''
+        """
         try:
-            if exp[0] == 'MP':
+            if exp[0] == "MP":
                 # pool.apply_async(run_exp, args=(copy.deepcopy(args), matching_pursuit, copy.deepcopy(logfile)+'-profile'))  # Copy inline to copy OTF
                 run_exp(args, matching_pursuit, mnist_imgs)
-            elif exp[0] == 'B_MP':
+            elif exp[0] == "B_MP":
                 # pool.apply_async(run_exp, args=(copy.deepcopy(args), b_matching_pursuit, copy.deepcopy(logfile)+'-profile-b'))  # Copy inline to copy OTF
                 run_exp(args, b_matching_pursuit, mnist_imgs)
             else:
-                raise Exception('Invalid algorithm specified')
+                raise Exception("Invalid algorithm specified")
         except Exception as _e:
             print(traceback.format_exc())
 

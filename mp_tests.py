@@ -3,13 +3,16 @@ from matching_pursuit_algs import matching_pursuit, b_matching_pursuit
 
 from utils import get_args
 
+
 def test_case_1(args):
     dim = 5
     signal = np.ones(dim)
-    atoms = np.array([
-        np.ones(dim) / np.sqrt(5),
-        [0, 1, 0, 0, 1] / np.sqrt(2),
-    ])
+    atoms = np.array(
+        [
+            np.ones(dim) / np.sqrt(5),
+            [0, 1, 0, 0, 1] / np.sqrt(2),
+        ]
+    )
     coefs, counter = matching_pursuit(signal, atoms, args)
     assert np.allclose(coefs, np.array([2.23606798, 0]))
     assert counter == 10
@@ -20,11 +23,13 @@ def test_case_1(args):
 
 
 def test_case_2(args):
-    signal = np.array([1., 0, 1, 0, 1, 0, 1])
-    atoms = np.array([
-        np.array([1., 0, 1, 0, 1, 0, 1]) / 2,
-        np.array([0, 1., 0, 1, 0, 1, 0]) / np.sqrt(3),
-    ])
+    signal = np.array([1.0, 0, 1, 0, 1, 0, 1])
+    atoms = np.array(
+        [
+            np.array([1.0, 0, 1, 0, 1, 0, 1]) / 2,
+            np.array([0, 1.0, 0, 1, 0, 1, 0]) / np.sqrt(3),
+        ]
+    )
     coefs, counter = matching_pursuit(signal, atoms, args)
     assert np.allclose(coefs, np.array([2, 0]))
     assert counter == 14
@@ -35,12 +40,14 @@ def test_case_2(args):
 
 
 def test_case_3(args):
-    signal = np.array([1., 1, 1, 0, 1, 0, 1])
-    atoms = np.array([
-        np.array([1., 0, 1, 0, 1, 0, 1]) / 2,
-        np.array([0, 1., 0, 1, 0, 1, 0]) / np.sqrt(3),
-        np.array([0, 1., 0, 0, 0, 0, 0]),
-    ])
+    signal = np.array([1.0, 1, 1, 0, 1, 0, 1])
+    atoms = np.array(
+        [
+            np.array([1.0, 0, 1, 0, 1, 0, 1]) / 2,
+            np.array([0, 1.0, 0, 1, 0, 1, 0]) / np.sqrt(3),
+            np.array([0, 1.0, 0, 0, 0, 0, 0]),
+        ]
+    )
     coefs, counter = matching_pursuit(signal, atoms, args)
     assert np.allclose(coefs, np.array([2, 0, 1]))
     assert counter == 42
@@ -66,8 +73,8 @@ def test_case_4(args):
     print(np.where(np.abs(b_coefs) > args.tol))
     print(b_coefs[np.where(np.abs(b_coefs) > args.tol)])
     print(b_counter)
-    #assert np.allclose(coefs, b_coefs)
-    #print("Asserted all coefficients are close in Test Case 4")
+    # assert np.allclose(coefs, b_coefs)
+    # print("Asserted all coefficients are close in Test Case 4")
 
 
 def main(args):
@@ -78,7 +85,7 @@ def main(args):
     test_case_4(args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = get_args()
     main(args)
     print("All tests pass")

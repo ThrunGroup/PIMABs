@@ -2,14 +2,17 @@ import numpy as np
 import os
 import argparse
 
+
 def get_args():
     parser = argparse.ArgumentParser(description="Solve MIPS problem")
     parser.add_argument("--get_ground_truth", default=False, action="store_true")
     parser.add_argument("--debug", default=False, action="store_true")
     return parser.parse_args()
 
+
 def load_data(fname):
     return np.load(fname)
+
 
 def bandit_solve(root, data):
     # Each point in data consists of an "arm"
@@ -54,6 +57,6 @@ def main(args):
         return best_p, mip
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = get_args()
     print(main(args))
