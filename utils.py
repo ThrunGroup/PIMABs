@@ -98,11 +98,11 @@ def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue) -> str:
     :return: string representation of list of arguments
     """
     return (
-        "\t["
-        + ", ".join(
-            map(str, [q(algo), N, d, seed, p, batch_size, max_iter, tol, residue])
-        )
-        + "],\n"
+            "\t["
+            + ", ".join(
+        map(str, [q(algo), N, d, seed, p, batch_size, max_iter, tol, residue])
+    )
+            + "],\n"
     )
 
 
@@ -117,13 +117,13 @@ def conv_to_str(input_: List[int]) -> str:
 
 
 def write_log(
-    args: argparse.Namespace,
-    stats: List,  # Actually a List[List[np.ndarray, int, int, float]]
-    coefs: np.ndarray,
-    init_signal_norm: float,
-    final_signal_norm: float,
-    total_cost: int,
-    bandit: bool,
+        args: argparse.Namespace,
+        stats: List,  # Actually a List[List[np.ndarray, int, int, float]]
+        coefs: np.ndarray,
+        init_signal_norm: float,
+        final_signal_norm: float,
+        total_cost: int,
+        bandit: bool,
 ):
     """
     Writes a logfile containing information about the experiment. The logfile contains information that is very useful
@@ -182,3 +182,31 @@ def get_logfile_name(args: argparse.Namespace, bandit=True) -> str:
         + str(args.tol)
         + suffix,
     )
+
+
+def welford_variance_calc(
+    n1: int, mean1: float, var1: float, n2: int, mean2: float, var2: float
+) -> float:
+    """
+    Calculate the variance of A U B given |A|, |B|, mean(A), mean(B), var(A), and var(B). See
+    https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+    """
+    if var1 == 0:
+        return var2
+    elif var2 == 0:
+        return var1
+
+    n = n1 + n2
+    delta = mean1 - mean2
+    M1 = n1 * var1
+    M2 = n2 * var2
+    M = M1 + M2 + (delta ** 2) * (n1 * n2) / n
+    return M / n
+
+
+def get_wo_variance(elems: np.ndarray, pop_size: int) -> np.ndarray:
+    """
+    Find sample variance of elements that are sample without replacement
+    """
+    FPC = (1 - len(elems) / pop_size)  # Finite Population Correction constant
+    return np.var(elems) / len(elems) * FPC

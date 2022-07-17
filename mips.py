@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from typing import Callable, Tuple
-from constants import MEDIAN_ELIMINATION, ADVERSARIAL_CUSTOM
+from constants import ADVERSARIAL_CUSTOM, MEDIAN_ELIMINATION, SUCCESSIVE_ELIMINATION
+from utils import welford_variance_calc, get_wo_variance
 
 
 def mips_bandit(
@@ -120,6 +121,46 @@ def mips_bandit(
         if verbose:
             print(f"budget is {budget}")
         return candidates, budget
+    elif bandit_alg is SUCCESSIVE_ELIMINATION:
+        num_items = items_data.shape[0]
+        len_query = items_data.shape[1]
+        candidates = np.arange(num_items)
+        lcbs = -np.inf * np.ones(num_items)  # lower confidence bounds of arm returns
+        ucbs = np.inf * np.ones(num_items)  # upper confidence bounds of arm returns
+        estimates = np.zeros(num_items)  # estimated means of arm returns
+        variances = np.zeros(num_items)  # variance of the mean of arm returns
+        deltas = np.zeros(
+            num_items
+        )  # the half-widths of the confidence intervals (ucb = mean + delta, lcb = mean - delta)
+        population_idcs = np.arange(num_items)  # Indices of items population that are not sampled
+        batch_size = 30  # Hard-coded
+        t = 0  # Time step
+        while len(candidates) > num_best_items:
+            if not is_experiment:
+                idcs = rng.choice(
+                    len_query - t * batch_size, batch_size, replace=False,
+                )
+            else:
+                # With an adversarial dataset, wan do a worst-case experiment by not shuffling a data
+                # Ex) items_data = np.transpose(np.array([[0, 0, 0, 0, 1, 1, 1, 1],
+                #                                         [1, 1, 1, 1, 0, 0, 0, 0]])
+                #     query = np.ones(8)
+                #
+                #     In this case, sampling without shuffling will cause a poor performance since
+                #     a first few elements of each item doesn't represent their distribution well.
+                #     So, it's a worst case scenario.
+                idcs = np.arange(batch_size, dtype=np.int64)
+            sample_idcs = population_idcs[idcs]
+            population_idcs = np.delete(population_idcs, idcs)
+            sampled_returns = items_data[:, sample_idcs][candidates] * np.expand_dims(query[sample_idcs], 0)
+
+            estimates = (estimates * batch_size * t + np.mean(sampled_returns, axis=1)) / ((t + 1) * batch_size)
+            ##### More to implement
+
+
+
+
+
     else:
         raise NotImplementedError(f"{bandit_alg} is not implemented.")
 
