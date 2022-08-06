@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from typing import List
 from sklearn.linear_model import LinearRegression
 
-from constants import COLORS
+from utils.constants import COLORS
 
 
 def get_args() -> argparse.Namespace:

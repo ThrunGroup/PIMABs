@@ -1,6 +1,6 @@
 import numpy as np
 
-from constants import HOEFFDING, ACTION_ELIMINATION
+from utils.constants import HOEFFDING
 
 
 def get_ci(

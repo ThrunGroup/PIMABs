@@ -2,7 +2,7 @@ import numpy as np
 import math
 from typing import Tuple
 
-from constants import (
+from utils.constants import (
     BATCH_SIZE,
     ADVERSARIAL_CUSTOM,
     NORMAL_CUSTOM,

@@ -4,7 +4,7 @@ import argparse
 from typing import Tuple
 
 from utils.utils import write_log
-from constants import NUM_STDS
+from utils.constants import NUM_STDS
 
 
 def matching_pursuit(
