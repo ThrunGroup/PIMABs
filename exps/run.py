@@ -29,7 +29,7 @@ def get_minst_data() -> np.ndarray:
     :return: numpy array containing the images
     """
     mnist_data = MNIST(
-        "/Users/motiwari/PycharmProjects/PIMABs/data/samples"
+        "/data/mnist"
     )  # Dear Apratim, I am so sorry for hardcoding this
     images, labels = mnist_data.load_training()
     images = np.array(images, dtype=np.float32)

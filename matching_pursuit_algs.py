@@ -151,7 +151,7 @@ def bandit_matching_pursuit(
             signal, atoms, args
         )  # empirical estimates of standard deviations of arm returns
 
-        # TODO: Add exact computation if total samples too big
+        # TODO: Add exact computation if total mnist too big
         # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
         # TODO: Don't let old candidates come back?
         # TODO: Change this to > 2, since if there is only one candidate left it will be the leader

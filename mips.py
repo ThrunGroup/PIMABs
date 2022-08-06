@@ -41,7 +41,7 @@ def action_elimination(
     lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
     ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
     means = np.zeros(D)  # estimated means of arm returns
-    # TODO: Add exact computation if total samples too big
+    # TODO: Add exact computation if total mnist too big
     # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
     # TODO: Don't let old candidates come back?
     # TODO: Change this to > 2, since if there is only one candidate left it will be the leader
@@ -199,21 +199,21 @@ def median_elimination(
     population_idcs = np.arange(len_signal)
     new_epsilon = epsilon / 4
     new_delta = delta / 2
-    prev_T = 0  # A helper variable for calculating the optimal number of samples in each round
+    prev_T = 0  # A helper variable for calculating the optimal number of mnist in each round
     total_num_samples = 0
     budget = 0  # Total number of calculations
 
     # U = (math.log(1 / delta) * (maxmin[0] - maxmin[1]) ** 2) / (2 * epsilon ** 2)
     def m(u):
         """
-        A helper function for calculating the optimal number of samples
+        A helper function for calculating the optimal number of mnist
         """
         return min(
             (u + 1) / (1 + u / len_signal), (u + u / len_signal) / (1 + u / len_signal),
         )
 
     while len(candidates) > num_best_atoms:
-        # Calculate the optimal number of samples in the current round
+        # Calculate the optimal number of mnist in the current round
         new_T = m(
             2
             * math.log(
@@ -365,7 +365,7 @@ def fixed_confidence_exp(
     :param bandit_alg: A name of bandit algorithm
     :param num_experiments: Number of experiments for each fixed confidence setting.
     :param verbose: verbosity of function
-    :param with_replacement: Whether the algorithm samples with replacement
+    :param with_replacement: Whether the algorithm mnist with replacement
     """
     if generate_data == ADVERSARIAL_CUSTOM:
         generate_data = generate_adversarial_data

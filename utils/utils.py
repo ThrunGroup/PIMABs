@@ -8,7 +8,6 @@ from sklearn.linear_model import LinearRegression
 from constants import COLORS
 
 
-
 def get_args() -> argparse.Namespace:
     """
     Gather the experimental arguments from the command line.
