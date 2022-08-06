@@ -7,7 +7,7 @@ import itertools
 import sys
 
 sys.path.append("..")
-from utils import write_exp
+from utils.utils import write_exp
 
 
 def main() -> None:

@@ -15,7 +15,7 @@ from sklearn.linear_model import LinearRegression
 
 import sys
 sys.path.append("..")
-from utils import get_args, get_logfile_name, remap_args
+from utils.utils import get_args, get_logfile_name, remap_args
 
 
 def verify_correctness() -> None:

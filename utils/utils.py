@@ -1,7 +1,12 @@
 import os
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
 from typing import List
+from sklearn.linear_model import LinearRegression
+
+from constants import COLORS
+
 
 
 def get_args() -> argparse.Namespace:
@@ -163,7 +168,7 @@ def get_logfile_name(args: argparse.Namespace, bandit=True) -> str:
     """
     suffix = "-bmp" if bandit else ""
     return os.path.join(
-        "logs",
+        "../logs",
         "N-"
         + str(args.N)
         + "-d-"
@@ -182,3 +187,97 @@ def get_logfile_name(args: argparse.Namespace, bandit=True) -> str:
         + str(args.tol)
         + suffix,
     )
+
+
+def welford_variance_calc(
+    n1: int, mean1: float, var1: float, n2: int, mean2: float, var2: float
+) -> float:
+    """
+    Calculate the variance of A U B given |A|, |B|, mean(A), mean(B), var(A), and var(B). See
+    https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+    """
+    if var1 == 0:
+        return var2
+    elif var2 == 0:
+        return var1
+
+    n = n1 + n2
+    delta = mean1 - mean2
+    M1 = n1 * var1
+    M2 = n2 * var2
+    M = M1 + M2 + (delta ** 2) * (n1 * n2) / n
+    return M / n
+
+
+def vectorize_welford(
+    n1_vec: np.ndarray,
+    mean1_vec: np.ndarray,
+    var1_vec: np.ndarray,
+    n2_vec: np.ndarray,
+    mean2_vec: np.ndarray,
+    var2_vec: np.ndarray,
+) -> np.ndarray:
+    """
+    A vectorized(1-dimensional) version of the function "welford_veriance_calc"
+    """
+    n_vec = n1_vec + n2_vec
+    delta_vec = mean1_vec - mean2_vec
+    M1_vec = n1_vec * var1_vec
+    M2_vec = n2_vec * var2_vec
+    var_vec = M1_vec + M2_vec + (delta_vec ** 2) * (n1_vec * n2_vec) / (n_vec ** 2)
+    return np.nan_to_num(var_vec, posinf=0, neginf=0)
+
+
+def get_wo_variance(elems: np.ndarray, pop_size: int) -> np.ndarray:
+    """
+    Find sample variance of elements that are sample without replacement
+    """
+    FPC = 1 - len(elems) / pop_size  # Finite Population Correction constant
+    return np.var(elems) / len(elems) * FPC
+
+
+def subset_2d(array: np.ndarray, rows: np.ndarray, columns: np.ndarray) -> np.ndarray:
+    """
+    Get the subset of arrays with the indices of the cartesian product of rows and columns
+    """
+    return array[np.repeat(rows, len(columns)), np.tile(columns, len(rows))].reshape(
+        (len(rows), len(columns))
+    )
+
+
+def fit_and_plot(
+    xs: np.ndarray,
+    ys: np.ndarray,
+    function_list: List[np.ufunc],
+    function_name_list: List[str],
+) -> None:
+    """
+    Fit xs, ys to function and plot the points and curve.
+
+    :param xs: Input array
+    :param ys: Output array
+    :param function_list: List of functions
+    :param function_name_list: List of function name
+    """
+    lr = LinearRegression()
+    hashes = np.linspace(xs[0], xs[-1], 5000)
+    for idx in range(len(function_list)):
+        function = function_list[idx]
+        function_name = function_name_list[idx]
+        lr.fit(function(xs).reshape(-1, 1), ys)  # Fit xs, ys into function
+
+        xs_predict = lr.predict(function(xs).reshape(-1, 1))
+        hashes_predict = lr.predict(function(hashes).reshape(-1, 1))
+        mean_ys = np.mean(ys)
+        r2 = 1 - ((xs_predict - ys) ** 2).sum() / ((ys - mean_ys) ** 2).sum()
+        plt.plot(
+            hashes,
+            hashes_predict,
+            color=COLORS[idx],
+            label=f"{function_name} fit,  $R^2 = {r2}",
+        )
+    plt.scatter(xs, ys, color="black")
+    plt.ylabel("Number of calculations for MIPS")
+    plt.xlabel("signal vector size")
+    plt.legend(loc="upper left")
+    plt.show()

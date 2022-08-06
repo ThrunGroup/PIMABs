@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from typing import Tuple
 
-from utils import write_log
+from utils.utils import write_log
 from constants import NUM_STDS
 
 
@@ -21,7 +21,9 @@ def matching_pursuit(
     :return: vector of length len(atoms) with coefficients produced by matching pursuit
     """
     # stats will contain a set of lists to write to logfile.
-    # Each child list contains the new norm of the signal, the index of the best atom, the coefficient of the residue with the best atom in this iteration, and the total coefficient of that atom (which may also contain coefficients from previous rounds)
+    # Each child list contains the new norm of the signal, the index of the best atom, the coefficient of the residue
+    # with the best atom in this iteration, and the total coefficient of that atom (which may also contain coefficients
+    # from previous rounds)
     stats = []
     signal = copy.deepcopy(input_signal)
     counter = 0  # Number of coordinate-wise multiplications performed
@@ -98,7 +100,6 @@ def get_sigmas(
     )  # Implicit broadcasting of * sampled_signal
     return sigmas
 
-
 def bandit_matching_pursuit(
     input_signal: np.ndarray,
     atoms: np.ndarray,
@@ -155,7 +156,6 @@ def bandit_matching_pursuit(
         # TODO: Don't let old candidates come back?
         # TODO: Change this to > 2, since if there is only one candidate left it will be the leader
         while len(candidates) > 1:
-
             # Figure out which arms would have more than d sample coordinates drawn in the next batch, and just compute
             # them exactly. This keeps the computation O(d) for arms that may be arbitrarily close to the leader.
             compute_exactly = np.where((T + batch_size >= d) & (exact_mask == 0))[0]

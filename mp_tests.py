@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 from matching_pursuit_algs import matching_pursuit, bandit_matching_pursuit
-from utils import get_args
+from utils.utils import get_args
 
 
 def test_case_1(args: argparse.Namespace) -> None:

@@ -7,21 +7,19 @@ run the corresponding experiment. It can also run many experiments in parallel
 by using the pool.apply_async calls instead of the explicit run_exp calls.
 """
 
-import cProfile
 import importlib
 import multiprocessing as mp
 import traceback
 import os
 import argparse
 import numpy as np
-import copy  # Do not delete, used when doing things asynchronously below
 from mnist import MNIST
 
 
 import sys
 
 sys.path.append("..")
-from utils import get_args, get_logfile_name, remap_args
+from utils.utils import get_args, get_logfile_name, remap_args
 from matching_pursuit_algs import matching_pursuit, bandit_matching_pursuit
 
 
