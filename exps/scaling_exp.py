@@ -14,6 +14,11 @@ from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
 from data.custom_data import generate_normal_data, generate_adversarial_data
 
+from algorithms.mips_bandit import mips_bandit
+from algorithms.median_elimination import median_elimination
+from algorithms.action_elimination import action_elimination
+from algorithms.adaptive_action_elimination import adaptive_action_elimination
+
 def scaling_exp(
     epsilon: float,
     delta: float,
@@ -83,5 +88,4 @@ def scaling_exp(
     budgets = np.array(budgets)
     functions = [np.array, np.sqrt, np.log]
     function_names = ["Linear", "Sqrt", "Logarithm"]
-
     fit_and_plot(sizes_signal, budgets, functions, function_names)

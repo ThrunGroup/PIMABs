@@ -2,7 +2,7 @@ import numpy as np
 import math
 from typing import Tuple
 
-from mips.utils.constants import (
+from utils.constants import (
     BATCH_SIZE,
     ADVERSARIAL_CUSTOM,
     NORMAL_CUSTOM,
@@ -13,6 +13,10 @@ from mips.utils.constants import (
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
 from data.custom_data import generate_normal_data, generate_adversarial_data
+
+from scaling_exp import scaling_exp
+from fixed_confidence_exp import fixed_confidence_exp
+
 
 
 if __name__ == "__main__":

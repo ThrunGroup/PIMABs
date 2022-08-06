@@ -273,10 +273,10 @@ def fit_and_plot(
             hashes,
             hashes_predict,
             color=COLORS[idx],
-            label=f"{function_name} fit,  $R^2 = {r2}",
+            label=f"{function_name} fit,  $R^2 = {r2:.4f}$",
         )
     plt.scatter(xs, ys, color="black")
     plt.ylabel("Number of calculations for MIPS")
     plt.xlabel("signal vector size")
-    plt.legend(loc="upper left")
+    plt.legend(loc="lower right")
     plt.show()
