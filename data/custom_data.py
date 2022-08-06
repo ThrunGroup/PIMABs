@@ -2,43 +2,53 @@ import numpy as np
 import math
 from typing import Tuple
 
-def generate_adversarial_data(
-    num_atoms: int = 10 ** 3, len_signal: int = 10 ** 4, seed: int = 0,
+from utils.constants import (
+    ADVERSARIAL_CUSTOM,
+    NORMAL_CUSTOM,
+    NORMAL_PAPER,
+    UNIFORM_PAPER,
+)
+
+
+def generate_custom_data(
+    num_atoms: int = 10 ** 3,
+    len_signal: int = 10 ** 4,
+    seed: int = 0,
+    data_type: str = "UNIFORM",
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Generate an adversarial dataset with given parameters. Refer to experiment (1) in "shorturl.at/adPR3".
-
-    :param num_atoms: Number of atoms (arms)
-    :param len_signal: A size of signal vector
-    :param seed: A random seed
-    :return: An adversarial dataset for MIPS problem. Returns atoms
-    (2d-array) and a signal vector(1d-array).
-    """
-    rng = np.random.default_rng(seed)
-    atoms_array = np.zeros((num_atoms, len_signal))
-    p = rng.random(num_atoms)
-    for idx in range(num_atoms):
-        atoms_array[idx][: math.floor(p[idx] * len_signal)] = 1
-    signal = np.ones(len_signal)
-    return atoms_array, signal
-
-
-def generate_normal_data(
-    num_atoms: int = 10 ** 3, len_signal: int = 10 ** 4, seed: int = 0,
-) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Generate a normal distributed rewards.
+    Generate a custom dataset described in a bandit approach to MIPS paper.
 
     :param num_atoms: Number of atoms(arms)
     :param len_signal: A size of signal vector
     :param seed: A random seed
-    :return: An adversarial dataset for MIPS problem. Returns atoms(2d-array) and a signal vector(1d-array).
+    :param data_type: The name of distribution from which data are drawn
+    :return: A synthetic dataset (vector values are drawn from Gaussian and Uniform distribution)
     """
     rng = np.random.default_rng(seed)
-    means = rng.normal(size=num_atoms)
     atoms_array = np.empty((num_atoms, len_signal))
-    for idx in range(num_atoms):
-        atoms_array[idx] = rng.normal(loc=means[idx], size=len_signal)
-    # signal = rng.normal(loc=0, size=len_signal)
-    signal = np.ones(len_signal)
+    if (
+        data_type is UNIFORM_PAPER
+    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+        atoms_array = rng.uniform(low=-1, high=1, size=(num_atoms, len_signal))
+        signal = rng.uniform(low=-1, high=1, size=len_signal)
+    elif (
+        data_type is NORMAL_PAPER
+    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+        atoms_array = rng.normal(size=(num_atoms, len_signal))  # variance proxy
+        signal = rng.uniform(low=-1, high=1, size=len_signal)
+    elif data_type is ADVERSARIAL_CUSTOM:
+        atoms_array = np.zeros((num_atoms, len_signal))
+        p = rng.random(num_atoms)
+        for idx in range(num_atoms):
+            atoms_array[idx][: math.floor(p[idx] * len_signal)] = 1
+        signal = np.ones(len_signal)
+    elif data_type is NORMAL_CUSTOM:
+        means = rng.normal(size=num_atoms)
+        atoms_array = np.empty((num_atoms, len_signal))
+        for idx in range(num_atoms):
+            atoms_array[idx] = rng.normal(loc=means[idx], size=len_signal)
+        signal = rng.normal(loc=rng.normal(), size=len_signal)
+    else:
+        raise NotImplementedError(f"{data_type} is not implemented.")
     return atoms_array, signal

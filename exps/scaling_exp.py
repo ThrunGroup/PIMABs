@@ -12,7 +12,7 @@ from utils.constants import (
 )
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
-from data.custom_data import generate_normal_data, generate_adversarial_data
+from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
 from algorithms.median_elimination import median_elimination
@@ -22,7 +22,7 @@ from algorithms.adaptive_action_elimination import adaptive_action_elimination
 def scaling_exp(
     epsilon: float,
     delta: float,
-    generate_data: str = ADVERSARIAL_CUSTOM,
+    data_type: str = ADVERSARIAL_CUSTOM,
     bandit_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = 20,
     size_minmax: Tuple[int] = (10, 10 ** 6),
@@ -36,7 +36,7 @@ def scaling_exp(
 
     :param epsilon: A epsilon (an additive error allowed)
     :param delta: A delta (an upper bound of failure probability)
-    :param generate_data: A name of data generating function
+    :param data_type: A name of data generating function
     :param bandit_alg: A name of bandit algorithm
     :param num_experiments: Number of experiments
     :param size_minmax: Minimum and Maximum of signal vector size
@@ -49,16 +49,9 @@ def scaling_exp(
         np.int64
     )
     budgets = []
-    if generate_data == ADVERSARIAL_CUSTOM:
-        generate_data = generate_adversarial_data
-        maxmin = (1, 0)
-    elif generate_data == NORMAL_CUSTOM:
-        generate_data = generate_normal_data
-        maxmin = (2, -2)
-    else:
-        raise NotImplementedError(f"{generate_data} is not implemented")
-
-    atoms, signal = generate_data(len_signal=sizes_signal[-1], seed=seed)
+    accuracy_list = []
+    atoms, signal = generate_custom_data(len_signal=sizes_signal[-1], seed=seed, data_type=data_type)
+    maxmin = (1, -1)
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
         atoms_subset, signal_subset = atoms[:, subset_indices], signal[subset_indices]
@@ -72,7 +65,7 @@ def scaling_exp(
                 1,
                 -1,
             )  # Assume that the information on element-wise product is not given.
-        _, budget = mips_bandit(
+        candidates, budget = mips_bandit(
             atoms=atoms_subset,
             signal=signal_subset,
             maxmin=maxmin,
@@ -85,7 +78,9 @@ def scaling_exp(
             with_replacement=with_replacement,
         )
         budgets.append(budget)
+        accuracy_list.append(int(np.matmul(atoms_subset, signal_subset).argmax() == candidates[0]))
     budgets = np.array(budgets)
     functions = [np.array, np.sqrt, np.log]
     function_names = ["Linear", "Sqrt", "Logarithm"]
     fit_and_plot(sizes_signal, budgets, functions, function_names)
+    print(f"Mean accuracy with {bandit_alg} for {data_type}: {np.mean(accuracy_list)}")

@@ -9,20 +9,17 @@ from utils.constants import (
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     HOEFFDING,
+    UNIFORM_PAPER,
+    NORMAL_PAPER,
 )
-from utils.utils import subset_2d, fit_and_plot
-from utils.bandit_utils import get_ci
-from data.custom_data import generate_normal_data, generate_adversarial_data
+from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
-from algorithms.median_elimination import median_elimination
-from algorithms.action_elimination import action_elimination
-from algorithms.adaptive_action_elimination import adaptive_action_elimination
 
 def fixed_confidence_exp(
     epsilons: Tuple[float],
     deltas: Tuple[float],
-    generate_data: str = ADVERSARIAL_CUSTOM,
+    data_type: str = ADVERSARIAL_CUSTOM,
     bandit_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = 20,
     verbose: bool = False,
@@ -35,19 +32,12 @@ def fixed_confidence_exp(
 
     :param epsilons: A tuple of epsilons
     :param deltas: A tuple of deltas
-    :param generate_data: A name of data generating function
+    :param data_type: A name of data generating function
     :param bandit_alg: A name of bandit algorithm
     :param num_experiments: Number of experiments for each fixed confidence setting.
     :param verbose: verbosity of function
     :param with_replacement: Whether the algorithm mnist with replacement
     """
-    if generate_data == ADVERSARIAL_CUSTOM:
-        generate_data = generate_adversarial_data
-        maxmin = (1, 0)
-    elif generate_data == NORMAL_CUSTOM:
-        generate_data = generate_normal_data
-    else:
-        raise NotImplementedError(f"{generate_data} is not implemented")
     for epsilon in epsilons:
         for delta in deltas:
             failure_counts = 0
@@ -55,7 +45,8 @@ def fixed_confidence_exp(
             for seed in range(num_experiments):
                 if verbose:
                     print(f"-seed: {seed}")
-                atoms, signal = generate_data(seed=seed)
+                atoms, signal = generate_custom_data(seed=seed, data_type=data_type)
+                maxmin = (1, -1)
                 if verbose:
                     print("--data generated")
                 true_inner_products = np.matmul(atoms, signal)

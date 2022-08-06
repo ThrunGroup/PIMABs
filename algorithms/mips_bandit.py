@@ -10,10 +10,6 @@ from utils.constants import (
     ACTION_ELIMINATION,
     HOEFFDING,
 )
-from utils.utils import subset_2d, fit_and_plot
-from utils.bandit_utils import get_ci
-from data.custom_data import generate_normal_data, generate_adversarial_data
-
 from algorithms.median_elimination import median_elimination
 from algorithms.action_elimination import action_elimination
 from algorithms.adaptive_action_elimination import adaptive_action_elimination

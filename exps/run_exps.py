@@ -8,15 +8,9 @@ from utils.constants import (
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
-    HOEFFDING,
+    NORMAL_PAPER,
 )
-from utils.utils import subset_2d, fit_and_plot
-from utils.bandit_utils import get_ci
-from data.custom_data import generate_normal_data, generate_adversarial_data
-
 from scaling_exp import scaling_exp
-from fixed_confidence_exp import fixed_confidence_exp
-
 
 
 if __name__ == "__main__":
@@ -39,7 +33,7 @@ if __name__ == "__main__":
         0.1,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
-        generate_data=NORMAL_CUSTOM,
+        data_type=NORMAL_PAPER,
         bandit_alg=ACTION_ELIMINATION,
         with_replacement=False,
         is_normalize=False,
@@ -49,7 +43,7 @@ if __name__ == "__main__":
         0.1,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
-        generate_data=NORMAL_CUSTOM,
+        data_type=NORMAL_PAPER,
         bandit_alg=ACTION_ELIMINATION,
         with_replacement=True,
         is_normalize=False,
@@ -59,7 +53,7 @@ if __name__ == "__main__":
         0.1,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
-        generate_data=NORMAL_CUSTOM,
+        data_type=NORMAL_PAPER,
         bandit_alg=MEDIAN_ELIMINATION,
         is_normalize=False,
     )
