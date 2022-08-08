@@ -21,15 +21,6 @@ class Hash:
     def hash(self, vec):
         pass
 
-    @staticmethod
-    def distance(u, v):
-        """
-        Computes the Euclidean Distance. This is the distance that the nearest neighbor search
-        is trying to minimize
-        """
-        return len(u) * 2, sum((ux - vx) ** 2 for ux, vx in zip(u, v)) ** 0.5
-
-
 
 class SymmetricLsh(Hash):
     """
@@ -110,33 +101,20 @@ class LshWrapper:
             for i, row in enumerate(self.data):
                 hash_dict[hash_class.hash(row)].append(i)
 
-    def query(self, q):
+    def query(self, q, top_k=1):
         """
         Return the best candidate and budget of MIPS. Here, budget is the number of cells that were used in MIPS where
-        cells equals x_{ij} (i.e. a single element in a vector).
+        cells equals x_{ij} (i.e. a single element in a vector). This function returns the row ind(ex/ices) of the best
+        candidate.
         """
         budget = 0
-        candidates = set()
+        candidates = set()      # this prevents duplicate indices
         for hash_class, hash_dict in self.hash_tables:
-            hashing_budget, q_hash = hash_class.hash(q)
+            hist_budget, q_hash = hash_class.hash(q)
             matches = hash_dict.get(q_hash, [])     # return [] if match doesn't exist
             candidates.update(matches)
-
-        # everytime we hash a q, the budget increases by the size of q.
-        budget += hashing_budget
-
-        # find best_candidate
-        best_candidate = candidates[0]
-        init_dist_budget, best_distance = self.hash_class.distance(q, self.data[best_candidate])
-
-        for i in xrange(1, len(candidates)):
-            dist_budget, distance = self.hash_class.distance(q, self.data[i])
-            if distance < best_distance:
-                best_candidate = i
-                best_distance = distance
-            budget += dist_budget
-
-        return budget + init_dist_budget, best_candidate
+            budget += hist_budget
+        return budget, candidates
 
 
 # matrix inner product
