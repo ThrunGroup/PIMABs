@@ -4,20 +4,18 @@ from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from operator import itemgetter
 
-from ..utils.lsh_utils import *
+from utils.lsh_utils import *
 
 class LshMips:
     """
-    Class for solving MIPS using LSH. Implements symmetric LSH (See https://arxiv.org/abs/1410.5518)
-    and asymmetric LSH (https://dl.acm.org/doi/10.5555/2969033.2969086) by referring to the
-    implementation in https://github.com/jfpu/lsh_mips.
+    Class for solving MIPS using LSH. The main logic divides into preprocessing the data and
+    querying the signal vector. Used https://github.com/jfpu/lsh_mips as reference for implementation.
 
     :type: either symmetric or asymmetric
     :data: data used to build hash indices
     :queries: 1d array of query data
     :rand_range: random range for normalization
-    :num_neighbors: number of neighbors to find in the near neighbor search.
-                    If this is 1, we're finding the nearest neighbor.
+    :m: the number of dimensions to extend the dataset to convert from MIPS to NN search problem.
     """
 
     def __init__(self, type, data, query, rand_range=1.0, m=3):
@@ -28,9 +26,7 @@ class LshMips:
         self.type = type
         self.data = data
         self.query = query
-
         self.rand_range = rand_range
-        self.num_neighbors = num_neighbors
 
         # m is always 1 if we're doing symmetric lsh mips
         if type == "symmetric":
@@ -52,27 +48,31 @@ class LshMips:
             self.ext_data = g_index_simple_extend(self.norm_data, self.m)
             self.ext_query = g_query_simple_extend(self.norm_query, self.m)
         else:
-            self.ext_datas = g_index_extend(self.norm_datas, self.m)
+            self.ext_data = g_index_extend(self.norm_data, self.m)
             self.ext_query = g_query_extend(self.norm_query, self.m)
 
         assert (new_len == len(self.ext_data[0]))   # num dimensions
         assert (new_len == len(self.ext_query))
 
-    def run(self, type, num_tables=2, num_hash_functions=2, top_k=1):
+    def run(self, type, num_hfunc=2, num_tables=2, top_k=1):
         """
         Run the nearest neighbor search to find the specified number of neighbors (default 1).
 
         :num_tables: number of hash tables
         :num_hfunctions: number of hash functions per table (i.e. size of the hash table)
         """
-        lsh = LshWrapper(type, self.d, self.rand_range, num_tables, 0)
-        lsh.resize(num_hash_functions)
+        lsh = LshWrapper(type, d=self.d, r=self.rand_range, num_hfunc=num_hfunc, num_tables=num_tables)
+        lsh.resize(num_tables)
         lsh.index(self.ext_data)    # hash the extended data (i.e. P(x))
         budget, candidates = lsh.query(self.ext_query, top_k)
 
+        candidates = np.array(list(candidates))
+        if len(candidates) < top_k:
+            raise Exception("Don't have k collisions... rerun with different params")
+
         # find best candidate and increment budget
         dist_vec = np.linalg.norm(self.data[candidates] - self.query, axis=1)
-        idx = np.argpartition(dist_vec, top_k)
+        idx = np.argpartition(dist_vec, top_k - 1)
 
         # increment budget by cells seen in matrix multiplication (assuming query is only seen once) and
         # the time complexity of np.argpartition (time complexity is O(n)).

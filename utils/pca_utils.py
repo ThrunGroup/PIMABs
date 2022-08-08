@@ -1,4 +1,5 @@
 import numpy as np
+import ipdb
 
 def first_reduction(arr, is_query=False):
     """
@@ -15,7 +16,8 @@ def first_reduction(arr, is_query=False):
     norms = np.linalg.norm(arr, axis=1)
     phi = norms.max()
     extra_dim = np.sqrt(phi ** 2 - norms ** 2)
-    return np.append(arr, extra_dim.reshape(norms.shape[0], 1), axis=1)
+    column = extra_dim.reshape(norms.shape[0], 1)
+    return np.append(arr, column, axis=1)
 
 
 def second_reduction(arr):
@@ -27,47 +29,67 @@ def second_reduction(arr):
         - mu: 1/n * sum(X_i)
         - (X - M) = W Sig U^T where M is mu concatenated as columns
     """
-    mu = np.mean(arr, axis=1)
-    M = np.array([])
-    for _ in range(arr.shape[1]):
-        M = np.c_[M, mu]
+    N, D = arr.shape
+    mu = np.mean(arr, axis=0)
 
-    W, _, _ = np.linalg.svd(arr - M, full_matrices=True)
-    return np.matmul(W.T, arr - mu)
+    M = np.zeros(D)
+    for _ in range(N):
+        M = np.c_[M, mu]
+    M = M[:, 1:]    # get rid of the initial placeholder column
+    assert (M.shape == (D, N))
+
+    W, _, _ = np.linalg.svd(arr.T - M, full_matrices=True)
+    assert (W.shape == (D, D))
+
+    return W, mu, np.matmul(W.T, (arr - mu).T)
 
 
 class Tree:
+    """
+    Basic Tree class to build the pca-tree data structure
+
+    :j: the index that is delta positions from the end.
+    """
     def __init__(self, data, j):
         self.data = data
         self.root = self.construct_pca_tree(j)
 
     def pca_tree_rec(self, node, j, max_j):
-        if j == max_j:
+        """
+        Recursive helper function that helps build the pca-tree.
+
+        :node: the current node
+        :j: the dimension that we want to compare
+        :max_j: dimension of the best principal component
+        """
+        if j == max_j or len(node.idcs) <= 1:
             return
 
         # find median value of node data
-        node_data = self.data[node.idcs]
-        m = np.median(node_data[:, j])
+        node_col = self.data[node.idcs][:, j]
+        m = np.median(node_col)
         node.m = m
         node.j = j
 
         # initialize children
-        l_idcs = node.idcs[np.where(node_data[:, j] <= m)]
-        r_idcs = node.idcs[np.where(node_data[:, j] > m)]
+        l_idcs = node.idcs[np.where(node_col <= m)]
+        r_idcs = node.idcs[np.where(node_col > m)]
         node.left = Node(l_idcs)
         node.right = Node(r_idcs)
 
-        pca_tree_rec(node.left, j + 1, max_j)
-        pca_tree_rec(node.right, j + 1, max_j)
+        self.pca_tree_rec(node.left, j + 1, max_j)
+        self.pca_tree_rec(node.right, j + 1, max_j)
         return
 
     def construct_pca_tree(self, j):
         """
-        :delta: number of top principal components to use.
+        Construct the pca-tree data structure.
+
+        :j: the index that is delta positions from the end.
         """
-        N, F = self.data.shape()
+        N, D = self.data.shape
         root = Node(np.arange(N))
-        pca_tree_rec(root, j, F)
+        self.pca_tree_rec(root, j, D)
         return root
 
 
