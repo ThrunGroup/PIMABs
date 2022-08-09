@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
-from constants import CUST_ID, RATING, MOVIE_ID
+from utils.constants import (
+    CUST_ID,
+    RATING,
+    MOVIE_ID,
+)
 
 
 def load_data(filename):
