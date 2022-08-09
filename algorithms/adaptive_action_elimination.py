@@ -44,7 +44,7 @@ def adaptive_action_elimination(
     D = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms/signal
     t = 0  # time step
-    new_delta = delta / (d * D)
+    new_delta = delta
     budgets = 0  # Number of calculations
     candidates = np.arange(D)  # arms (atoms)
     lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
@@ -53,7 +53,8 @@ def adaptive_action_elimination(
     sorted_idcs = np.argsort(
         -np.abs(signal)
     )  # Indices that sorts signal in the descending order
-    l2_atoms = np.zeros(D)  # l2 norms of atoms
+    # l2_atoms = np.zeros(D)  # l2 norms of atoms
+
 
     while len(candidates) > num_best_atoms:
         t += 1
@@ -67,7 +68,7 @@ def adaptive_action_elimination(
         batch_size = min(
             batch_size, d - (t - 1) * batch_size
         )  # Can't sample more than population size
-        sample_idcs = sorted_idcs[(t - 1) * batch_size : t * batch_size]
+        sample_idcs = sorted_idcs[(t - 1) * batch_size: t * batch_size]
         signal_sampled = signal[sample_idcs]
         candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
         means[candidates] = (
@@ -75,17 +76,18 @@ def adaptive_action_elimination(
         ) / ((t + 1) * batch_size)
 
         # Make confidence interval tighter using the constraint that all the vectors have unit length.
-        l2_atoms[candidates] += np.sum(
-            np.square(candidates_sampled), axis=1
-        )  # l2 norm of sampled atoms
+        # l2_atoms[candidates] += np.sum(
+        #     np.square(candidates_sampled), axis=1
+        # )  # l2 norm of sampled atoms
         max_signal = np.abs(signal_sampled[0])  # maximum of signal sampled
-        multiplication_bounds = (
-            2 * (1 - l2_atoms[candidates]) * np.abs(max_signal)
-        )  # The bound of the multiplication
+        # multiplication_bounds = (
+        #     2 * (1 - l2_atoms[candidates]) * np.abs(max_signal)
+        # )  # The bound of the multiplication
         # between each element from signal and atoms
-        new_var_proxy = (
-            multiplication_bounds ** 2 / 4
-        )  # See Hoeffding's lemma (lemma 18) in https://bit.ly/3RXawav
+        # new_var_proxy = (
+        #     multiplication_bounds ** 2 / 4
+        # )  # See Hoeffding's lemma (lemma 18) in https://bit.ly/3RXawav
+        new_var_proxy = var_proxy
         new_var_proxy = np.minimum(var_proxy, new_var_proxy)
         ci_vec = get_ci(
             delta=new_delta,

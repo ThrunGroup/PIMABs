@@ -9,6 +9,7 @@ from utils.constants import (
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     NORMAL_PAPER,
+    UNIFORM_PAPER,
 )
 from scaling_exp import scaling_exp
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         0.1,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
-        data_type=NORMAL_PAPER,
+        data_type=UNIFORM_PAPER,
         bandit_alg=ACTION_ELIMINATION,
         with_replacement=False,
         is_normalize=False,
@@ -43,7 +44,7 @@ if __name__ == "__main__":
         0.1,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
-        data_type=NORMAL_PAPER,
+        data_type=UNIFORM_PAPER,
         bandit_alg=ACTION_ELIMINATION,
         with_replacement=True,
         is_normalize=False,
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         0.1,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
-        data_type=NORMAL_PAPER,
+        data_type=UNIFORM_PAPER,
         bandit_alg=MEDIAN_ELIMINATION,
         is_normalize=False,
     )

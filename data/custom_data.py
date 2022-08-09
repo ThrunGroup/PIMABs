@@ -14,7 +14,7 @@ def generate_custom_data(
     num_atoms: int = 10 ** 3,
     len_signal: int = 10 ** 4,
     seed: int = 0,
-    data_type: str = "UNIFORM",
+    data_type: str = NORMAL_CUSTOM,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Generate a custom dataset described in a bandit approach to MIPS paper.
@@ -30,13 +30,20 @@ def generate_custom_data(
     if (
         data_type is UNIFORM_PAPER
     ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
-        atoms_array = rng.uniform(low=-1, high=1, size=(num_atoms, len_signal))
         signal = rng.uniform(low=-1, high=1, size=len_signal)
+        atoms_array = rng.uniform(low=-1, high=1, size=(num_atoms, len_signal))
+        # means = rng.uniform(low=-1, high=+1, size=num_atoms)
+        # means = np.zeros(num_atoms)
+        # atoms_array = np.empty((num_atoms, len_signal))
+        # for idx in range(num_atoms):
+        #     atoms_array = rng.uniform(low=-1 + means[idx], high=1 + means[idx], size=(num_atoms, len_signal))
     elif (
         data_type is NORMAL_PAPER
     ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
-        atoms_array = rng.normal(size=(num_atoms, len_signal))  # variance proxy
-        signal = rng.uniform(low=-1, high=1, size=len_signal)
+        signal = rng.normal(loc=rng.normal(), size=len_signal)
+        means = rng.normal(size=num_atoms)
+        for idx in range(num_atoms):
+            atoms_array[idx] = rng.normal(loc=means[idx], size=len_signal)
     elif data_type is ADVERSARIAL_CUSTOM:
         atoms_array = np.zeros((num_atoms, len_signal))
         p = rng.random(num_atoms)
