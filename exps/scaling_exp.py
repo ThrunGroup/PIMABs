@@ -19,6 +19,7 @@ from algorithms.median_elimination import median_elimination
 from algorithms.action_elimination import action_elimination
 from algorithms.adaptive_action_elimination import adaptive_action_elimination
 
+
 def scaling_exp(
     epsilon: float,
     delta: float,
@@ -50,7 +51,9 @@ def scaling_exp(
     )
     budgets = []
     accuracy_list = []
-    atoms, signal = generate_custom_data(len_signal=sizes_signal[-1], seed=seed, data_type=data_type)
+    atoms, signal = generate_custom_data(
+        len_signal=sizes_signal[-1], seed=seed, data_type=data_type
+    )
     maxmin = (1, -1)
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
@@ -78,9 +81,17 @@ def scaling_exp(
             with_replacement=with_replacement,
         )
         budgets.append(budget)
-        accuracy_list.append(int(np.matmul(atoms_subset, signal_subset).argmax() == candidates[0]))
+        accuracy_list.append(
+            int(np.matmul(atoms_subset, signal_subset).argmax() == candidates[0])
+        )
     budgets = np.array(budgets)
     functions = [np.array, np.sqrt, np.log]
     function_names = ["Linear", "Sqrt", "Logarithm"]
-    fit_and_plot(sizes_signal, budgets, functions, function_names)
+    fit_and_plot(
+        sizes_signal,
+        budgets,
+        functions,
+        function_names,
+        title=f"{bandit_alg} + w/ replacement: {with_replacement}",
+    )
     print(f"Mean accuracy with {bandit_alg} for {data_type}: {np.mean(accuracy_list)}")

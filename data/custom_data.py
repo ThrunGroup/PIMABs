@@ -40,10 +40,8 @@ def generate_custom_data(
     elif (
         data_type is NORMAL_PAPER
     ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
-        signal = rng.normal(loc=rng.normal(), size=len_signal)
-        means = rng.normal(size=num_atoms)
-        for idx in range(num_atoms):
-            atoms_array[idx] = rng.normal(loc=means[idx], size=len_signal)
+        signal = rng.normal(loc=2, size=len_signal)
+        atoms_array = rng.normal(size=(num_atoms, len_signal))
     elif data_type is ADVERSARIAL_CUSTOM:
         atoms_array = np.zeros((num_atoms, len_signal))
         p = rng.random(num_atoms)

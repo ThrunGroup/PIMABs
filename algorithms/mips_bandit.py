@@ -8,6 +8,7 @@ from utils.constants import (
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
+    ADAPTIVE_ACTION_ELIMINATION,
     HOEFFDING,
 )
 from algorithms.median_elimination import median_elimination
@@ -82,6 +83,16 @@ def mips_bandit(
                 seed=seed,
             )
         elif bandit_alg is ACTION_ELIMINATION:
+            return action_elimination(
+                atoms=atoms,
+                signal=signal,
+                var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                epsilon=epsilon,
+                delta=delta,
+                num_best_atoms=num_best_atoms,
+                with_replacement=False,
+            )
+        elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
                 atoms=atoms,
                 signal=signal,

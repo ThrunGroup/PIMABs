@@ -23,6 +23,8 @@ def action_elimination(
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
+    with_replacement: bool = True,
+    seed=0,
 ) -> Tuple[np.ndarray, int]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -31,6 +33,7 @@ def action_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
+    rng = np.random.default_rng(seed)
     D = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms/signal
     t = 0  # time step
@@ -40,6 +43,11 @@ def action_elimination(
     lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
     ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
     means = np.zeros(D)  # estimated means of arm returns
+    if not with_replacement:
+        shuffled_idcs = np.arange(d)
+        rng.shuffle(shuffled_idcs)
+    else:
+        shuffled_idcs = None
     # TODO: Add exact computation if total mnist too big
     # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
     # TODO: Don't let old candidates come back?
@@ -49,12 +57,27 @@ def action_elimination(
 
         # Find a true inner product value of candidates if we sample more than their dimension (length of atom/signal)
         if t * batch_size > d:
-            means[candidates] = np.abs(atoms[candidates] @ signal)
-            budgets += d * len(candidates)
+            if with_replacement:
+                means[candidates] = atoms[candidates] @ signal
+                budgets += d * len(candidates)
+            else:
+                sample_idcs = shuffled_idcs[(t - 1) * batch_size :]
+                signal_sampled = signal[sample_idcs]
+                candidates_sampled = subset_2d(
+                    atoms, rows=candidates, columns=sample_idcs
+                )
+                means[candidates] = (
+                    (t * batch_size * means[candidates])
+                    + (candidates_sampled @ signal_sampled)
+                ) / d
+                budgets += (d - (t - 1) * batch_size) * len(candidates)
             return candidates[np.argsort(-means[candidates])][:num_best_atoms], budgets
         budgets += batch_size * len(candidates)
 
-        sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False)
+        if with_replacement:
+            sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False)
+        else:
+            sample_idcs = shuffled_idcs[(t - 1) * batch_size : t * batch_size]
         signal_sampled = signal[sample_idcs]
         candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
         means[candidates] = (
@@ -62,12 +85,22 @@ def action_elimination(
         ) / (
             (t + 1) * batch_size
         )  # Update the running means of arm returns # Does this np.dot do implicit broadcasting?
-        ci = get_ci(
-            delta=new_delta,
-            var_proxy=var_proxy,
-            ci_bound=HOEFFDING,
-            num_samples=t * batch_size,
-        )
+        if with_replacement:
+            ci = get_ci(
+                delta=new_delta,
+                var_proxy=var_proxy,
+                ci_bound=HOEFFDING,
+                num_samples=t * batch_size,
+            )
+        else:
+            ci = get_ci(
+                delta=new_delta,
+                var_proxy=var_proxy,
+                ci_bound=HOEFFDING,
+                num_samples=t * batch_size,
+                pop_size=d,
+                with_replacement=False,
+            )
         if 4 * ci < epsilon:
             return candidates[np.argsort(-means[candidates])][:num_best_atoms], budgets
         ucbs[candidates] = means[candidates] + ci

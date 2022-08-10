@@ -8,6 +8,7 @@ from utils.constants import (
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
+    ADAPTIVE_ACTION_ELIMINATION,
     NORMAL_PAPER,
     UNIFORM_PAPER,
 )
@@ -30,8 +31,18 @@ if __name__ == "__main__":
     #     with_replacement=True,
     # )
     scaling_exp(
-        0.05,
-        0.1,
+        0,
+        0.5,
+        size_minmax=(10, 10 ** 5),
+        num_experiments=10,
+        data_type=UNIFORM_PAPER,
+        bandit_alg=ADAPTIVE_ACTION_ELIMINATION,
+        with_replacement=False,
+        is_normalize=False,
+    )
+    scaling_exp(
+        0,
+        0.5,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
         data_type=UNIFORM_PAPER,
@@ -40,8 +51,8 @@ if __name__ == "__main__":
         is_normalize=False,
     )
     scaling_exp(
-        0.05,
-        0.1,
+        0,
+        0.5,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
         data_type=UNIFORM_PAPER,
@@ -50,11 +61,11 @@ if __name__ == "__main__":
         is_normalize=False,
     )
     scaling_exp(
-        0.05,
-        0.1,
+        0.0001,
+        0.5,
         size_minmax=(10, 10 ** 5),
         num_experiments=10,
-        data_type=UNIFORM_PAPER,
+        data_type=NORMAL_PAPER,
         bandit_alg=MEDIAN_ELIMINATION,
         is_normalize=False,
     )
