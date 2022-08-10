@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from typing import Tuple
-
+import numba as nb
 from utils.constants import (
     BATCH_SIZE,
     ADVERSARIAL_CUSTOM,
@@ -12,7 +12,6 @@ from utils.constants import (
 )
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
-
 
 def adaptive_action_elimination(
     atoms: np.ndarray,
@@ -44,7 +43,7 @@ def adaptive_action_elimination(
     D = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms/signal
     t = 0  # time step
-    new_delta = delta
+    new_delta = delta/D
     budgets = 0  # Number of calculations
     candidates = np.arange(D)  # arms (atoms)
     lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
@@ -79,7 +78,7 @@ def adaptive_action_elimination(
         # l2_atoms[candidates] += np.sum(
         #     np.square(candidates_sampled), axis=1
         # )  # l2 norm of sampled atoms
-        max_signal = np.abs(signal_sampled[0])  # maximum of signal sampled
+        # max_signal = np.abs(signal_sampled[0])  # maximum of signal sampled
         # multiplication_bounds = (
         #     2 * (1 - l2_atoms[candidates]) * np.abs(max_signal)
         # )  # The bound of the multiplication
@@ -87,7 +86,8 @@ def adaptive_action_elimination(
         # new_var_proxy = (
         #     multiplication_bounds ** 2 / 4
         # )  # See Hoeffding's lemma (lemma 18) in https://bit.ly/3RXawav
-        new_var_proxy = var_proxy
+        min_signal = np.abs(signal_sampled[-1])
+        new_var_proxy = var_proxy * (min_signal ** 2)
         new_var_proxy = np.minimum(var_proxy, new_var_proxy)
         ci_vec = get_ci(
             delta=new_delta,

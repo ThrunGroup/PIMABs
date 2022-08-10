@@ -249,6 +249,9 @@ def fit_and_plot(
     ys: np.ndarray,
     function_list: List[np.ufunc],
     function_name_list: List[str],
+    title: str = None,
+    xlabel: str = None,
+    ylabel: str = None,
 ) -> None:
     """
     Fit xs, ys to function and plot the points and curve.
@@ -276,7 +279,15 @@ def fit_and_plot(
             label=f"{function_name} fit,  $R^2 = {r2:.4f}$",
         )
     plt.scatter(xs, ys, color="black")
-    plt.ylabel("Number of calculations for MIPS")
-    plt.xlabel("signal vector size")
+    title = "Scaling exps" if title is None else title
+    xlabel = "signal vector size" if xlabel is None else xlabel
+    ylabel = "Number of calculations for MIPS" if ylabel is None else ylabel
+    plt.title(title)
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
     plt.legend(loc="lower right")
     plt.show()
+
+
+def r(num: int):
+    return round(num, 3)
