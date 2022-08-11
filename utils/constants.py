@@ -29,3 +29,8 @@ HOEFFDING = "HOEFFDING"
 CUST_ID = "Cust_id"
 RATING = "Rating"
 MOVIE_ID = "Movie_Id"
+
+# Netflix dataset-specific constants
+NUM_NETFLIX_USERS = 2649429
+NUM_NETFLIX_MOVIES = 17770
+NUM_DATA_FILES = 4
