@@ -1,47 +1,5 @@
 import numpy as np
-import ipdb
-
-def first_reduction(arr, is_query=False):
-    """
-    Apply the first reduction in the preprocessing step and return the matrix with the concatenated rows.
-    Conversions are as follows (X is the dataset matrix and y is the query vector):
-        x_i -> [sqrt(phi^2 - norm^2);  x_i]
-        y -> [0; y]
-
-    :arr: 2d array if is_query is false, otherwise 1d array
-    """
-    if is_query:
-        return np.append(arr, 0)
-
-    norms = np.linalg.norm(arr, axis=1)
-    phi = norms.max()
-    extra_dim = np.sqrt(phi ** 2 - norms ** 2)
-    column = extra_dim.reshape(norms.shape[0], 1)
-    return np.append(arr, column, axis=1)
-
-
-def second_reduction(arr):
-    # Todo: check if these dimensions are correct!!!
-    """
-    Apply the second reduction in the pre-processing step and return the transformed arr.
-    Note that the components are in decreasing order of variance.   #Todo: verify that this is true!!!
-    Converts X -> W^T (X - mu) where
-        - mu: 1/n * sum(X_i)
-        - (X - M) = W Sig U^T where M is mu concatenated as columns
-    """
-    N, D = arr.shape
-    mu = np.mean(arr, axis=0)
-
-    M = np.zeros(D)
-    for _ in range(N):
-        M = np.c_[M, mu]
-    M = M[:, 1:]    # get rid of the initial placeholder column
-    assert (M.shape == (D, N))
-
-    W, _, _ = np.linalg.svd(arr.T - M, full_matrices=True)
-    assert (W.shape == (D, D))
-
-    return W, mu, np.matmul(W.T, (arr - mu).T)
+#from numba import jit
 
 
 class Tree:
@@ -50,9 +8,49 @@ class Tree:
 
     :j: the index that is delta positions from the end.
     """
-    def __init__(self, data, j):
-        self.data = data
-        self.root = self.construct_pca_tree(j)
+    def __init__(self):
+        self.data = None
+        self.root = None
+
+    @staticmethod
+    def first_reduction(arr, is_query=False):
+        """
+        Apply the first reduction in the preprocessing step and return the concatenated arr.
+        Conversion is described below where phi = max_i ||x_i||, and ";" signifies concatenation.
+        (X is the dataset matrix and y is the query vector):
+            x_i -> [sqrt(phi^2 - ||x_i||^2);  x_i]
+            y -> [0; y]
+
+        :arr: 1d array if is_query, otherwise 2d array
+        """
+        if is_query:
+            return np.append(arr, 0)
+
+        norms = np.linalg.norm(arr, axis=1)
+        phi = np.max(norms)
+        extra_dim = np.sqrt(phi ** 2 - norms ** 2)
+        column = extra_dim.reshape(norms.shape[0], 1)
+        return np.append(arr, column, axis=1)
+
+    @staticmethod
+    def second_reduction(arr):
+        """
+        Apply the second reduction in the pre-processing step and return the transformed arr.
+        Note that the components are in decreasing order of variance.
+        Converts X -> W^T (X - mu) where
+            - mu: 1/n * sum(X_i)
+            - (X - M) = W Sig U^T where M is mu concatenated as columns
+        """
+        N, D = arr.shape
+        mu = np.mean(arr, axis=0)
+
+        M = np.repeat(mu.reshape((D, 1)), N, axis=1)
+        assert (M.shape == (D, N))
+
+        W, _, _ = np.linalg.svd(arr.T - M, full_matrices=True)
+        assert (W.shape == (D, D))
+
+        return W, mu, np.matmul(W.T, (arr - mu).T)
 
     def pca_tree_rec(self, node, j, max_j):
         """
@@ -83,14 +81,29 @@ class Tree:
 
     def construct_pca_tree(self, j):
         """
-        Construct the pca-tree data structure.
+        Construct the pca-tree (similar to kd-trees) data structure.
 
-        :j: the index that is delta positions from the end.
+        :j: the index that is delta positions from the end where delta is the
+            number of principle components that you want to use as the dimensions of the split.
         """
         N, D = self.data.shape
         root = Node(np.arange(N))
         self.pca_tree_rec(root, j, D)
+        self.root = root
         return root
+
+    def print_tree_rec(self, node, space):
+        if node.m is None:
+            print(space + "node idcs: ", node.idcs)
+            return
+
+        print(space + "node idcs: ", node.idcs)
+
+        print(space + "--left: ")
+        self.print_tree_rec(node.left, space + "    ")
+
+        print(space + "--right: ")
+        self.print_tree_rec(node.right, space + "    ")
 
 
 class Node:

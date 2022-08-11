@@ -2,21 +2,23 @@ import numpy as np
 from utils.pca_utils import *
 
 
-class PcaMips:
+class PCA_MIPS:
     """
     Basic Class for PCA-MIPS described here:
     https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/XboxInnerProduct.pdf
-
-    :delta: the number of top principal components to use
     """
     def __init__(self, data, query, delta):
+        """
+        :delta: the number of top principal components to use
+        """
         assert (data.shape[1] == len(query))
 
         self.data = data
         self.query = query
-        self.delta = delta
+        self.delta = delta  # if delta is 0, this is the same as naive MIPS
         assert (delta <= len(query))
 
+        self.p_data = None
         self.p_query = None
         self.tree = None
 
@@ -25,15 +27,20 @@ class PcaMips:
         Preprocess dataset and signal vector by converting to NN search problem, and building a
         pca-tree data structure. Here, note that the principal components are in "decreasing" order of variance.
         """
-        W, mu, p_data = second_reduction(first_reduction(self.data))
-        p_data = p_data.T
+        tree = Tree()
 
-        _p_query = first_reduction(self.query, is_query=True)
+        # concatenate data and matmul with principle components matrix
+        W, mu, p_data = tree.second_reduction(tree.first_reduction(self.data))
+        self.p_data = p_data.T
+
+        # concatenate query and matmul by the same principle components matrix
+        _p_query = tree.first_reduction(self.query, is_query=True)
         self.p_query = np.matmul(W.T, _p_query - mu)
-        assert (p_data.shape[1] == len(self.p_query))
+        assert (self.p_data.shape[1] == len(self.p_query))
 
-        self.tree = Tree(p_data, p_data.shape[1] - self.delta)
-
+        # feed converted data into tree class and construct pca-tree
+        tree.data = self.p_data
+        self.tree = tree.construct_pca_tree(self.p_data.shape[1] - self.delta)
 
     def run(self, top_k=1):
         """
@@ -45,7 +52,7 @@ class PcaMips:
         budget = 0
 
         # traverse tree to find the query leaf
-        curr_node = self.tree.root
+        curr_node = self.tree
         while curr_node.m is not None:
             if self.p_query[curr_node.j] <= curr_node.m:
                 curr_node = curr_node.left
@@ -56,12 +63,16 @@ class PcaMips:
         # get top k candidates
         candidates = curr_node.idcs
         if len(candidates) < top_k:
-            raise Exception("Don't have k collisions... rerun with different params")
+            print(f"have {len(candidates)} collisions but need {top_k}!")
+            top_k = len(candidates)
 
-        dist_vec = np.linalg.norm(self.data[candidates] - self.query, axis=1)
+        if len(candidates) == 0:
+            return budget, []
+
+        dist_vec = np.linalg.norm(self.p_data[candidates] - self.p_query, axis=1)
         idx = np.argpartition(dist_vec, top_k - 1)
 
         # increment budget by cells seen in matrix multiplication (assuming query is only seen once) and
         # the time complexity of np.argpartition (time complexity is O(n)).
-        budget += (len(candidates) * self.data.shape[1] + len(dist_vec))
+        budget += (len(candidates) * len(self.p_query) + len(dist_vec))
         return budget, candidates[idx[:top_k]]

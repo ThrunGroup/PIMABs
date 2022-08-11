@@ -42,3 +42,9 @@ def generate_normal_data(
     # signal = rng.normal(loc=0, size=len_signal)
     signal = np.ones(len_signal)
     return atoms_array, signal
+
+def generate_normal_paper(
+    num_atoms: int = 10 ** 3, len_signal: int = 10 ** 4, seed: int = 0,
+) -> Tuple[np.ndarray, np.ndarray]:
+    rng = np.random.default_rng(seed)
+    return np.random.normal(size=(num_atoms, len_signal)), np.ones(len_signal)
