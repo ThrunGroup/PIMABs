@@ -2,7 +2,7 @@ import os
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import List
+from typing import List, Any
 from sklearn.linear_model import LinearRegression
 
 from utils.constants import COLORS
@@ -85,13 +85,18 @@ def q(str_: str) -> str:
     return '"' + str_ + '"'
 
 
-def b(num: int) -> str:
+def b(num: Any) -> str:
     """
-   Helper function that wraps brackets to a string.
+   Helper function that wraps brackets to a number/string.
 
    :param num: number to put brackets around
    """
     return "{" + str(num) + "}"
+
+
+def r(num: int):
+    return round(num, 3)
+
 
 def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue) -> str:
     """
@@ -265,14 +270,14 @@ def fit_and_plot(
     """
     Fit xs, ys to function and plot the points and curve.
 
-    :param ys_std: Standard Deviation of Output array (used for error bar plot)
-    :param title: Title of plot
-    :param xlabel: X label of plot
-    :param ylabel: Y label of plot
     :param xs: Input array
     :param ys: Output array
     :param function_list: List of functions
     :param function_name_list: List of function name
+    :param ys_std: Standard Deviation of Output array (used for error bar plot)
+    :param title: Title of plot
+    :param xlabel: X label of plot
+    :param ylabel: Y label of plot
     """
     lr = LinearRegression()
     hashes = np.linspace(xs[0], xs[-1], 5000)
@@ -304,7 +309,3 @@ def fit_and_plot(
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
     plt.show()
-
-
-def r(num: int):
-    return round(num, 3)
