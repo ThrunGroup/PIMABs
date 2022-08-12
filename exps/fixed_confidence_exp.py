@@ -55,7 +55,7 @@ def fixed_confidence_exp(
                     print("--naively solved")
                 estimated_best_idx, _ = mips_bandit(
                     atoms=atoms,
-                    signal=signal,
+                    signals=signal,
                     maxmin=maxmin,
                     bandit_alg=bandit_alg,
                     epsilon=epsilon,

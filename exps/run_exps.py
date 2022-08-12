@@ -33,42 +33,46 @@ if __name__ == "__main__":
     scaling_exp(
         0,
         0.5,
-        size_minmax=(10, 10 ** 5),
-        num_experiments=10,
-        data_type=UNIFORM_PAPER,
+        size_minmax=(10, 10 ** 4),
+        num_experiments=5,
+        num_signals=5,
+        data_type=NORMAL_CUSTOM,
         bandit_alg=ADAPTIVE_ACTION_ELIMINATION,
         with_replacement=False,
         is_normalize=False,
     )
+    # scaling_exp(
+    #     0,
+    #     0.5,
+    #     size_minmax=(10, 10 ** 5),
+    #     num_experiments=10,
+    #     data_type=UNIFORM_PAPER,
+    #     algorithm=ACTION_ELIMINATION,
+    #     with_replacement=False,
+    #     is_normalize=False,
+    # )
     scaling_exp(
         0,
         0.5,
-        size_minmax=(10, 10 ** 5),
-        num_experiments=10,
-        data_type=UNIFORM_PAPER,
-        bandit_alg=ACTION_ELIMINATION,
-        with_replacement=False,
-        is_normalize=False,
-    )
-    scaling_exp(
-        0,
-        0.5,
-        size_minmax=(10, 10 ** 5),
-        num_experiments=10,
-        data_type=UNIFORM_PAPER,
+        size_minmax=(50, 10 ** 4),
+        num_experiments=5,
+        num_signals=5,
+        data_type=NORMAL_CUSTOM,
         bandit_alg=ACTION_ELIMINATION,
         with_replacement=True,
         is_normalize=False,
     )
     scaling_exp(
-        0.0001,
-        0.5,
-        size_minmax=(10, 10 ** 5),
-        num_experiments=10,
-        data_type=NORMAL_PAPER,
+        0.05,
+        0.1,
+        size_minmax=(30, 10 ** 4),
+        num_signals=5,
+        num_experiments=5,
+        data_type=NORMAL_CUSTOM,
         bandit_alg=MEDIAN_ELIMINATION,
         is_normalize=False,
     )
+
     # fixed_confidence_exp(
     #     epsilons=epsilons,
     #     deltas=deltas,

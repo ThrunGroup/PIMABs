@@ -5,6 +5,8 @@ import time
 from numba.typed import List
 
 from utils.utils import fit_and_plot, r
+from utils.constants import NORMAL_CUSTOM
+from data.custom_data import generate_custom_data
 
 
 def generate_conditer(atoms: np.ndarray) -> np.ndarray:
@@ -36,6 +38,7 @@ def candidate_screening(
     Screening candidates that have maximum one-element inner product with signal
     """
     candidates = []
+    complxity = int(0)
     while len(candidates) < budget:
         z, t = heapq.heappop(Q)
         z = -z  # heapq is min heap but regard it as max heap
@@ -45,9 +48,11 @@ def candidate_screening(
             if signal[t] > 0
             else conditer[-1 - conditer_idx, t]
         )
+        complxity += 3 + int(np.log2(len(Q)))
         if visited_j[j] == 0:
             candidates.append(j)
             visited_j[j] = 1
+            complxity += 1
         while conditer_idx < conditer.shape[0]:
             iters[t] += 1
             conditer_idx = iters[t]
@@ -56,11 +61,13 @@ def candidate_screening(
                 if signal[t] > 0
                 else conditer[-1 - conditer_idx, t]
             )
+            complxity += 3
             if visited_j[j] == 0:
                 z = atoms[j, t] * signal[t]
                 heapq.heappush(Q, (-z, t))
+                complxity += 1 + int(np.log2(len(Q)))
                 break
-    return np.array(candidates)
+    return np.array(candidates), budget
 
 
 def greedy_mips(
@@ -81,11 +88,13 @@ def greedy_mips(
     best_atom_list = []
     query_dependent_time_list = []
     candidate_ranking_time_list = []
+    total_complexity_list = []
     for signal in signals:
         start_time = time.time()
         heap, iters = generate_heap(atoms, conditer, signal)
+        generate_heap_complexity = int(signal.shape[0]) * int(np.log2(signal.shape[0]))
         heap = List(heap)
-        candidates = candidate_screening(
+        candidates, screen_complexity = candidate_screening(
             atoms, signal, conditer, iters, heap, budget, visited_j
         )
         # Uncomment following line to check if algorithm is correctly implemented
@@ -95,6 +104,7 @@ def greedy_mips(
         best_atom_list.append(
             candidates[np.argsort(-atoms[candidates] @ signal)[:num_best_atoms]]
         )
+        ranking_complexity = budget * (int(signal.shape[0]) * (int(np.log2(signal.shape[0])) + 1))
         candidate_ranking_time = time.time() - start_time
         query_dependent_time_list.append(query_dependent_time)
         candidate_ranking_time_list.append(candidate_ranking_time)
@@ -105,12 +115,17 @@ def greedy_mips(
             print(f"candidate ranking: {candidate_ranking_time}")
         for candidate in candidates:
             visited_j[candidate] = 0
-    return best_atom_list, query_dependent_time_list, candidate_ranking_time_list
+        total_complexity_list.append(generate_heap_complexity + screen_complexity + ranking_complexity)
+    return best_atom_list, query_dependent_time_list, candidate_ranking_time_list, total_complexity_list
+
+
+# def exp_speedup_over_naive():
 
 
 def reproduce_figure6():
     num_experiments = 50
     num_best_atoms = 5
+    num_naive_best_atoms = 20
     rng = np.random.default_rng(0)
     for n in [17, 18, 19]:
         for k in [2, 5, 7]:
@@ -122,12 +137,12 @@ def reproduce_figure6():
             naive_best_arms = []
             for signal in signals:
                 start_time = time.time()
-                naive_best_arms.append(np.argsort(-atoms @ signal)[:num_best_atoms])
+                naive_best_arms.append(np.argsort(-atoms @ signal)[:num_naive_best_atoms])
                 time_list.append(time.time() - start_time)
             time_list = np.array(time_list)
             for budget in np.geomspace(2, 500, 20):
                 conditer = generate_conditer(atoms)
-                best_arms, query_dependent_time_list, ranking_time_list = greedy_mips(
+                best_arms, query_dependent_time_list, ranking_time_list, _ = greedy_mips(
                     atoms,
                     signals,
                     int(2 ** n / budget),
@@ -156,14 +171,47 @@ def reproduce_figure6():
                 [np.array, np.sqrt, np.log],
                 ["Linear", "Sqrt", "Log"],
                 title=f"Greedy MIPS: n = 2 ^ {n}, k = 2 ^ {k}",
-                xlabel=f"Speed up over naive approaches({r(np.mean(time_list))}",
+                xlabel=f"Speed up over naive approaches({r(np.mean(time_list))}s)",
                 ylabel=f"Performance (prec @ {num_best_atoms})",
             )
 
 
-if __name__ == "__main__":
+def scaling_exp():
+    rng = np.random.default_rng(0)
+    atoms, signal = generate_custom_data(10 ** 3, 10 ** 5, num_signals=3, data_type=NORMAL_CUSTOM)
+    sizes_signal = np.linspace(10, 10 ** 5, 5).astype(
+        np.int64
+    )
+    num_calcs_list = []
+    num_calcs_std_list = []
+    accuracy_list = []
+    for size in sizes_signal:
+        subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
+        atoms_subset, signal_subset = atoms[:, subset_indices], signal[:, subset_indices]
+        candidates, query_dependent_time_list, ranking_time_list, num_calcs = greedy_mips(atoms=atoms_subset, signals=signal_subset, budget=20)
+        accuracy_list.append(
+            np.sum(np.matmul(atoms_subset, signal_subset.transpose()).argmax() == np.array(candidates))
+        )
+        num_calcs_list.append(np.mean(num_calcs))
+        num_calcs_std_list.append(np.std(num_calcs))
 
-    reproduce_figure6()
+    functions = [np.array, np.sqrt, np.log]
+    function_names = ["Linear", "Sqrt", "Logarithm"]
+    fit_and_plot(
+        sizes_signal,
+        np.array(num_calcs_list),
+        None,
+        None,
+        ys_std=num_calcs_std_list,
+        ylabel="Runtime(s)",
+        title="GREEDY MIPS Scaling exps",
+    )
+    print(f"Mean accuracy with Greedy MIPS for NORMAL_CUSTOM: {np.mean(accuracy_list)}")
+
+
+if __name__ == "__main__":
+    scaling_exp()
+    # reproduce_figure6()
     # from data.custom_data import generate_custom_data
     #
     # rng = np.random.default_rng(3)
