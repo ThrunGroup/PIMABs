@@ -26,7 +26,7 @@ def scaling_exp(
     data_type: str = ADVERSARIAL_CUSTOM,
     mips_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = 20,
-    size_minmax: Tuple[int] = (10, 10 ** 6),
+    size_minmax: Tuple[int, int] = (10, 10 ** 6),
     num_atoms: int = 10 ** 3,
     num_signals: int = 1,
     num_best_atoms: int = 1,

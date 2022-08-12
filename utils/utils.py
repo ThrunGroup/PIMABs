@@ -85,6 +85,14 @@ def q(str_: str) -> str:
     return '"' + str_ + '"'
 
 
+def b(num: int) -> str:
+    """
+   Helper function that wraps brackets to a string.
+
+   :param num: number to put brackets around
+   """
+    return "{" + str(num) + "}"
+
 def write_exp(algo, N, d, seed, p, batch_size, max_iter, tol, residue) -> str:
     """
     Given a set of experimental arguments, produce a string representing the list of arguments (to be stored in a text

@@ -3,12 +3,18 @@ import numba as nb
 import numpy as np
 import heapq
 import time
+from typing import Tuple
 from numba.typed import List
 
-from utils.utils import fit_and_plot, r
-from utils.constants import NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, UNIFORM_PAPER, NORMAL_PAPER, GREEDY_MIPS
+from utils.utils import fit_and_plot, r, b
+from utils.constants import (
+    NORMAL_CUSTOM,
+    ADVERSARIAL_CUSTOM,
+    UNIFORM_PAPER,
+    NORMAL_PAPER,
+    GREEDY_MIPS,
+)
 from data.custom_data import generate_custom_data
-
 
 
 def generate_conditer(atoms: np.ndarray) -> np.ndarray:
@@ -86,7 +92,7 @@ def greedy_mips(
     num_best_atoms: int = 1,
     conditer: np.ndarray = None,
     is_check: bool = False,
-):
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Run Greedy MIPS
     - Description: Find atoms(the number of atoms is set by budget param) that have maximum one-element product
@@ -96,14 +102,11 @@ def greedy_mips(
     :param signals: Signals array
     :param budget: Number of atoms of which we naively compute inner product
     :param verbose: Whether to
-    :param num_best_atoms:
-    :type num_best_atoms:
-    :param conditer:
-    :type conditer:
-    :param is_check:
-    :type is_check:
-    :return:
-    :rtype:
+    :param num_best_atoms: Number of best atoms we choose
+    :param conditer: Preprocessed array that is not signal dependent.
+    :param is_check: Whether to check the algorithm well behaves. Turn off as it increases runtime.
+    :return: Arrays of final answers of MIPS, signal(query)-dependent runtime, signal-independent runtime, and
+    number of calculations.
     """
 
     start_time = time.time()
@@ -129,15 +132,16 @@ def greedy_mips(
             atoms, signal, conditer, iters, heap, budget, visited_j
         )
         if is_check:
-            print(
+            assert (
                 np.sum(
                     candidates
-                    == np.argsort(-np.max(atoms * np.expand_dims(signal, axis=0), axis=1))[
-                        :budget
-                    ]
+                    == np.argsort(
+                        -np.max(atoms * np.expand_dims(signal, axis=0), axis=1)
+                    )[:budget]
                 )
                 / budget
-            )
+                == 1.0
+            ), "Greedy MIPS algorithm is broken"
 
         query_dependent_time = time.time() - start_time
         start_time = time.time()
@@ -168,10 +172,7 @@ def greedy_mips(
     )
 
 
-# def exp_speedup_over_naive():
-
-
-def reproduce_figure6(seed: int =0):
+def reproduce_figure6(seed: int = 0):
     num_experiments = 50
     num_best_atoms = 5
     num_naive_best_atoms = 20
@@ -227,56 +228,16 @@ def reproduce_figure6(seed: int =0):
                 None,
                 None,
                 ys_std=np.zeros(1),
-                title=f"Greedy MIPS: n = 2 ^ {n}, k = 2 ^ {k}",
+                title=f"Greedy MIPS: $n = 2^{b(n)}, k = 2^{b(k)}$",
                 xlabel=f"Speed up over naive approaches({r(np.mean(time_list))}s)",
                 ylabel=f"Performance (prec @ {num_best_atoms})",
             )
 
 
-# def scaling_exp():
-#     rng = np.random.default_rng(0)
-#     atoms, signal = generate_custom_data(
-#         10 ** 3, 10 ** 5, num_signals=3, data_type=NORMAL_CUSTOM
-#     )
-#     sizes_signal = np.linspace(10, 10 ** 5, 5).astype(np.int64)
-#     num_calcs_list = []
-#     num_calcs_std_list = []
-#     accuracy_list = []
-#     for size in sizes_signal:
-#         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
-#         atoms_subset, signal_subset = (
-#             atoms[:, subset_indices],
-#             signal[:, subset_indices],
-#         )
-#         (
-#             candidates,
-#             query_dependent_time_list,
-#             ranking_time_list,
-#             num_calcs,
-#         ) = greedy_mips(atoms=atoms_subset, signals=signal_subset, budget=20)
-#         accuracy_list.append(
-#             np.sum(
-#                 np.matmul(atoms_subset, signal_subset.transpose()).argmax()
-#                 == np.array(candidates)
-#             )
-#         )
-#         num_calcs_list.append(np.mean(num_calcs))
-#         num_calcs_std_list.append(np.std(num_calcs) / np.sqrt(len(num_calcs)))
-#
-#     fit_and_plot(
-#         sizes_signal,
-#         np.array(num_calcs_list),
-#         None,
-#         None,
-#         ys_std=np.array(num_calcs_std_list),
-#         ylabel="Runtime(s)",
-#         title="GREEDY MIPS Scaling exps",
-#     )
-#     print(f"Mean accuracy with Greedy MIPS for NORMAL_CUSTOM: {np.mean(accuracy_list)}")
-
-
 if __name__ == "__main__":
     from exps.scaling_exp import scaling_exp
+
+    reproduce_figure6()
     for dataset in [ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, UNIFORM_PAPER, NORMAL_PAPER]:
         scaling_exp(
             epsilon=None,
@@ -289,4 +250,3 @@ if __name__ == "__main__":
             num_signals=10,
             is_logspace=True,
         )
-    reproduce_figure6()
