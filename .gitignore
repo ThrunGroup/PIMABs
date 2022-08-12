@@ -1,3 +1,6 @@
+data/raw_data/combined*
+data/raw_data/train*
+
 .idea/
 *.DS_Store*
 .DS_Store
