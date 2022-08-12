@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import math
-from typing import Tuple
+from typing import Tuple, Optional
 
 from utils.constants import (
     BATCH_SIZE,
@@ -11,22 +11,20 @@ from utils.constants import (
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     HOEFFDING,
+    GREEDY_MIPS,
 )
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
 from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
-from algorithms.median_elimination import median_elimination
-from algorithms.action_elimination import action_elimination
-from algorithms.adaptive_action_elimination import adaptive_action_elimination
-
+from algorithms.greedy_mips import greedy_mips
 
 def scaling_exp(
-    epsilon: float,
-    delta: float,
+    epsilon: Optional[float],
+    delta: Optional[float],
     data_type: str = ADVERSARIAL_CUSTOM,
-    bandit_alg: str = MEDIAN_ELIMINATION,
+    mips_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = 20,
     size_minmax: Tuple[int] = (10, 10 ** 6),
     num_atoms: int = 10 ** 3,
@@ -37,6 +35,8 @@ def scaling_exp(
     is_normalize: bool = False,
     is_log: bool = True,
     is_plot: bool = True,
+    is_logspace: bool = True,
+    dirname: str = None,
 ) -> None:
     """
     Check that the time complexity of bandit algorithm scales with the square root of the signal size.
@@ -45,7 +45,7 @@ def scaling_exp(
     :param epsilon: A epsilon (an additive error allowed)
     :param delta: A delta (an upper bound of failure probability)
     :param data_type: A name of data generating function
-    :param bandit_alg: A name of bandit algorithm
+    :param mips_alg: A name of bandit algorithm
     :param num_experiments: Number of experiments
     :param size_minmax: Minimum and Maximum of signal vector size
     :param num_atoms: Number of atoms
@@ -56,11 +56,19 @@ def scaling_exp(
     :param is_normalize: Whether to normalize atoms and signal
     :param is_log: Whether to log the results
     :param is_plot: Whether to plot the results
+    :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
+    :param dirname: Directory name to log the results
     """
+    global budget_array
     rng = np.random.default_rng(seed)
-    sizes_signal = np.linspace(size_minmax[0], size_minmax[1], num_experiments).astype(
-        np.int64
-    )
+    if is_logspace:
+        sizes_signal = np.logspace(np.log(size_minmax[0]), np.log(size_minmax[1]), num_experiments, base=np.e).astype(
+            np.int64
+        )
+    else:
+        sizes_signal = np.linspace(size_minmax[0], size_minmax[1], num_experiments).astype(
+            np.int64
+        )
     budgets = []
     budgets_std = []
     accuracy_list = []
@@ -88,12 +96,12 @@ def scaling_exp(
                 1,
                 -1,
             )  # Assume that the information on element-wise product is not given.
-        if "ELIMINATION" in bandit_alg:
+        if "ELIMINATION" in mips_alg:
             candidates_array, budget_array = mips_bandit(
                 atoms=atoms_subset,
                 signals=signals_subset,
                 maxmin=maxmin,
-                bandit_alg=bandit_alg,
+                bandit_alg=mips_alg,
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,
@@ -101,20 +109,29 @@ def scaling_exp(
                 is_experiment=False,
                 with_replacement=with_replacement,
             )
-            budgets.append(np.mean(budget_array))
-            budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
-            naive_candidates_array = (
-                np.matmul(-atoms_subset, signals_subset.transpose())
-                .argsort(axis=0)[:num_best_atoms]
-                .transpose()
+        elif mips_alg is GREEDY_MIPS:
+            candidates_array, _, _, budget_array = greedy_mips(
+                atoms=atoms_subset,
+                signals=signals_subset,
+                budget=50,
+                num_best_atoms=num_best_atoms,
             )
-            accuracy = 0
-            for idx in range(num_signals):
-                accuracy += len(
-                    np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
-                )
-            accuracy /= num_signals * num_best_atoms
-            accuracy_list.append(accuracy)
+        else:
+            raise NotImplementedError(f"{mips_alg} is not implemented")
+        budgets.append(np.mean(budget_array))
+        budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
+        naive_candidates_array = (
+            np.matmul(-atoms_subset, signals_subset.transpose())
+            .argsort(axis=0)[:num_best_atoms]
+            .transpose()
+        )
+        accuracy = 0
+        for idx in range(num_signals):
+            accuracy += len(
+                np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
+            )
+        accuracy /= num_signals * num_best_atoms
+        accuracy_list.append(accuracy)
 
     budgets = np.array(budgets)
     budgets_std = np.array(budgets_std)
@@ -128,22 +145,31 @@ def scaling_exp(
             "accuracy": accuracy_list,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs"
+        log_dir = "logs" if dirname is None else dirname
         filename = os.path.join(
             log_dir,
-            "SCALING_" + data_type + "_" + bandit_alg + "_" + str(epsilon) + "_" + str(delta),
+            "SCALING_" + data_type + "_" + mips_alg + "_" + str(epsilon) + "_" + str(delta),
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
     if is_plot:
-        functions = [np.array, np.sqrt, np.log]
-        function_names = ["Linear", "Sqrt", "Logarithm"]
+        if is_logspace:
+            functions = [np.array, np.exp]
+            function_names = ["Linear", "Exp"]
+            sizes_signal = np.log(sizes_signal)
+            xlabel = "signal sizes (natural log scale)"
+        else:
+            functions = [np.array, np.sqrt, np.log]
+            function_names = ["Linear", "Sqrt", "Logarithm"]
+            xlabel = None
         fit_and_plot(
             sizes_signal,
             budgets,
             functions,
             function_names,
             ys_std=budgets_std,
-            title=f"{bandit_alg} + w/ replacement: {with_replacement}",
+            title=f"{mips_alg} + w/ replacement: {with_replacement}",
+            xlabel=xlabel
         )
-        print(f"Mean accuracy with {bandit_alg} for {data_type}: {np.mean(accuracy_list)}")
+
+    print(f"Mean accuracy with {mips_alg} for {data_type}: {np.mean(accuracy_list)}")

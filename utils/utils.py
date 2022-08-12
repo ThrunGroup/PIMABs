@@ -257,6 +257,10 @@ def fit_and_plot(
     """
     Fit xs, ys to function and plot the points and curve.
 
+    :param ys_std: Standard Deviation of Output array (used for error bar plot)
+    :param title: Title of plot
+    :param xlabel: X label of plot
+    :param ylabel: Y label of plot
     :param xs: Input array
     :param ys: Output array
     :param function_list: List of functions
@@ -284,7 +288,7 @@ def fit_and_plot(
     if ys_std is None:
         plt.scatter(xs, ys, color="black")
     else:
-        plt.errorbar(xs, ys, ys_std, fmt='o', color="black")
+        plt.errorbar(xs, ys, ys_std, fmt="o", color="black")
     title = "Scaling exps" if title is None else title
     xlabel = "signal vector size" if xlabel is None else xlabel
     ylabel = "Number of calculations for MIPS" if ylabel is None else ylabel

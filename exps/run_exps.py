@@ -37,7 +37,7 @@ if __name__ == "__main__":
         num_experiments=5,
         num_signals=5,
         data_type=NORMAL_CUSTOM,
-        bandit_alg=ADAPTIVE_ACTION_ELIMINATION,
+        mips_alg=ADAPTIVE_ACTION_ELIMINATION,
         with_replacement=False,
         is_normalize=False,
     )
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         num_experiments=5,
         num_signals=5,
         data_type=NORMAL_CUSTOM,
-        bandit_alg=ACTION_ELIMINATION,
+        mips_alg=ACTION_ELIMINATION,
         with_replacement=True,
         is_normalize=False,
     )
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         num_signals=5,
         num_experiments=5,
         data_type=NORMAL_CUSTOM,
-        bandit_alg=MEDIAN_ELIMINATION,
+        mips_alg=MEDIAN_ELIMINATION,
         is_normalize=False,
     )
 

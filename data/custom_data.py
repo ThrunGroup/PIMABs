@@ -48,7 +48,7 @@ def generate_custom_data(
         p = rng.random(num_atoms)
         for idx in range(num_atoms):
             atoms_array[idx][: math.floor(p[idx] * len_signal)] = 1
-        signal = np.ones(size=(num_signals, len_signal))
+        signal = np.ones((num_signals, len_signal))
     elif data_type is NORMAL_CUSTOM:
         means = rng.normal(size=num_atoms)
         atoms_array = np.empty((num_atoms, len_signal))
