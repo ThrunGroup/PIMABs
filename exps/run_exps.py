@@ -13,6 +13,7 @@ from utils.constants import (
     UNIFORM_PAPER,
 )
 from scaling_exp import scaling_exp
+from fixed_confidence_exp import fixed_confidence_exp
 
 
 if __name__ == "__main__":
@@ -23,13 +24,13 @@ if __name__ == "__main__":
         0.2,
         0.3,
     )
-    # fixed_confidence_exp(
-    #     epsilons=epsilons,
-    #     deltas=deltas,
-    #     bandit_alg=ACTION_ELIMINATION,
-    #     num_experiments=50,
-    #     with_replacement=True,
-    # )
+    fixed_confidence_exp(
+        epsilons=epsilons,
+        deltas=deltas,
+        bandit_alg=ACTION_ELIMINATION,
+        num_experiments=50,
+        with_replacement=True,
+    )
     scaling_exp(
         0,
         0.5,
@@ -41,16 +42,16 @@ if __name__ == "__main__":
         with_replacement=False,
         is_normalize=False,
     )
-    # scaling_exp(
-    #     0,
-    #     0.5,
-    #     size_minmax=(10, 10 ** 5),
-    #     num_experiments=10,
-    #     data_type=UNIFORM_PAPER,
-    #     algorithm=ACTION_ELIMINATION,
-    #     with_replacement=False,
-    #     is_normalize=False,
-    # )
+    scaling_exp(
+        0,
+        0.5,
+        size_minmax=(10, 10 ** 5),
+        num_experiments=10,
+        data_type=UNIFORM_PAPER,
+        algorithm=ACTION_ELIMINATION,
+        with_replacement=False,
+        is_normalize=False,
+    )
     scaling_exp(
         0,
         0.5,

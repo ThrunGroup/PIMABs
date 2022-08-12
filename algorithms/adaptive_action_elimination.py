@@ -47,7 +47,7 @@ def adaptive_action_elimination(
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
-        new_delta = delta / (D * d)
+        new_delta = delta * batch_size / (d * D)
         budgets = 0  # Number of calculations
         candidates = np.arange(D)  # arms (atoms)
         lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
@@ -56,9 +56,8 @@ def adaptive_action_elimination(
         sorted_idcs = np.argsort(
             -np.abs(signal)
         )  # Indices that sorts signal in the descending order
-        # l2_atoms = np.zeros(D)  # l2 norms of atoms
-        # np.random.shuffle(sorted_idcs)
         sum_var_proxy = 0
+
         while len(candidates) > num_best_atoms:
             t += 1
 
@@ -87,8 +86,6 @@ def adaptive_action_elimination(
 
             min_signal = np.abs(signal_sampled[0])
             sum_var_proxy += var_proxy * (min_signal ** 2)
-            # new_var_proxy = var_proxy # * (min_signal ** 2)
-            # new_var_proxy = np.minimum(var_proxy, new_var_proxy)
             ci_vec = get_ci(
                 delta=new_delta,
                 var_proxy=var_proxy,

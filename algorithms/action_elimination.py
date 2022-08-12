@@ -40,7 +40,7 @@ def action_elimination(
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
-        new_delta = delta / (d * D)
+        new_delta = delta * batch_size / (d * D)
         budgets = 0  # Number of calculations
         candidates = np.arange(D)  # arms (atoms)
         lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
@@ -57,7 +57,6 @@ def action_elimination(
         # TODO: Change this to > 2, since if there is only one candidate left it will be the leader
         while len(candidates) > num_best_atoms:
             t += 1
-
             # Find a true inner product value of candidates if we sample more than their dimension (length of atom/signal)
             if t * batch_size > d:
                 if with_replacement:

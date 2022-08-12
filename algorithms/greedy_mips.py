@@ -52,7 +52,7 @@ def candidate_screening(
     Screening candidates that have maximum one-element inner product with signal
     """
     candidates = []
-    complxity = int(0)
+    complexity = int(0)
     while len(candidates) < budget:
         z, t = heapq.heappop(Q)
         z = -z  # heapq is min heap but regard it as max heap
@@ -62,11 +62,11 @@ def candidate_screening(
             if signal[t] > 0
             else conditer[-1 - conditer_idx, t]
         )
-        complxity += 3 + int(np.log2(len(Q)))
+        complexity += 3 + int(np.log2(len(Q)))
         if visited_j[j] == 0:
             candidates.append(j)
             visited_j[j] = 1
-            complxity += 1
+            complexity += 1
         while conditer_idx < conditer.shape[0]:
             iters[t] += 1
             conditer_idx = iters[t]
@@ -75,11 +75,11 @@ def candidate_screening(
                 if signal[t] > 0
                 else conditer[-1 - conditer_idx, t]
             )
-            complxity += 3
+            complexity += 3
             if visited_j[j] == 0:
                 z = atoms[j, t] * signal[t]
                 heapq.heappush(Q, (-z, t))
-                complxity += 1 + int(np.log2(len(Q)))
+                complexity += 1 + int(np.log2(len(Q)))
                 break
     return np.array(candidates), budget
 
@@ -102,7 +102,7 @@ def greedy_mips(
     :param signals: Signals array
     :param budget: Number of atoms of which we naively compute inner product
     :param verbose: Whether to
-    :param num_best_atoms: Number of best atoms we choose
+    :param num_best_atoms: Number of the best atoms we choose
     :param conditer: Preprocessed array that is not signal dependent.
     :param is_check: Whether to check the algorithm well behaves. Turn off as it increases runtime.
     :return: Arrays of final answers of MIPS, signal(query)-dependent runtime, signal-independent runtime, and
@@ -112,9 +112,9 @@ def greedy_mips(
     start_time = time.time()
     if conditer is None:
         conditer = generate_conditer(atoms)
-    visited_j = np.zeros(atoms.shape[0])
     if verbose:
         print(f"preprocess time: {time.time() - start_time}")
+    visited_j = np.zeros(atoms.shape[0])
     best_atom_list = []
     query_dependent_time_list = []
     candidate_ranking_time_list = []
@@ -131,6 +131,28 @@ def greedy_mips(
         candidates, screen_complexity = candidate_screening(
             atoms, signal, conditer, iters, heap, budget, visited_j
         )
+        query_dependent_time = time.time() - start_time
+
+        # Rank the candidates
+        start_time = time.time()
+        best_atom_list.append(
+            candidates[np.argsort(-atoms[candidates] @ signal)[:num_best_atoms]]
+        )
+
+        ranking_complexity = budget * (
+            int(signal.shape[0]) * (int(np.log2(signal.shape[0])) + 1)
+        )
+        candidate_ranking_time = time.time() - start_time
+
+        # log the results
+        total_complexity_list.append(
+            generate_heap_complexity + screen_complexity + ranking_complexity
+        )
+        query_dependent_time_list.append(query_dependent_time)
+        candidate_ranking_time_list.append(candidate_ranking_time)
+
+        for candidate in candidates:
+            visited_j[candidate] = 0
         if is_check:
             assert (
                 np.sum(
@@ -142,28 +164,11 @@ def greedy_mips(
                 / budget
                 == 1.0
             ), "Greedy MIPS algorithm is broken"
-
-        query_dependent_time = time.time() - start_time
-        start_time = time.time()
-        best_atom_list.append(
-            candidates[np.argsort(-atoms[candidates] @ signal)[:num_best_atoms]]
-        )
-        ranking_complexity = budget * (
-            int(signal.shape[0]) * (int(np.log2(signal.shape[0])) + 1)
-        )
-        candidate_ranking_time = time.time() - start_time
-        query_dependent_time_list.append(query_dependent_time)
-        candidate_ranking_time_list.append(candidate_ranking_time)
         if verbose:
             print(
                 f"query dependent preprocess + candidates screening: {query_dependent_time}"
             )
             print(f"candidate ranking: {candidate_ranking_time}")
-        for candidate in candidates:
-            visited_j[candidate] = 0
-        total_complexity_list.append(
-            generate_heap_complexity + screen_complexity + ranking_complexity
-        )
     return (
         np.array(best_atom_list),
         np.array(query_dependent_time_list),
@@ -181,10 +186,13 @@ def reproduce_figure6(seed: int = 0):
         for k in [2, 5, 7]:
             speedup_list = []
             accuracy_list = []
-            atoms = rng.normal(size=(2 ** n, 2 ** k))
-            signals = rng.normal(size=(num_experiments, 2 ** k))
             time_list = []
             naive_best_arms = []
+
+            # Dataset described in https://arxiv.org/pdf/1610.03317.pdf#page=16
+            atoms = rng.normal(size=(2 ** n, 2 ** k))
+            signals = rng.normal(size=(num_experiments, 2 ** k))
+
             for signal in signals:
                 start_time = time.time()
                 naive_best_arms.append(
@@ -207,13 +215,14 @@ def reproduce_figure6(seed: int = 0):
                     conditer=conditer,
                 )
                 best_arms = np.array(best_arms)
+
                 accuracy = 0
                 for idx in range(len(best_arms)):
                     accuracy += len(
                         np.intersect1d(naive_best_arms[idx], best_arms[idx])
                     )
                 accuracy /= len(best_arms) * len(best_arms[0])
-
+                accuracy_list.append(accuracy)
                 speedup_list.append(
                     np.mean(time_list)
                     / (
@@ -221,7 +230,6 @@ def reproduce_figure6(seed: int = 0):
                         + np.mean(ranking_time_list[1:])
                     )
                 )
-                accuracy_list.append(accuracy)
             fit_and_plot(
                 np.array(speedup_list),
                 np.array(accuracy_list),
@@ -235,9 +243,7 @@ def reproduce_figure6(seed: int = 0):
 
 
 if __name__ == "__main__":
-    from exps.scaling_exp import scaling_exp
-
-    reproduce_figure6()
+    from exps.scaling_exp import scaling_exp  # To avoid circular import
     for dataset in [ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, UNIFORM_PAPER, NORMAL_PAPER]:
         scaling_exp(
             epsilon=None,
@@ -246,7 +252,8 @@ if __name__ == "__main__":
             mips_alg=GREEDY_MIPS,
             size_minmax=(30, 10 ** 4),
             num_experiments=10,
-            dirname=os.path.join("exps", "logs"),
+            dirname=os.path.join(os.path.dirname(os.path.dirname(__file__)), os.path.join("exps", "logs")),
             num_signals=10,
             is_logspace=True,
         )
+    reproduce_figure6()

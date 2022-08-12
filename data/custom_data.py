@@ -22,22 +22,18 @@ def generate_custom_data(
 
     :param num_atoms: Number of atoms(arms)
     :param len_signal: A size of signal vector
+    :param num_signals: Number of signals
     :param seed: A random seed
     :param data_type: The name of distribution from which data are drawn
-    :return: A synthetic dataset (vector values are drawn from Gaussian and Uniform distribution)
+    :return: A synthetic dataset
     """
     rng = np.random.default_rng(seed)
     atoms_array = np.empty((num_atoms, len_signal))
     if (
         data_type is UNIFORM_PAPER
-    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+    ):   # Hardcode so that variance proxy(sub-gaussian distribution) is 1
         signal = rng.uniform(low=0, high=2, size=(num_signals, len_signal))
         atoms_array = rng.uniform(low=0, high=2, size=(num_atoms, len_signal))
-        # means = rng.uniform(low=-1, high=+1, size=num_atoms)
-        # means = np.zeros(num_atoms)
-        # atoms_array = np.empty((num_atoms, len_signal))
-        # for idx in range(num_atoms):
-        #     atoms_array = rng.uniform(low=-1 + means[idx], high=1 + means[idx], size=(num_atoms, len_signal))
     elif (
         data_type is NORMAL_PAPER
     ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
@@ -49,7 +45,7 @@ def generate_custom_data(
         for idx in range(num_atoms):
             atoms_array[idx][: math.floor(p[idx] * len_signal)] = 1
         signal = np.ones((num_signals, len_signal))
-    elif data_type is NORMAL_CUSTOM:
+    elif data_type is NORMAL_CUSTOM:  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
         means = rng.normal(size=num_atoms)
         atoms_array = np.empty((num_atoms, len_signal))
         for idx in range(num_atoms):
