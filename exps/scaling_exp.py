@@ -40,7 +40,8 @@ def scaling_exp(
 ) -> None:
     """
     Check that the time complexity of bandit algorithm scales with the square root of the signal size.
-    MEDIAN_ELIMINATION algorithm should satisfy this scaling according to Corollary 3 in "shorturl.at/adPR3".
+    MEDIAN_ELIMINATION algorithm should satisfy this scaling according to Corollary 3 in
+    "https://arxiv.org/pdf/1812.06360.pdf#page=5".
 
     :param epsilon: A epsilon (an additive error allowed)
     :param delta: A delta (an upper bound of failure probability)
