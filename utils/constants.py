@@ -26,11 +26,14 @@ NORMAL_CUSTOM = "NORMAL_CUSTOM"
 HOEFFDING = "HOEFFDING"
 
 # DataFrame columns for Netflix and Yahoo! Music datasets
+NETFLIX = "NETFLIX"
+YAHOO = "YAHOO"
 CUST_ID = "Cust_id"
 RATING = "Rating"
 MOVIE_ID = "Movie_Id"
 USER_ID = "User_id"
 ITEM_ID = "Item_id"
+INDEX = "index"
 
 # Netflix dataset-specific constants
 NUM_NETFLIX_USERS = 2649429
