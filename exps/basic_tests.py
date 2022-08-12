@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from typing import Tuple
+from typing import Tuple, List
 
 from algorithms.lsh_mips import LSH_MIPS
 from algorithms.pca_mips import PCA_MIPS
@@ -13,6 +13,8 @@ from utils.constants import (
     LSH,
     SYMMETRIC,
     ASYMMETRIC,
+    NUM_HFUNC,
+    NUM_POINTS_LSH
 )
 from utils.utils import subset_2d, fit_and_plot
 from data.custom_data import generate_normal_data, generate_adversarial_data, generate_normal_paper
@@ -49,7 +51,6 @@ def run_lsh_mips(
     data,
     query,
     top_k=[1, 3],
-    num_bits=5,
     num_hfunc=5,
     num_tables=10,
     type=ASYMMETRIC,
@@ -70,7 +71,6 @@ def run_lsh_mips(
     LSHMIPS = LSH_MIPS(
         data,
         query,
-        num_bits=num_bits,
         num_hfunc=num_hfunc,
         num_tables=num_tables,
         type=type
@@ -121,27 +121,26 @@ def compare_with_naive(candidates1, candidates2, top_k):
     :candidates1: a list of true candidates returned from the naive search for each k value
     :candidates2: a list of candidates returned from either LSH-MIPS or PCA-MIPS.
     """
-    if len(candidates2) == 0:
-        return 0
-
+    precisions = []
     for i, k in enumerate(top_k):
-        precision = len(np.intersect1d(candidates1, candidates2)) / k
-        #print("     => precision: ", precision)
-        return precision
+        if len(candidates2[i]) == 0:
+            precisions.append(0.0)
+        else:
+            precisions.append(len(np.intersect1d(candidates1[i], candidates2[i])) / k)
+    return precisions
 
 
 def scaling_baseline(
-    top_k: list[int] = [5],
-    generate_data: str = ADVERSARIAL_CUSTOM,
-    name_alg: str = PCA,
-    size_minmax: Tuple[int] = (10, 10 ** 4),
-    type: str = None,
-    num_bits: int = 5,
-    num_hfunc: int = 10,
-    num_tables: int = 5,
-    num_experiments: int = 20,
     seed: int = 0,
-    is_normalize: bool = True,
+    top_k: List[int] = [5],
+    generate_data: str = ADVERSARIAL_CUSTOM,
+    is_normalize: bool = False,
+    size_minmax: Tuple[int] = (10, 10 ** 4),
+    num_points: int = 20,
+    name_alg: str = PCA,
+    num_hfunc: int = NUM_HFUNC//3,
+    num_tables: int = 3,
+    type: str = None,
 ) -> None:
     """
     Verify that the query time complexities of pca-mips and lsh-mips are both linear to the size of the
@@ -155,7 +154,6 @@ def scaling_baseline(
     :size_minmax: the minimum, maximum of the signal vector size
 
     :type: either symmetric of asymmetric
-    :num_bits: number of buckets to hash the dataset to
     :num_hfunc: number of hyperplanes per hash table
     :num_tables: number of hash tables
 
@@ -164,7 +162,7 @@ def scaling_baseline(
     :is_normalize: Whether to normalize atoms and signal
     """
     rng = np.random.default_rng(seed)
-    sizes_signal = np.linspace(size_minmax[0], size_minmax[1], num_experiments).astype(
+    sizes_signal = np.linspace(size_minmax[0], size_minmax[1], num_points).astype(
         np.int64
     )
     budgets = []
@@ -178,7 +176,7 @@ def scaling_baseline(
     else:
         raise NotImplementedError(f"{generate_data} is not implemented")
 
-    atoms, signal = generate_data(num_atoms=1000, len_signal=sizes_signal[-1], seed=seed)
+    atoms, signal = generate_data(num_atoms=100, len_signal=sizes_signal[-1], seed=seed)
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
         atoms_subset, signal_subset = atoms[:, subset_indices], signal[subset_indices]
@@ -188,7 +186,7 @@ def scaling_baseline(
             atoms_subset /= atoms_norm
             signal_subset /= signal_norm
 
-        #print("=> signal length:", size)
+        print("     ... signal length:", size)
         if name_alg == PCA:
             budget, _ = run_pca_mips(
                 data=atoms_subset,
@@ -197,12 +195,10 @@ def scaling_baseline(
                 top_k=top_k
             )
         elif name_alg == LSH:
-            #print(f"=> type is {type}")
             budget, _ = run_lsh_mips(
                 type=type,
                 data=atoms_subset,
                 query=signal_subset,
-                num_bits=num_bits,
                 num_hfunc=num_hfunc,
                 num_tables=num_tables,
                 top_k=top_k,
@@ -210,45 +206,29 @@ def scaling_baseline(
 
         budgets.append(budget)
     budgets = np.array(budgets)
-    return budgets, sizes_signal
+    return np.squeeze(budgets), np.array(sizes_signal)
 
 
-def precision_speed(
-    top_k: list[int] = [5],
-    generate_data: str = ADVERSARIAL_CUSTOM,
-    name_alg: str = PCA,
-    a_minmax: Tuple[int] = (0, 9),
-    type: str = None,
-    num_experiments: int = 4,
+def precision_speed_pca(
     seed: int = 0,
-    is_normalize: bool = True,
-    num_hfunc: int = 10,
-    num_tables: int = 5,
+    top_k: List[int] = [5, 10],
+    generate_data: str = ADVERSARIAL_CUSTOM,
+    is_normalize: bool = False,
+    num_points: int = 4,
+    depth_minmax: Tuple[int] = (0, 5),
 ) -> None:
     """
-    Verify the precision, speed tradeoff of pca-mips and lsh-mips is logarithmic.
-    Precisions is defined as the fraction of true top K solutions in the returned tp K solutions and
-    speed is dictated by the total budget used.
+    For a given dataset and a certain minmax range, computes the budgets and precisions for
+    num_points total experiments of pca-mips. Returns a numpy array of budgets and their corresponding precision.
 
+    :seed: A random seed
     :top_k: A list of how many candidates to return
     :generate_data: A name of data generating function
-    :name_alg: A name of algorithm (either pca or lsh)
-    :a_minmax: the min and max of "a" where a represents either the depth of pca-tree (pca-mips) or the number of bits
-                to hash the dataset into (lsh-mips)
-    :type: either symmetric or asymmetric
-    :num_experiments: Number of experiments
-    :seed: A random seed
     :is_normalize: Whether to normalize atoms and signal
-    :num_hfunc: number of hyperplanes per hash table
-    :num_tables: number of hash tables
+    :num_points: Number of points that will be plotted
+    :depth_minmax: the min and max of depth of pca-tree
     """
-    rng = np.random.default_rng(seed)
-    a_values = np.linspace(a_minmax[0], a_minmax[1], num_experiments).astype(
-        np.int64
-    )
-
-    budgets = []
-    #print(f"... generating {generate_data}")
+    # generate the correct dataset
     if generate_data == ADVERSARIAL_CUSTOM:
         generate_data = generate_adversarial_data
     elif generate_data == NORMAL_CUSTOM:
@@ -257,39 +237,111 @@ def precision_speed(
         generate_data = generate_normal_paper
     else:
         raise NotImplementedError(f"{generate_data} is not implemented")
-
+    #atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
     atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
+
+    # by default, we will NOT be needing to normalize
     if is_normalize:
         atoms_norm = np.linalg.norm(atoms, axis=1, keepdims=True)
         signal_norm = np.linalg.norm(signal, keepdims=True)
         atoms /= atoms_norm
         signal /= signal_norm
 
+    # setup experiements by defining the depths we will experiment on.
+    # This is analogous to setting "a" in the paper
+    depths = np.linspace(depth_minmax[0], depth_minmax[1], num_points).astype(
+        np.int64
+    )
+
+    # running the experiments and concatenating the results in the budget, precisions list.
+    # both lists should be of size num_points at the end of the experiment
     budgets = []
     precisions = []
     candidates = naive_mips(atoms, signal, top_k=top_k)
-    for a in a_values:
-        #print("=> a: ", a)
-        if name_alg == PCA:
-            budget, _candidates = run_pca_mips(
-                data=atoms,
-                query=signal,
-                delta=a,  # this deepens the tree
-                top_k=top_k
-            )
-        elif name_alg == LSH:
+    for depth in depths:
+        print("     ... depth: ", depth)
+        budget, _candidates = run_pca_mips(
+            data=atoms,
+            query=signal,
+            delta=depth,  # this deepens the tree
+            top_k=top_k
+        )
+        budgets.append(np.array(budget))
+        precisions.append(
+            np.array(compare_with_naive(candidates, _candidates, top_k))
+        )
+    return np.array(budgets), np.array(precisions)
+
+
+def precision_speed_lsh(
+    seed: int = 0,
+    top_k: list[int] = [5, 10],
+    generate_data: str = ADVERSARIAL_CUSTOM,
+    is_normalize: bool = False,
+    num_points: int = 10,
+    hfunc_minmax: Tuple[int] = (0, NUM_HFUNC),
+    table_minmax: Tuple[int] = (1, 6),
+    type: str = None
+) -> None:
+    """
+    For a given dataset and a certain minmax range, computes the budgets and precisions for
+    num_points total experiments of lsh-mips. Returns a numpy array of budgets and their corresponding precision.
+
+    :seed: A random seed
+    :top_k: A list of how many candidates to return
+    :generate_data: A name of data generating function
+    :is_normalize: Whether to normalize atoms and signal
+    :num_points: Number of points to plot on graph
+    :hfunc_minmax: Minmax of number of hyperplanes
+    :table_minmax: Minmax of table size.
+    :type: Either symmetric or asymmetric
+    """
+    # generate the data
+    if generate_data == ADVERSARIAL_CUSTOM:
+        generate_data = generate_adversarial_data
+    elif generate_data == NORMAL_CUSTOM:
+        generate_data = generate_normal_data
+    elif generate_data == NORMAL_PAPER:
+        generate_data = generate_normal_paper
+    else:
+        raise NotImplementedError(f"{generate_data} is not implemented")
+    #atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
+    atoms, signal = generate_data(num_atoms=100, len_signal=1000, seed=seed)
+
+    # by default, the data is NOT normalized
+    if is_normalize:
+        atoms_norm = np.linalg.norm(atoms, axis=1, keepdims=True)
+        signal_norm = np.linalg.norm(signal, keepdims=True)
+        atoms /= atoms_norm
+        signal /= signal_norm
+
+    # setup experiments by defining the array of num_hfunc and num_tables.
+    # This is analogous to setting up pairs of (a, b) in the paper.
+    table_diff = table_minmax[1] - table_minmax[0] + 1
+    num_hfuncs = np.linspace(hfunc_minmax[0], hfunc_minmax[1], num_points // table_diff).astype(np.int64)
+    num_tables = np.linspace(table_minmax[0], table_minmax[1], table_diff).astype(np.int64)
+    assert (len(num_hfuncs) * len(num_tables) == num_points)
+
+    # running the experiments and concatenating the results in the budget, precisions list.
+    # both lists should be of size num_points at the end of the experiment
+    budgets = []
+    precisions = []
+    candidates = naive_mips(atoms, signal, top_k=top_k)
+    for num_table in num_tables:
+        for num_hfunc in num_hfuncs:
+            print("     ... num_tables, num_hfunc: ", (num_table, num_hfunc))
             budget, _candidates = run_lsh_mips(
                 type=type,
                 data=atoms,
-                num_bits=a,  # this controls the final buckets
-                num_hfunc=num_hfunc,
-                num_tables=num_tables,
+                num_hfunc=num_hfunc,  # this is analogous to "a"
+                num_tables=num_table,  # this is analogous to "b"
                 query=signal,
                 top_k=top_k,
             )
-        budgets.append(budget)
-        precisions.append(compare_with_naive(candidates, _candidates, top_k))
-    return np.array(budgets), np.array(precisions).reshape((len(precisions), 1))
-
+            budgets.append(np.array(budget))
+            precisions.append(
+                np.array(compare_with_naive(candidates, _candidates, top_k))
+            )
+    return np.array(budgets), np.array(precisions)
 
 

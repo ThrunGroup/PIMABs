@@ -247,12 +247,19 @@ def subset_2d(array: np.ndarray, rows: np.ndarray, columns: np.ndarray) -> np.nd
 def fit_and_plot(
     xs: np.ndarray,
     ys: np.ndarray,
-    function_list: List[np.ufunc],
-    function_name_list: List[str],
+    function_list: List[np.ufunc] = None,
+    function_name_list: List[str] = None,
+    ys_std: np.ndarray = None,
+    title: str = None,
+    xlabel: str = None,
+    ylabel: str = None,
 ) -> None:
     """
     Fit xs, ys to function and plot the points and curve.
-
+    :param ys_std: Standard Deviation of Output array (used for error bar plot)
+    :param title: Title of plot
+    :param xlabel: X label of plot
+    :param ylabel: Y label of plot
     :param xs: Input array
     :param ys: Output array
     :param function_list: List of functions
@@ -260,23 +267,31 @@ def fit_and_plot(
     """
     lr = LinearRegression()
     hashes = np.linspace(xs[0], xs[-1], 5000)
-    for idx in range(len(function_list)):
-        function = function_list[idx]
-        function_name = function_name_list[idx]
-        lr.fit(function(xs).reshape(-1, 1), ys)  # Fit xs, ys into function
+    if (function_list is not None) and (function_name_list is not None):
+        for idx in range(len(function_list)):
+            function = function_list[idx]
+            function_name = function_name_list[idx]
+            lr.fit(function(xs).reshape(-1, 1), ys)  # Fit xs, ys into function
 
-        xs_predict = lr.predict(function(xs).reshape(-1, 1))
-        hashes_predict = lr.predict(function(hashes).reshape(-1, 1))
-        mean_ys = np.mean(ys)
-        r2 = 1 - ((xs_predict - ys) ** 2).sum() / ((ys - mean_ys) ** 2).sum()
-        plt.plot(
-            hashes,
-            hashes_predict,
-            color=COLORS[idx],
-            label=f"{function_name} fit,  $R^2 = {r2:.4f}$",
-        )
-    plt.scatter(xs, ys, color="black")
-    plt.ylabel("Number of calculations for MIPS")
-    plt.xlabel("signal vector size")
-    plt.legend(loc="lower right")
+            xs_predict = lr.predict(function(xs).reshape(-1, 1))
+            hashes_predict = lr.predict(function(hashes).reshape(-1, 1))
+            mean_ys = np.mean(ys)
+            r2 = 1 - ((xs_predict - ys) ** 2).sum() / ((ys - mean_ys) ** 2).sum()
+            plt.plot(
+                hashes,
+                hashes_predict,
+                color=COLORS[idx],
+                label=f"{function_name} fit,  $R^2 = {r2:.4f}$",
+            )
+            plt.legend(loc="lower right")
+    if ys_std is None:
+        plt.scatter(xs, ys, color="black")
+    else:
+        plt.errorbar(xs, ys, ys_std, fmt="o", color="black")
+    title = "Scaling exps" if title is None else title
+    xlabel = "signal vector size" if xlabel is None else xlabel
+    ylabel = "Number of calculations for MIPS" if ylabel is None else ylabel
+    plt.title(title)
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
     plt.show()

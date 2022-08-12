@@ -7,6 +7,8 @@ from operator import itemgetter
 from utils.lsh_utils import *
 from utils.constants import SYMMETRIC, ASYMMETRIC
 
+# for debugging purposes
+np.random.seed(0)
 
 class LSH_MIPS:
     """
@@ -30,7 +32,6 @@ class LSH_MIPS:
         query,
         m=3,
         rand_range=1.0,
-        num_bits=5,
         num_hfunc=5,
         num_tables=10,
         type=ASYMMETRIC,
@@ -56,7 +57,6 @@ class LSH_MIPS:
             raise Expection("Invalid LSH type declared")
 
         self.type = type
-        self.num_bits = num_bits
         self.num_hfunc = num_hfunc
         self.num_tables = num_tables
 
@@ -93,7 +93,11 @@ class LSH_MIPS:
         # create num_tables hash tables where each table consists of num_hfunc hyperplanes
         self.hash_tables = []
         for i in range(self.num_tables):
-            hyperplanes = np.random.normal(0.0, 1.0, (self.num_hfunc, self.d))
+            if self.num_hfunc == 0:
+                hyperplanes = np.zeros((1, self.d))  # map to single bucket
+            else:
+                hyperplanes = np.random.normal(0.0, 1.0, (self.num_hfunc, self.d))
+
             self.hash_tables.append(
                 # single element of table looks like (hyperplanes, dict(hash_value: {idcs_of_data}))
                 (hyperplanes, defaultdict(lambda: []))
@@ -101,14 +105,13 @@ class LSH_MIPS:
 
         # hash the values
         for hyperplanes, hash_dict in self.hash_tables:
-            # each row represents one atom's hash value
+            # standard amplification procedure (a hash value is an array).
+            # The final number of buckets is 2^num_hfunc
             values = self.hash_func(data, hyperplanes.T)
             hash_values = np.where(values > 0, 1, 0)
 
-            # standard amplification procedure (a hash value is an array).
-            # The final value is value mod 2^num_bits (this allows for more collisions).
             for i, hash_value in enumerate(hash_values):
-                bucket = binary_to_num(hash_value) % (2 ** self.num_bits)
+                bucket = binary_to_num(hash_value)
                 hash_dict[bucket].append(i)
 
     def run(self, data, query, top_k=1):
@@ -130,7 +133,7 @@ class LSH_MIPS:
             hash_value = np.where(value > 0, 1, 0)
 
             # get matches
-            bucket = binary_to_num(hash_value) % (2 ** self.num_bits)
+            bucket = binary_to_num(hash_value)
             matches = hash_dict.get(bucket, [])  # return [] if match doesn't exist
             candidates.update(matches)
 

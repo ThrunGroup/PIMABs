@@ -74,5 +74,5 @@ class PCA_MIPS:
 
         # increment budget by cells seen in matrix multiplication (assuming query is only seen once) and
         # the time complexity of np.argpartition (time complexity is O(n)).
-        budget += (len(candidates) * len(self.p_query) + len(dist_vec))
+        budget += len(candidates) * len(self.p_query) + len(dist_vec)
         return budget, candidates[idx[:top_k]]

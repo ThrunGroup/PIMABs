@@ -7,7 +7,7 @@ def binary_to_num(bnum):
     Converts an array of ints into one integer.
     [1, 0, 1, 1] => 1011
     """
-    return int("".join(map(str, bnum)), 2)
+    return int("".join(map(str, bnum)))
 
 
 def g_index_extend(data, m):
