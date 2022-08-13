@@ -40,7 +40,6 @@ def load_netflix():
     :return: numpy ndarray of users by movies
     """
     # Join the shards into one
-    df = dataframes[0]
     for idx in range(NUM_DATA_FILES):
         if idx == 0:
             df = load_data(os.path.join("raw_data", "combined_data_" + str(idx + 1) + ".txt"))
