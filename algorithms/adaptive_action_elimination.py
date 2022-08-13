@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from typing import Tuple
-import numba as nb
+
 from utils.constants import (
     BATCH_SIZE,
     ADVERSARIAL_CUSTOM,
@@ -84,8 +84,8 @@ def adaptive_action_elimination(
                 (t * batch_size * means[candidates]) + (candidates_sampled @ signal_sampled)
             ) / ((t + 1) * batch_size)
 
-            min_signal = np.abs(signal_sampled[0])
-            sum_var_proxy += var_proxy * (min_signal ** 2)
+            max_signal = np.abs(signal_sampled[0])
+            sum_var_proxy += var_proxy * (max_signal ** 2)
             ci_vec = get_ci(
                 delta=new_delta,
                 var_proxy=var_proxy,

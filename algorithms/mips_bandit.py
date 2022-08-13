@@ -3,11 +3,9 @@ import math
 from typing import Tuple
 
 from utils.constants import (
-    BATCH_SIZE,
-    ADVERSARIAL_CUSTOM,
-    NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
+    ADAPTIVE_ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
     HOEFFDING,
 )
