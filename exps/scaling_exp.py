@@ -37,6 +37,7 @@ def scaling_exp(
     seed: int = 0,
     with_replacement: bool = False,
     is_normalize: bool = False,
+    is_run: bool = True,
     is_log: bool = True,
     is_plot: bool = True,
     is_logspace: bool = True,
@@ -59,111 +60,115 @@ def scaling_exp(
     :param seed: A random seed
     :param with_replacement: Whether to sample with replacement
     :param is_normalize: Whether to normalize atoms and signal
+    :param is_run: Whether to run experiments
     :param is_log: Whether to log the results
     :param is_plot: Whether to plot the results
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
     :param dirname: Directory name to log the results
     """
-    rng = np.random.default_rng(seed)
-    if is_logspace:
-        sizes_signal = np.logspace(
-            np.log(size_minmax[0]), np.log(size_minmax[1]), num_ds, base=np.e
-        ).astype(np.int64)
-    else:
-        sizes_signal = np.linspace(
-            size_minmax[0], size_minmax[1], num_experiments
-        ).astype(np.int64)
-    budgets = []
-    budgets_std = []
-    accuracy_list = []
-    atoms, signals = generate_custom_data(
-        num_atoms=num_atoms,
-        len_signal=sizes_signal[-1],
-        num_signals=num_signals,
-        seed=seed,
-        data_type=data_type,
-    )
-    maxmin = (1, -1)
-    for size in sizes_signal:
-        subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
-        atoms_subset, signals_subset = (
-            atoms[:, subset_indices],
-            signals[:, subset_indices],
-        )
-        if is_normalize:
-            atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
-            signal_norm = np.linalg.norm(signals_subset, axis=1, keepdims=True)
-            atoms_subset /= atoms_norm
-            signals_subset /= signal_norm
-            epsilon /= atoms_norm.max() * signal_norm
-            maxmin = (
-                1,
-                -1,
-            )  # Assume that the information on element-wise product is not given.
-        if mips_alg in (ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION):
-            candidates_array, budget_array = mips_bandit(
-                atoms=atoms_subset,
-                signals=signals_subset,
-                maxmin=maxmin,
-                bandit_alg=mips_alg,
-                epsilon=epsilon,
-                delta=delta,
-                num_best_atoms=num_best_atoms,
-                seed=seed,
-                is_experiment=False,
-                with_replacement=with_replacement,
-            )
-        elif mips_alg is GREEDY_MIPS:
-            candidates_array, _, _, budget_array = greedy_mips(
-                atoms=atoms_subset,
-                signals=signals_subset,
-                budget=50,
-                num_best_atoms=num_best_atoms,
+    if is_log:
+        assert is_run, "Cannot log experiments without running them"
+
+    if is_run:
+        global budget_array
+        rng = np.random.default_rng(seed)
+        if is_logspace:
+            sizes_signal = np.logspace(np.log(size_minmax[0]), np.log(size_minmax[1]), num_ds, base=np.e).astype(
+                np.int64
             )
         else:
-            raise NotImplementedError(f"{mips_alg} is not implemented")
-        budgets.append(np.mean(budget_array))
-        budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
-        naive_candidates_array = (
-            np.matmul(-atoms_subset, signals_subset.transpose())
-            .argsort(axis=0)[:num_best_atoms]
-            .transpose()
-        )
-        accuracy = 0
-        for idx in range(num_signals):
-            accuracy += len(
-                np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
+            sizes_signal = np.linspace(size_minmax[0], size_minmax[1], num_ds).astype(
+                np.int64
             )
-        accuracy /= num_signals * num_best_atoms
-        accuracy_list.append(accuracy)
-
-    budgets = np.array(budgets)
-    budgets_std = np.array(budgets_std)
-    accuracy_list = np.array(accuracy_list)
-
-    if is_log:
-        log_dict = {
-            "signal_sizes": sizes_signal,
-            "budgets": budgets,
-            "budgets_std": budgets_std,
-            "accuracy": accuracy_list,
-        }
-        log_df = pd.DataFrame(log_dict)
-        log_dir = "logs" if dirname is None else dirname
-        filename = os.path.join(
-            log_dir,
-            "SCALING_"
-            + data_type
-            + "_"
-            + mips_alg
-            + "_"
-            + str(epsilon)
-            + "_"
-            + str(delta),
+        budgets = []
+        budgets_std = []
+        accuracy_list = []
+        max_d = sizes_signal[-1]
+        atoms, signals = generate_custom_data(
+            num_atoms=num_atoms,
+            len_signal=max_d,  # Generate the data of the longest length, then take subsets later
+            num_signals=num_signals,
+            seed=seed,
+            data_type=data_type,
         )
-        os.makedirs(log_dir, exist_ok=True)
-        log_df.to_csv(filename, index=False)
+        maxmin = (1, -1)
+        for size in sizes_signal:
+            subset_indices = rng.choice(max_d, size, replace=False)
+            atoms_subset, signals_subset = (
+                atoms[:, subset_indices],
+                signals[:, subset_indices],
+            )
+            if is_normalize:
+                atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
+                signal_norm = np.linalg.norm(signals_subset, axis=1, keepdims=True)
+                atoms_subset /= atoms_norm
+                signals_subset /= signal_norm
+                epsilon /= atoms_norm.max() * signal_norm
+                maxmin = (
+                    1,
+                    -1,
+                )  # Assume that the information on element-wise product is not given.
+            if "ELIMINATION" in mips_alg:
+                candidates_array, budget_array = mips_bandit(
+                    atoms=atoms_subset,
+                    signals=signals_subset,
+                    maxmin=maxmin,
+                    bandit_alg=mips_alg,
+                    epsilon=epsilon,
+                    delta=delta,
+                    num_best_atoms=num_best_atoms,
+                    seed=seed,
+                    is_experiment=False,
+                    with_replacement=with_replacement,
+                )
+            elif mips_alg is GREEDY_MIPS:
+                candidates_array, _, _, budget_array = greedy_mips(
+                    atoms=atoms_subset,
+                    signals=signals_subset,
+                    budget=50,
+                    num_best_atoms=num_best_atoms,
+                )
+            else:
+                raise NotImplementedError(f"{mips_alg} is not implemented")
+
+            budgets.append(np.mean(budget_array))
+            budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
+            naive_candidates_array = (
+                np.matmul(-atoms_subset, signals_subset.transpose())
+                .argsort(axis=0)[:num_best_atoms]
+                .transpose()
+            )
+            accuracy = 0
+            for idx in range(num_signals):
+                accuracy += len(
+                    np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
+                )
+            accuracy /= num_signals * num_best_atoms
+            accuracy_list.append(accuracy)
+
+        budgets = np.array(budgets)
+        budgets_std = np.array(budgets_std)
+        accuracy_list = np.array(accuracy_list)
+
+        if is_log:
+            log_dict = {
+                "signal_sizes": sizes_signal,
+                "budgets": budgets,
+                "budgets_std": budgets_std,
+                "accuracy": accuracy_list,
+            }
+            log_df = pd.DataFrame(log_dict)
+            log_dir = "logs" if dirname is None else dirname
+            filename = os.path.join(
+                log_dir,
+                "SCALING_" + data_type + "_" + mips_alg + "_" + str(epsilon) + "_" + str(delta),
+            )
+            os.makedirs(log_dir, exist_ok=True)
+            log_df.to_csv(filename, index=False)
+
     if is_plot:
+        # TODO: If is_run is False, load the data from the log file
+
         if is_logspace:
             functions = [np.array, np.exp]
             function_names = ["Linear", "Exp"]
@@ -173,6 +178,7 @@ def scaling_exp(
             functions = [np.array, np.sqrt, np.log]
             function_names = ["Linear", "Sqrt", "Logarithm"]
             xlabel = None
+
         fit_and_plot(
             sizes_signal,
             budgets,

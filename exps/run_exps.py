@@ -25,6 +25,24 @@ if __name__ == "__main__":
     #     0.2,
     #     0.3,
     # )
+
+    scaling_exp(
+        epsilon=0.05,
+        delta=0.1,
+        num_atoms=int(10**2 / 3),
+        size_minmax=(100, 10**6),
+        num_signals=3,
+        num_ds=50,
+        data_type=NORMAL_CUSTOM,
+        mips_alg=MEDIAN_ELIMINATION,
+        num_best_atoms=1,
+        with_replacement=False,  # highlighted in the paper
+        is_log=True,
+        is_plot=True,
+        is_logspace=False,
+        is_normalize=False,
+    )
+
     # fixed_confidence_exp(
     #     epsilons=epsilons,
     #     deltas=deltas,
@@ -72,27 +90,7 @@ if __name__ == "__main__":
     #     with_replacement=True,
     #     is_normalize=False,
     # )
-    scaling_exp(
-        0.05,
-        0.1,
-        num_atoms=int(10**2 / 3),
-        size_minmax=(100, 10**6),
-        num_signals=3,
-        num_ds=100,
-        data_type=NORMAL_CUSTOM,
-        mips_alg=MEDIAN_ELIMINATION,
-        num_ds=5,
-        size_minmax=(30, 10 ** 4),
-        num_atoms = 10 ** 3,
-        num_signals=5,
-        num_best_atoms=1,
-        with_replacement=False,  # highlighted in the paper
-        is_log=True,
-        is_plot=True,
-        is_logspace=True,
-        is_normalize=False,
-        is_logspace=False,
-    )
+
 
     # fixed_confidence_exp(
     #     epsilons=epsilons,
