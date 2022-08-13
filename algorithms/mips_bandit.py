@@ -6,6 +6,8 @@ from utils.constants import (
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
+    ADAPTIVE_ACTION_ELIMINATION,
+    HOEFFDING,
 )
 from algorithms.median_elimination import median_elimination
 from algorithms.action_elimination import action_elimination
@@ -14,7 +16,7 @@ from algorithms.adaptive_action_elimination import adaptive_action_elimination
 
 def mips_bandit(
     atoms: np.ndarray,
-    signal: np.ndarray,
+    signals: np.ndarray,
     maxmin: Tuple,
     bandit_alg: str,
     epsilon: float,
@@ -24,7 +26,7 @@ def mips_bandit(
     is_experiment: bool = False,
     verbose: bool = False,
     with_replacement: bool = False,
-) -> Tuple[np.ndarray, int]:
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
     MIPS problem: To find a best atom vector in data_atoms
@@ -34,7 +36,7 @@ def mips_bandit(
      in rows. atoms
       are the vectors one of which will be selected
     as the vector with maximum inner product with a signal vector.
-    :param signal: A signal vector.
+    :param signals: A matrix whose each row contains a signal vector.
     :param maxmin: A tuple with two elements which are the maximum and minimum of data_atoms
      array
     :param bandit_alg: A name of multi-armed bandit algorithm
@@ -53,13 +55,13 @@ def mips_bandit(
     calculations)
     """
     assert len(atoms.shape) == 2, "Invalid size of data atoms" " matrix"
-    assert len(signal.shape) == 1, "Invalid size of signal vector"
+    assert len(signals.shape) == 2, "Invalid size of signal vector"
 
     if with_replacement:
         if bandit_alg is ACTION_ELIMINATION:
             return action_elimination(
                 atoms=atoms,
-                signal=signal,
+                signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
                 delta=delta,
@@ -71,7 +73,7 @@ def mips_bandit(
         if bandit_alg is MEDIAN_ELIMINATION:
             return median_elimination(
                 atoms=atoms,
-                signal=signal,
+                signals=signals,
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,
@@ -81,7 +83,7 @@ def mips_bandit(
         elif bandit_alg is ACTION_ELIMINATION:
             return action_elimination(
                 atoms=atoms,
-                signal=signal,
+                signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
                 delta=delta,
@@ -91,7 +93,7 @@ def mips_bandit(
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
                 atoms=atoms,
-                signal=signal,
+                signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
                 delta=delta,
