@@ -3,17 +3,10 @@ import math
 from typing import Tuple
 
 from utils.constants import (
-    BATCH_SIZE,
-    ADVERSARIAL_CUSTOM,
-    NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
-    HOEFFDING,
+    ADAPTIVE_ACTION_ELIMINATION,
 )
-from utils.utils import subset_2d, fit_and_plot
-from utils.bandit_utils import get_ci
-from data.custom_data import generate_normal_data, generate_adversarial_data
-
 from algorithms.median_elimination import median_elimination
 from algorithms.action_elimination import action_elimination
 from algorithms.adaptive_action_elimination import adaptive_action_elimination
@@ -86,6 +79,16 @@ def mips_bandit(
                 seed=seed,
             )
         elif bandit_alg is ACTION_ELIMINATION:
+            return action_elimination(
+                atoms=atoms,
+                signal=signal,
+                var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                epsilon=epsilon,
+                delta=delta,
+                num_best_atoms=num_best_atoms,
+                with_replacement=False,
+            )
+        elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
                 atoms=atoms,
                 signal=signal,
