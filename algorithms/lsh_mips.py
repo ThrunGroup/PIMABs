@@ -5,7 +5,9 @@ from collections import defaultdict
 from operator import itemgetter
 
 from utils.lsh_utils import *
+from data.custom_data import generate_normal_data
 from utils.constants import SYMMETRIC, ASYMMETRIC
+
 
 # for debugging purposes
 np.random.seed(0)
@@ -159,3 +161,18 @@ class LSH_MIPS:
         budget += (len(candidates) + 1) * self.d
         return budget, candidates[idx[:top_k]]
 
+
+if __name__ == "__main__":
+    # This is just for @Mo to test the PR and verify that the lsh-mips object runs.
+    # To compare with the naive mips, check branch test_baselines which has a function called compare_to_naive
+    seed = 0
+    top_k = 5
+    atoms, signal = generate_normal_data(num_atoms=100, len_signal=1000, seed=seed)
+
+    LSHMIPS = LSH_MIPS(atoms, signal, type=SYMMETRIC)
+    LSHMIPS.prepare_data()
+    LSHMIPS.create_lsh_table(LSHMIPS.ext_data)
+    budget, candidates = LSHMIPS.run(LSHMIPS.ext_data, LSHMIPS.ext_query, top_k=top_k)
+
+    print(f" =>> Top {top_k} candidate(s): ", candidates)
+    print(" =>> budget: ", budget)

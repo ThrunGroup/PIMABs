@@ -74,3 +74,10 @@ def g_normalization(query):
 
     norm = math.sqrt(np.dot(query, query))
     return [q / norm for q in query]
+
+
+if __name__ == "__main__":
+    seed = 0
+    atoms, signal = generate_normal_data(num_atoms=100, len_signal=1000, seed=seed)
+    run_lsh_mips(atoms, signal, type=SYMMETRIC, verbose=True)
+    run_lsh_mips(atoms, signal, type=ASYMMETRIC, verbose=True)
