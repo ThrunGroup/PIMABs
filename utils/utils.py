@@ -1,6 +1,7 @@
 import os
 import argparse
 import numpy as np
+import numba as nb
 import matplotlib.pyplot as plt
 from typing import List, Any
 from sklearn.linear_model import LinearRegression
@@ -248,13 +249,16 @@ def get_wo_variance(elems: np.ndarray, pop_size: int) -> np.ndarray:
     return np.var(elems) / len(elems) * FPC
 
 
-def subset_2d(array: np.ndarray, rows: np.ndarray, columns: np.ndarray) -> np.ndarray:
+@nb.njit
+def subset_2d(source_array: np.ndarray, rows: np.ndarray, columns: np.ndarray):
     """
-    Get the subset of arrays with the indices of the cartesian product of rows and columns
+    Why to implement this: there's no faster NumPy function that can replace this.
     """
-    return array[np.repeat(rows, len(columns)), np.tile(columns, len(rows))].reshape(
-        (len(rows), len(columns))
-    )
+    subset_array = np.empty((len(rows), len(columns)))
+    for i in range(len(rows)):
+        for j in range(len(columns)):
+            subset_array[(i, j)] = source_array[(rows[i], columns[j])]
+    return subset_array
 
 
 def fit_and_plot(

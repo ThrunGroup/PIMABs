@@ -1,4 +1,5 @@
 import numpy as np
+import numba as nb
 import math
 from typing import Tuple
 
@@ -13,7 +14,7 @@ from utils.constants import (
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
 
-
+@nb.njit
 def adaptive_action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -41,9 +42,10 @@ def adaptive_action_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
-    candidates_array = []
-    budgets_array = []
-    for signal in signals:
+    candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
+    budgets_array = np.empty(signals.shape[0], dtype=np.int64)
+    for signal_idx in range(signals.shape[0]):
+        signal = signals[signal_idx]
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
@@ -96,7 +98,7 @@ def adaptive_action_elimination(
                 sum_var_proxy=sum_var_proxy,
             )
             budgets += batch_size * len(candidates)
-            if np.all(4 * ci_vec < epsilon):
+            if 4 * ci_vec < epsilon:
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
             ucbs[candidates] = means[candidates] + ci_vec
@@ -109,6 +111,6 @@ def adaptive_action_elimination(
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
             candidates = candidates[new_cand_idcs]
-        candidates_array.append(candidates)
-        budgets_array.append(budgets)
-    return np.array(candidates_array), np.array(budgets_array)
+        candidates_array[signal_idx] = candidates
+        budgets_array[signal_idx] = budgets
+    return candidates_array, budgets_array

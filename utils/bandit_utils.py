@@ -1,15 +1,16 @@
 import numpy as np
+import numba as nb
 
 from utils.constants import HOEFFDING
 
-
+@nb.njit
 def get_ci(
     delta: np.ndarray,
     var_proxy: np.ndarray,  # Variance proxy of sub-gaussian r.v.
     num_samples: int,
     ci_bound: str = HOEFFDING,
     with_replacement: bool = True,
-    pop_size: int = None,
+    pop_size: int = 10 ** 10,
     sum_var_proxy: float = None,
 ) -> np.ndarray:
     if with_replacement:
