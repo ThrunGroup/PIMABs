@@ -12,7 +12,6 @@ from utils.constants import (
 )
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
-from data.custom_data import generate_normal_data, generate_adversarial_data
 
 
 def median_elimination(
