@@ -27,9 +27,11 @@ def scaling_exp(
     delta: Optional[float],
     data_type: str = ADVERSARIAL_CUSTOM,
     mips_alg: str = MEDIAN_ELIMINATION,
-    num_experiments: int = 20,
     size_minmax: Tuple[int, int] = (10, 10**6),
     num_atoms: int = 10**3,
+    num_ds: int = 20,
+    size_minmax: Tuple[int, int] = (10, 10 ** 6),
+    num_atoms: int = 10 ** 3,
     num_signals: int = 1,
     num_best_atoms: int = 1,
     seed: int = 0,
@@ -49,7 +51,7 @@ def scaling_exp(
     :param delta: A delta (an upper bound of failure probability)
     :param data_type: A name of data generating function
     :param mips_alg: A name of bandit algorithm
-    :param num_experiments: Number of experiments
+    :param num_ds: Number of experiments
     :param size_minmax: Minimum and Maximum of signal vector size
     :param num_atoms: Number of atoms
     :param num_signals: Number of signals
@@ -65,7 +67,7 @@ def scaling_exp(
     rng = np.random.default_rng(seed)
     if is_logspace:
         sizes_signal = np.logspace(
-            np.log(size_minmax[0]), np.log(size_minmax[1]), num_experiments, base=np.e
+            np.log(size_minmax[0]), np.log(size_minmax[1]), num_ds, base=np.e
         ).astype(np.int64)
     else:
         sizes_signal = np.linspace(
