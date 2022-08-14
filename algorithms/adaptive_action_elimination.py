@@ -82,11 +82,12 @@ def warm_start(
             with_replacement=False,
             sum_var_proxy=sum_var_proxy_all[signal_idx],
         )
-        import ipdb; ipdb.set_trace()
-        assert ci_vec_all[signal_idx].shape == (N,)
-        lcbs_all[signal_idx] = means[signal_idx] - ci_vec_all[signal_idx]
-        ucbs_all[signal_idx] = means[signal_idx] + ci_vec_all[signal_idx]
-        candidates_all[i] = np.where((ucbs_all[signal_idx][candidates] >= lcbs[signal_idx][candidates].max()))[0]
+        assert ci_vec_all[signal_idx].shape == (1,) # We have a scalar value since we use a single variance proxy for each
+
+        # Implicit broadcasting, add comment
+        lcbs_all[signal_idx] = means_all[signal_idx] - ci_vec_all[signal_idx]
+        ucbs_all[signal_idx] = means_all[signal_idx] + ci_vec_all[signal_idx]
+        candidates_all[signal_idx] = np.where((ucbs_all[signal_idx] >= lcbs_all[signal_idx].max()))[0]
 
     return budget, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all
 
