@@ -30,8 +30,6 @@ def scaling_exp(
     size_minmax: Tuple[int, int] = (10, 10**6),
     num_atoms: int = 10**3,
     num_ds: int = 20,
-    size_minmax: Tuple[int, int] = (10, 10**6),
-    num_atoms: int = 10**3,
     num_signals: int = 1,
     num_best_atoms: int = 1,
     seed: int = 0,
