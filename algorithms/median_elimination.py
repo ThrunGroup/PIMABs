@@ -3,6 +3,8 @@ import numba as nb
 import math
 from typing import Tuple
 
+from utils.utils import set_seed
+
 @nb.njit
 def median_elimination(
     atoms: np.ndarray,
@@ -19,7 +21,7 @@ def median_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
-    # rng = np.random.default_rng(seed)
+    set_seed(seed)
     len_signal = signals.shape[1]
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)

@@ -8,6 +8,17 @@ from sklearn.linear_model import LinearRegression
 
 from utils.constants import COLORS
 
+@nb.njit
+def set_seed(a: int):
+    """
+    We need this function to properly set random seeds when using numba.
+    It is INCORRECT to call np.random.seed directly in numba-decorated functions!
+    See shorturl.at/gPVXZ.
+
+    :param a: seed value
+    :return: None
+    """
+    np.random.seed(a)
 
 def get_args() -> argparse.Namespace:
     """

@@ -11,7 +11,7 @@ from utils.constants import (
     ACTION_ELIMINATION,
     HOEFFDING,
 )
-from utils.utils import subset_2d, fit_and_plot
+from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 @nb.njit
@@ -34,7 +34,7 @@ def action_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
-    # rng = np.random.default_rng(seed)
+    utils.set_seed(seed)
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
     for signal_idx in range(signals.shape[0]):
@@ -50,7 +50,6 @@ def action_elimination(
         means = np.zeros(D)  # estimated means of arm returns
         if not with_replacement:
             shuffled_idcs = np.arange(d)
-            # rng.shuffle(shuffled_idcs)
             np.random.shuffle(shuffled_idcs)
         else:
             shuffled_idcs = None
