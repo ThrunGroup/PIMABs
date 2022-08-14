@@ -26,8 +26,8 @@ from algorithms.greedy_mips import greedy_mips
 def speedup_precision_exps(
     data_type: str = ADVERSARIAL_CUSTOM,
     mips_alg: str = MEDIAN_ELIMINATION,
-    len_signals_list: np.ndarray = np.linspace(10 ** 3, 10 ** 5, 3, dtype=np.int64),
-    num_atoms_list: np.ndarray = np.linspace(10 ** 3, 10 ** 4, 3, dtype=np.int64),
+    len_signals_list: np.ndarray = np.linspace(10**3, 10**5, 3, dtype=np.int64),
+    num_atoms_list: np.ndarray = np.linspace(10**3, 10**4, 3, dtype=np.int64),
     num_experiments: int = 5,
     num_signals: int = 1,
     num_best_atoms: int = 1,
@@ -50,8 +50,12 @@ def speedup_precision_exps(
         for len_signal in len_signals_list:
             speedup_list = []
             accuracy_list = []
-            num_atoms_subset_idcs = rng.choice(num_atoms_list[-1], num_atoms, replace=False)
-            len_signals_subset_idcs = rng.choice(len_signals_list[-1], len_signal, replace=False)
+            num_atoms_subset_idcs = rng.choice(
+                num_atoms_list[-1], num_atoms, replace=False
+            )
+            len_signals_subset_idcs = rng.choice(
+                len_signals_list[-1], len_signal, replace=False
+            )
             atoms_subset, signals_subset = (
                 subset_2d(atoms, num_atoms_subset_idcs, len_signals_subset_idcs),
                 subset_2d(signals, np.arange(num_signals), len_signals_subset_idcs),
@@ -94,7 +98,9 @@ def speedup_precision_exps(
                     accuracy = 0
                     for idx in range(num_signals):
                         accuracy += len(
-                            np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
+                            np.intersect1d(
+                                naive_candidates_array[idx], candidates_array[idx]
+                            )
                         )
                     accuracy /= num_signals * num_best_atoms
                     accuracy_list.append(accuracy)
@@ -115,7 +121,12 @@ def speedup_precision_exps(
                 log_dir = "logs" if dirname is None else dirname
                 filename = os.path.join(
                     log_dir,
-                    "SPEEDUP_" + data_type + "_" + mips_alg + "_" + str((num_atoms, len_signal)),
+                    "SPEEDUP_"
+                    + data_type
+                    + "_"
+                    + mips_alg
+                    + "_"
+                    + str((num_atoms, len_signal)),
                 )
                 os.makedirs(log_dir, exist_ok=True)
                 log_df.to_csv(filename, index=False)

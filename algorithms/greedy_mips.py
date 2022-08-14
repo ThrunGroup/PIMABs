@@ -190,8 +190,8 @@ def reproduce_figure6(seed: int = 0):
             naive_best_arms = []
 
             # Dataset described in https://arxiv.org/pdf/1610.03317.pdf#page=16
-            atoms = rng.normal(size=(2 ** n, 2 ** k))
-            signals = rng.normal(size=(num_experiments, 2 ** k))
+            atoms = rng.normal(size=(2**n, 2**k))
+            signals = rng.normal(size=(num_experiments, 2**k))
 
             for signal in signals:
                 start_time = time.time()
@@ -210,7 +210,7 @@ def reproduce_figure6(seed: int = 0):
                 ) = greedy_mips(
                     atoms,
                     signals,
-                    int(2 ** n / budget),
+                    int(2**n / budget),
                     num_best_atoms=num_best_atoms,
                     conditer=conditer,
                 )
@@ -244,15 +244,18 @@ def reproduce_figure6(seed: int = 0):
 
 if __name__ == "__main__":
     from exps.scaling_exp import scaling_exp  # To avoid circular import
+
     for dataset in [ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, UNIFORM_PAPER, NORMAL_PAPER]:
         scaling_exp(
             epsilon=None,
             delta=None,
             data_type=dataset,
             mips_alg=GREEDY_MIPS,
-            size_minmax=(30, 10 ** 4),
+            size_minmax=(30, 10**4),
             num_experiments=10,
-            dirname=os.path.join(os.path.dirname(os.path.dirname(__file__)), os.path.join("exps", "logs")),
+            dirname=os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), os.path.join("exps", "logs")
+            ),
             num_signals=10,
             is_logspace=True,
         )

@@ -5,6 +5,7 @@ from typing import Tuple
 
 from utils.utils import set_seed
 
+
 @nb.njit
 def median_elimination(
     atoms: np.ndarray,
@@ -42,7 +43,8 @@ def median_elimination(
             A helper function for calculating the optimal number of mnist
             """
             return min(
-                (u + 1) / (1 + u / len_signal), (u + u / len_signal) / (1 + u / len_signal),
+                (u + 1) / (1 + u / len_signal),
+                (u + u / len_signal) / (1 + u / len_signal),
             )
 
         while len(candidates) > num_best_atoms:
@@ -57,7 +59,7 @@ def median_elimination(
                         * (math.floor(((len(candidates)) - num_best_atoms) / 2) + 1)
                     )
                 )
-                / (new_epsilon ** 2)
+                / (new_epsilon**2)
             )
             current_num_samples = int(new_T - prev_T)
             prev_T = new_T
@@ -67,7 +69,9 @@ def median_elimination(
             # Time complexity is linear in len(current_num_samples)
             if not is_experiment:
                 idcs = np.random.choice(
-                    len_signal - total_num_samples, current_num_samples, replace=False,
+                    len_signal - total_num_samples,
+                    current_num_samples,
+                    replace=False,
                 )
             else:
                 # With an adversarial dataset, wan do a worst-case experiment by not shuffling a data

@@ -16,6 +16,7 @@ from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
 
+
 def fixed_confidence_exp(
     epsilons: Tuple[float, ...],
     deltas: Tuple[float, ...],
@@ -45,7 +46,9 @@ def fixed_confidence_exp(
             for seed in range(num_experiments):
                 if verbose:
                     print(f"-seed: {seed}")
-                atoms, signals = generate_custom_data(seed=seed, data_type=data_type, num_signals=5)
+                atoms, signals = generate_custom_data(
+                    seed=seed, data_type=data_type, num_signals=5
+                )
                 maxmin = (1, -1)
                 if verbose:
                     print("--data generated")
@@ -67,11 +70,19 @@ def fixed_confidence_exp(
                 )
                 if verbose:
                     print("--stochastically solved")
-                best_arm_means = true_inner_products[(true_best_idcs, np.arange(signals.shape[0]))] / signals.shape[1]
-                estimated_best_arm_mean = (
-                    true_inner_products[(estimated_best_idcs, np.arange(signals.shape[0]))] / signals.shape[1]
+                best_arm_means = (
+                    true_inner_products[(true_best_idcs, np.arange(signals.shape[0]))]
+                    / signals.shape[1]
                 )
-                failure_counts += np.sum(np.abs(best_arm_means - estimated_best_arm_mean) > epsilon)
+                estimated_best_arm_mean = (
+                    true_inner_products[
+                        (estimated_best_idcs, np.arange(signals.shape[0]))
+                    ]
+                    / signals.shape[1]
+                )
+                failure_counts += np.sum(
+                    np.abs(best_arm_means - estimated_best_arm_mean) > epsilon
+                )
             observed_delta = failure_counts / (num_experiments * signals.shape[0])
             print(f"delta: {delta}, epsilon: {epsilon}")
             print(f"observed failure probability: {observed_delta}")

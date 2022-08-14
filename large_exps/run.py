@@ -28,9 +28,7 @@ def get_minst_data() -> np.ndarray:
     Load the MNIST images as a numpy array
     :return: numpy array containing the images
     """
-    mnist_data = MNIST(
-        "/data/mnist"
-    )  # Dear Apratim, I am so sorry for hardcoding this
+    mnist_data = MNIST("/data/mnist")  # Dear Apratim, I am so sorry for hardcoding this
     images, labels = mnist_data.load_training()
     images = np.array(images, dtype=np.float32)
     return images

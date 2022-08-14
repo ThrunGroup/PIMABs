@@ -11,8 +11,8 @@ from utils.constants import (
 
 
 def generate_custom_data(
-    num_atoms: int = 10 ** 3,
-    len_signal: int = 10 ** 4,
+    num_atoms: int = 10**3,
+    len_signal: int = 10**4,
     num_signals: int = 1,
     seed: int = 0,
     data_type: str = NORMAL_CUSTOM,
@@ -31,7 +31,7 @@ def generate_custom_data(
     atoms_array = np.empty((num_atoms, len_signal))
     if (
         data_type is UNIFORM_PAPER
-    ):   # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
         signal = rng.uniform(low=0, high=2, size=(num_signals, len_signal))
         atoms_array = rng.uniform(low=0, high=2, size=(num_atoms, len_signal))
     elif (
@@ -45,7 +45,9 @@ def generate_custom_data(
         for idx in range(num_atoms):
             atoms_array[idx][: math.floor(p[idx] * len_signal)] = 1
         signal = np.ones((num_signals, len_signal))
-    elif data_type is NORMAL_CUSTOM:  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+    elif (
+        data_type is NORMAL_CUSTOM
+    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
         means = rng.normal(size=num_atoms)
         atoms_array = np.empty((num_atoms, len_signal))
         for idx in range(num_atoms):

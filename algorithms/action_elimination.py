@@ -14,6 +14,7 @@ from utils.constants import (
 from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
+
 @nb.njit
 def action_elimination(
     atoms: np.ndarray,
@@ -86,7 +87,8 @@ def action_elimination(
             signal_sampled = signal[sample_idcs]
             candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
             means[candidates] = (
-                (t * batch_size * means[candidates]) + (candidates_sampled @ signal_sampled)
+                (t * batch_size * means[candidates])
+                + (candidates_sampled @ signal_sampled)
             ) / (
                 (t + 1) * batch_size
             )  # Update the running means of arm returns # Does this np.dot do implicit broadcasting?

@@ -14,10 +14,14 @@ from utils.constants import (
     SYMMETRIC,
     ASYMMETRIC,
     NUM_HFUNC,
-    NUM_POINTS_LSH
+    NUM_POINTS_LSH,
 )
 from utils.utils import subset_2d, fit_and_plot
-from data.custom_data import generate_normal_data, generate_adversarial_data, generate_normal_paper
+from data.custom_data import (
+    generate_normal_data,
+    generate_adversarial_data,
+    generate_normal_paper,
+)
 
 
 def run_pca_mips(data, query, top_k=[1, 3], delta=1, verbose=False):
@@ -54,7 +58,7 @@ def run_lsh_mips(
     num_hfunc=5,
     num_tables=10,
     type=ASYMMETRIC,
-    verbose=False
+    verbose=False,
 ):
     """
     Finds the top_k candidates to the MIPS problem by building the LSH hash table. Returns an array of
@@ -69,11 +73,7 @@ def run_lsh_mips(
     if verbose:
         print(f"... Running LSH-MIPS {type}")
     LSHMIPS = LSH_MIPS(
-        data,
-        query,
-        num_hfunc=num_hfunc,
-        num_tables=num_tables,
-        type=type
+        data, query, num_hfunc=num_hfunc, num_tables=num_tables, type=type
     )
     LSHMIPS.prepare_data()
     LSHMIPS.create_lsh_table(LSHMIPS.ext_data)
@@ -81,11 +81,7 @@ def run_lsh_mips(
     budgets = []
     results = []
     for k in top_k:
-        budget, candidates = LSHMIPS.run(
-            LSHMIPS.ext_data,
-            LSHMIPS.ext_query,
-            top_k=k
-        )
+        budget, candidates = LSHMIPS.run(LSHMIPS.ext_data, LSHMIPS.ext_query, top_k=k)
         budgets.append(budget)
         results.append(candidates)
 
@@ -103,12 +99,14 @@ def naive_mips(data, query, top_k):
 
     :top_k: a list of the number of closest vectors we want to return
     """
-    assert (data.shape[1] == len(query))
+    assert data.shape[1] == len(query)
 
     result = []
     dist_vec = np.matmul(data, query)
     for k in top_k:
-        idx = np.argpartition(-dist_vec, k - 1)  # -dist_vec to we can get the top k largest
+        idx = np.argpartition(
+            -dist_vec, k - 1
+        )  # -dist_vec to we can get the top k largest
         result.append(idx[:k])
     return result
 
@@ -135,10 +133,10 @@ def scaling_baseline(
     top_k: List[int] = [5],
     generate_data: str = ADVERSARIAL_CUSTOM,
     is_normalize: bool = False,
-    size_minmax: Tuple[int] = (10, 10 ** 4),
+    size_minmax: Tuple[int] = (10, 10**4),
     num_points: int = 20,
     name_alg: str = PCA,
-    num_hfunc: int = NUM_HFUNC//3,
+    num_hfunc: int = NUM_HFUNC // 3,
     num_tables: int = 3,
     type: str = None,
 ) -> None:
@@ -166,7 +164,7 @@ def scaling_baseline(
         np.int64
     )
     budgets = []
-    #print(f"...generating {generate_data}")
+    # print(f"...generating {generate_data}")
     if generate_data == ADVERSARIAL_CUSTOM:
         generate_data = generate_adversarial_data
     elif generate_data == NORMAL_CUSTOM:
@@ -189,10 +187,7 @@ def scaling_baseline(
         print("     ... signal length:", size)
         if name_alg == PCA:
             budget, _ = run_pca_mips(
-                data=atoms_subset,
-                query=signal_subset,
-                delta=2,
-                top_k=top_k
+                data=atoms_subset, query=signal_subset, delta=2, top_k=top_k
             )
         elif name_alg == LSH:
             budget, _ = run_lsh_mips(
@@ -237,7 +232,7 @@ def precision_speed_pca(
         generate_data = generate_normal_paper
     else:
         raise NotImplementedError(f"{generate_data} is not implemented")
-    #atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
+    # atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
     atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
 
     # by default, we will NOT be needing to normalize
@@ -249,9 +244,7 @@ def precision_speed_pca(
 
     # setup experiements by defining the depths we will experiment on.
     # This is analogous to setting "a" in the paper
-    depths = np.linspace(depth_minmax[0], depth_minmax[1], num_points).astype(
-        np.int64
-    )
+    depths = np.linspace(depth_minmax[0], depth_minmax[1], num_points).astype(np.int64)
 
     # running the experiments and concatenating the results in the budget, precisions list.
     # both lists should be of size num_points at the end of the experiment
@@ -261,15 +254,10 @@ def precision_speed_pca(
     for depth in depths:
         print("     ... depth: ", depth)
         budget, _candidates = run_pca_mips(
-            data=atoms,
-            query=signal,
-            delta=depth,  # this deepens the tree
-            top_k=top_k
+            data=atoms, query=signal, delta=depth, top_k=top_k  # this deepens the tree
         )
         budgets.append(np.array(budget))
-        precisions.append(
-            np.array(compare_with_naive(candidates, _candidates, top_k))
-        )
+        precisions.append(np.array(compare_with_naive(candidates, _candidates, top_k)))
     return np.array(budgets), np.array(precisions)
 
 
@@ -281,7 +269,7 @@ def precision_speed_lsh(
     num_points: int = 10,
     hfunc_minmax: Tuple[int] = (0, NUM_HFUNC),
     table_minmax: Tuple[int] = (1, 6),
-    type: str = None
+    type: str = None,
 ) -> None:
     """
     For a given dataset and a certain minmax range, computes the budgets and precisions for
@@ -305,7 +293,7 @@ def precision_speed_lsh(
         generate_data = generate_normal_paper
     else:
         raise NotImplementedError(f"{generate_data} is not implemented")
-    #atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
+    # atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
     atoms, signal = generate_data(num_atoms=100, len_signal=1000, seed=seed)
 
     # by default, the data is NOT normalized
@@ -318,9 +306,13 @@ def precision_speed_lsh(
     # setup experiments by defining the array of num_hfunc and num_tables.
     # This is analogous to setting up pairs of (a, b) in the paper.
     table_diff = table_minmax[1] - table_minmax[0] + 1
-    num_hfuncs = np.linspace(hfunc_minmax[0], hfunc_minmax[1], num_points // table_diff).astype(np.int64)
-    num_tables = np.linspace(table_minmax[0], table_minmax[1], table_diff).astype(np.int64)
-    assert (len(num_hfuncs) * len(num_tables) == num_points)
+    num_hfuncs = np.linspace(
+        hfunc_minmax[0], hfunc_minmax[1], num_points // table_diff
+    ).astype(np.int64)
+    num_tables = np.linspace(table_minmax[0], table_minmax[1], table_diff).astype(
+        np.int64
+    )
+    assert len(num_hfuncs) * len(num_tables) == num_points
 
     # running the experiments and concatenating the results in the budget, precisions list.
     # both lists should be of size num_points at the end of the experiment
@@ -343,5 +335,3 @@ def precision_speed_lsh(
                 np.array(compare_with_naive(candidates, _candidates, top_k))
             )
     return np.array(budgets), np.array(precisions)
-
-

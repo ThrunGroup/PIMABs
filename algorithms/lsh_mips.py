@@ -12,6 +12,7 @@ from utils.constants import SYMMETRIC, ASYMMETRIC
 # for debugging purposes
 np.random.seed(0)
 
+
 class LSH_MIPS:
     """
     Class for solving MIPS using LSH. The main logic divides into preprocessing the data and
@@ -40,21 +41,22 @@ class LSH_MIPS:
     ):
         kdata = len(data[0])
         qdata = len(query)  # queries are 1d-array
-        assert (kdata == qdata)  # can only take inner product if dimensions match
+        assert kdata == qdata  # can only take inner product if dimensions match
 
         self.data = data
         self.query = query
 
         if type == SYMMETRIC:
             self.m = 1  # m is always 1 if we're doing symmetric lsh mips
-            self.hash_func = lambda data, hyperplanes: \
-                                np.matmul(data, hyperplanes)
+            self.hash_func = lambda data, hyperplanes: np.matmul(data, hyperplanes)
 
         elif type == ASYMMETRIC:
             self.m = m
             b = np.random.uniform(0, rand_range)  # 0 < b < rand_range
-            self.hash_func = lambda data, hyperplanes: \
-                                (np.matmul(data, hyperplanes) + b) / rand_range
+            self.hash_func = (
+                lambda data, hyperplanes: (np.matmul(data, hyperplanes) + b)
+                / rand_range
+            )
         else:
             raise Expection("Invalid LSH type declared")
 
@@ -81,8 +83,8 @@ class LSH_MIPS:
             self.ext_data = np.array(g_index_extend(norm_data, self.m))
             self.ext_query = np.array(g_query_extend(norm_query, self.m))
 
-        assert (self.d == len(self.ext_data[0]))   # num dimensions
-        assert (self.d == len(self.ext_query))
+        assert self.d == len(self.ext_data[0])  # num dimensions
+        assert self.d == len(self.ext_query)
 
     def create_lsh_table(self, data):
         """
@@ -90,7 +92,9 @@ class LSH_MIPS:
 
         :data: the preprocessed dataset
         """
-        assert (data.shape[1] == self.d)  # make sure that we're using the preprocessed data
+        assert (
+            data.shape[1] == self.d
+        )  # make sure that we're using the preprocessed data
 
         # create num_tables hash tables where each table consists of num_hfunc hyperplanes
         self.hash_tables = []
@@ -125,8 +129,8 @@ class LSH_MIPS:
         :top_k: the number of top candidates you want to find
         """
         # make sure we're using the preprocessed data and queries
-        assert(data.shape[1] == self.d)
-        assert(len(query) == self.d)
+        assert data.shape[1] == self.d
+        assert len(query) == self.d
 
         budget = 0
         candidates = set()  # this prevents duplicates

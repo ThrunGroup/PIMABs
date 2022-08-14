@@ -100,6 +100,7 @@ def get_sigmas(
     )  # Implicit broadcasting of * sampled_signal
     return sigmas
 
+
 def bandit_matching_pursuit(
     input_signal: np.ndarray,
     atoms: np.ndarray,

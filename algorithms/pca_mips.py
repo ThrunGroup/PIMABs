@@ -8,16 +8,17 @@ class PCA_MIPS:
     Basic Class for PCA-MIPS described here:
     https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/XboxInnerProduct.pdf
     """
+
     def __init__(self, data, query, delta):
         """
         :delta: the number of top principal components to use
         """
-        assert (data.shape[1] == len(query))
+        assert data.shape[1] == len(query)
 
         self.data = data
         self.query = query
         self.delta = delta  # if delta is 0, this is the same as naive MIPS
-        assert (delta <= len(query))
+        assert delta <= len(query)
 
         self.p_data = None
         self.p_query = None
@@ -37,7 +38,7 @@ class PCA_MIPS:
         # concatenate query and matmul by the same principle components matrix
         _p_query = tree.first_reduction(self.query, is_query=True)
         self.p_query = np.matmul(W.T, _p_query - mu)
-        assert (self.p_data.shape[1] == len(self.p_query))
+        assert self.p_data.shape[1] == len(self.p_query)
 
         # feed converted data into tree class and construct pca-tree
         tree.data = self.p_data

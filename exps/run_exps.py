@@ -75,8 +75,8 @@ if __name__ == "__main__":
     scaling_exp(
         0.05,
         0.1,
-        num_atoms=int(10 ** 2 / 3),
-        size_minmax=(100, 10 ** 6),
+        num_atoms=int(10**2 / 3),
+        size_minmax=(100, 10**6),
         num_signals=3,
         num_experiments=100,
         data_type=NORMAL_CUSTOM,

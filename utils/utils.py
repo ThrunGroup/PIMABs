@@ -8,6 +8,7 @@ from sklearn.linear_model import LinearRegression
 
 from utils.constants import COLORS
 
+
 @nb.njit
 def set_seed(a: int):
     """
@@ -19,6 +20,7 @@ def set_seed(a: int):
     :return: None
     """
     np.random.seed(a)
+
 
 def get_args() -> argparse.Namespace:
     """
@@ -99,10 +101,10 @@ def q(str_: str) -> str:
 
 def b(num: Any) -> str:
     """
-   Helper function that wraps brackets to a number/string.
+    Helper function that wraps brackets to a number/string.
 
-   :param num: number to put brackets around
-   """
+    :param num: number to put brackets around
+    """
     return "{" + str(num) + "}"
 
 
@@ -229,7 +231,7 @@ def welford_variance_calc(
     delta = mean1 - mean2
     M1 = n1 * var1
     M2 = n2 * var2
-    M = M1 + M2 + (delta ** 2) * (n1 * n2) / n
+    M = M1 + M2 + (delta**2) * (n1 * n2) / n
     return M / n
 
 
@@ -248,7 +250,7 @@ def vectorize_welford(
     delta_vec = mean1_vec - mean2_vec
     M1_vec = n1_vec * var1_vec
     M2_vec = n2_vec * var2_vec
-    var_vec = M1_vec + M2_vec + (delta_vec ** 2) * (n1_vec * n2_vec) / (n_vec ** 2)
+    var_vec = M1_vec + M2_vec + (delta_vec**2) * (n1_vec * n2_vec) / (n_vec**2)
     return np.nan_to_num(var_vec, posinf=0, neginf=0)
 
 
