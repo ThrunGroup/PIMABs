@@ -1,6 +1,6 @@
 import numpy as np
 from utils.pca_utils import *
-from data.custom_data import generate_normal_data
+from data.custom_data import generate_custom_data
 
 
 class PCA_MIPS:

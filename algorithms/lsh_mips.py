@@ -5,7 +5,7 @@ from collections import defaultdict
 from operator import itemgetter
 
 from utils.lsh_utils import *
-from data.custom_data import generate_normal_data
+from data.custom_data import generate_custom_data
 from utils.constants import SYMMETRIC, ASYMMETRIC
 
 

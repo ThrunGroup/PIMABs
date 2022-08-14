@@ -17,11 +17,7 @@ from utils.constants import (
     NUM_POINTS_LSH,
 )
 from utils.utils import subset_2d, fit_and_plot
-from data.custom_data import (
-    generate_normal_data,
-    generate_adversarial_data,
-    generate_normal_paper,
-)
+from data.custom_data import generate_custom_data
 
 
 def run_pca_mips(data, query, top_k=[1, 3], delta=1, verbose=False):
@@ -164,19 +160,15 @@ def scaling_baseline(
         np.int64
     )
     budgets = []
-    # print(f"...generating {generate_data}")
-    if generate_data == ADVERSARIAL_CUSTOM:
-        generate_data = generate_adversarial_data
-    elif generate_data == NORMAL_CUSTOM:
-        generate_data = generate_normal_data
-    elif generate_data == NORMAL_PAPER:
-        generate_data = generate_normal_paper
-    else:
-        raise NotImplementedError(f"{generate_data} is not implemented")
-
-    atoms, signal = generate_data(num_atoms=100, len_signal=sizes_signal[-1], seed=seed)
+    atoms, signal = generate_custom_data(
+        data_type=generate_data,
+        num_atoms=100,
+        len_signal=sizes_signal[-1],
+        seed=seed
+    )
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
+        import ipdb; ipdb.set_trace()
         atoms_subset, signal_subset = atoms[:, subset_indices], signal[subset_indices]
         if is_normalize:
             atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
@@ -223,17 +215,12 @@ def precision_speed_pca(
     :num_points: Number of points that will be plotted
     :depth_minmax: the min and max of depth of pca-tree
     """
-    # generate the correct dataset
-    if generate_data == ADVERSARIAL_CUSTOM:
-        generate_data = generate_adversarial_data
-    elif generate_data == NORMAL_CUSTOM:
-        generate_data = generate_normal_data
-    elif generate_data == NORMAL_PAPER:
-        generate_data = generate_normal_paper
-    else:
-        raise NotImplementedError(f"{generate_data} is not implemented")
-    # atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
-    atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
+    atoms, signal = generate_custom_data(
+        data_type=generate_data,
+        num_atoms=100,
+        len_signal=sizes_signal[-1],
+        seed=seed
+    )
 
     # by default, we will NOT be needing to normalize
     if is_normalize:
@@ -285,16 +272,12 @@ def precision_speed_lsh(
     :type: Either symmetric or asymmetric
     """
     # generate the data
-    if generate_data == ADVERSARIAL_CUSTOM:
-        generate_data = generate_adversarial_data
-    elif generate_data == NORMAL_CUSTOM:
-        generate_data = generate_normal_data
-    elif generate_data == NORMAL_PAPER:
-        generate_data = generate_normal_paper
-    else:
-        raise NotImplementedError(f"{generate_data} is not implemented")
-    # atoms, signal = generate_data(num_atoms=1000, len_signal=10000, seed=seed)
-    atoms, signal = generate_data(num_atoms=100, len_signal=1000, seed=seed)
+    atoms, signal = generate_custom_data(
+        data_type=generate_data,
+        num_atoms=100,
+        len_signal=sizes_signal[-1],
+        seed=seed
+    )
 
     # by default, the data is NOT normalized
     if is_normalize:

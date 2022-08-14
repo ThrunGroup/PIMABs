@@ -9,6 +9,7 @@ from utils.constants import (
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
+    GREEDY_MIPS,
     NORMAL_PAPER,
     UNIFORM_PAPER,
 )
@@ -75,12 +76,12 @@ if __name__ == "__main__":
     scaling_exp(
         0.05,
         0.1,
-        num_atoms=int(10**2 / 3),
-        size_minmax=(100, 10**6),
+        num_atoms=int(100),
+        size_minmax=(100, 10 ** 5),
         num_signals=3,
-        num_experiments=100,
+        num_experiments=30,
         data_type=NORMAL_CUSTOM,
-        mips_alg=MEDIAN_ELIMINATION,
+        mips_alg=ACTION_ELIMINATION,
         is_normalize=False,
         is_logspace=False,
     )

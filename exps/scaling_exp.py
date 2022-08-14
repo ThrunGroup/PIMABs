@@ -12,6 +12,8 @@ from utils.constants import (
     ACTION_ELIMINATION,
     HOEFFDING,
     GREEDY_MIPS,
+    PCA_MIPS,
+    LSH_MIPS,
 )
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
@@ -19,6 +21,8 @@ from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
+from algorithms.lsh_mips import LSH_MIPS
+from algorithms.pca_mips import PCA_MIPS
 
 
 def scaling_exp(
@@ -120,6 +124,7 @@ def scaling_exp(
             )
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
+
         budgets.append(np.mean(budget_array))
         budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
         naive_candidates_array = (
@@ -150,14 +155,15 @@ def scaling_exp(
         log_dir = "logs" if dirname is None else dirname
         filename = os.path.join(
             log_dir,
+            mips_alg
+            + "_"
             "SCALING_"
             + data_type
             + "_"
-            + mips_alg
-            + "_"
             + str(epsilon)
             + "_"
-            + str(delta),
+            + str(delta)
+            + ".csv",
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
@@ -171,14 +177,5 @@ def scaling_exp(
             functions = [np.array, np.sqrt, np.log]
             function_names = ["Linear", "Sqrt", "Logarithm"]
             xlabel = None
-        fit_and_plot(
-            sizes_signal,
-            budgets,
-            functions,
-            function_names,
-            ys_std=budgets_std,
-            title=f"{mips_alg} + w/ replacement: {with_replacement}",
-            xlabel=xlabel,
-        )
 
     print(f"Mean accuracy with {mips_alg} for {data_type}: {np.mean(accuracy_list)}")
