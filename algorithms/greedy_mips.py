@@ -4,7 +4,6 @@ import numpy as np
 import heapq
 import time
 from typing import Tuple
-from numba.typed import List
 
 from utils.utils import fit_and_plot, r, b
 from utils.constants import (
@@ -13,6 +12,8 @@ from utils.constants import (
     UNIFORM_PAPER,
     NORMAL_PAPER,
     GREEDY_MIPS,
+    GREEDY_ATOM_SIZE,
+    GREEDY_QUERY_SIZE,
 )
 from data.custom_data import generate_custom_data
 
@@ -54,12 +55,13 @@ def candidate_screening(
     signal: np.ndarray,
     conditer: np.ndarray,
     iters: np.ndarray,
-    Q: List,
+    Q: nb.typed.List,
     budget: int,
     visited_j: np.ndarray,
 ):
     """
-    Screening candidates that have maximum one-element inner product with signal
+    Screening candidates that have maximum one-element inner product with signal. See page 6 in
+    https://proceedings.neurips.cc/paper/2017/file/39d352b0395ba768e18f042c6e2a8621-Paper.pdf.
     """
     candidates = []
     complexity = int(0)
@@ -141,30 +143,30 @@ def greedy_mips(
     query_dependent_time_list = []
     candidate_ranking_time_list = []
     total_complexity_list = []
+
     for signal in signals:
-        start_time = time.time()
+        query_dependent_start_time = time.time()
 
         # Query dependent preprocess
         heap, iters = generate_heap(atoms, conditer, signal)
         generate_heap_complexity = int(signal.shape[0]) * int(np.log2(signal.shape[0]))
-        heap = List(heap)
+        heap = nb.typed.List(heap)
 
         # Candidate Screening
         candidates, screen_complexity = candidate_screening(
             atoms, signal, conditer, iters, heap, budget, visited_j
         )
-        query_dependent_time = time.time() - start_time
+        query_dependent_time = time.time() - query_dependent_start_time
 
         # Rank the candidates
-        start_time = time.time()
+        ranking_start_time = time.time()
         best_atom_list.append(
             candidates[np.argsort(-atoms[candidates] @ signal)[:num_best_atoms]]
         )
-
         ranking_complexity = budget * (
             int(signal.shape[0]) * (int(np.log2(signal.shape[0])) + 1)
         )
-        candidate_ranking_time = time.time() - start_time
+        candidate_ranking_time = time.time() - ranking_start_time
 
         # log the results
         total_complexity_list.append(
@@ -206,8 +208,8 @@ def reproduce_figure6(seed: int = 0):
     num_best_atoms = 5
     num_naive_best_atoms = 20
     rng = np.random.default_rng(seed)
-    for n in [17, 18, 19]:
-        for k in [2, 5, 7]:
+    for n in GREEDY_ATOM_SIZE:
+        for k in GREEDY_QUERY_SIZE:
             speedup_list = []
             accuracy_list = []
             time_list = []

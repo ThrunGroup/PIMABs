@@ -10,6 +10,7 @@ from utils.constants import (
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
+    ADAPTIVE_ACTION_ELIMINATION,
     HOEFFDING,
     GREEDY_MIPS,
 )
@@ -61,7 +62,6 @@ def scaling_exp(
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
     :param dirname: Directory name to log the results
     """
-    global budget_array
     rng = np.random.default_rng(seed)
     if is_logspace:
         sizes_signal = np.logspace(
@@ -98,7 +98,7 @@ def scaling_exp(
                 1,
                 -1,
             )  # Assume that the information on element-wise product is not given.
-        if "ELIMINATION" in mips_alg:
+        if mips_alg in (ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION):
             candidates_array, budget_array = mips_bandit(
                 atoms=atoms_subset,
                 signals=signals_subset,
