@@ -88,8 +88,8 @@ def adaptive_action_elimination(
             ) / ((t + 1) * batch_size)
 
             # Last coordinate will be the smallest
-            min_signal = np.abs(signal_sampled[-1])
-            sum_var_proxy = var_proxy * (min_signal**2)
+            min_signal = np.abs(signal_sampled[0])
+            sum_var_proxy += var_proxy * (min_signal**2)
             ci_vec = get_ci(
                 delta=new_delta,
                 var_proxy=var_proxy,

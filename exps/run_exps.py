@@ -38,18 +38,18 @@ if __name__ == "__main__":
     #     mips_alg=ADAPTIVE_ACTION_ELIMINATION,
     #     num_signals=3,
     # )
-    # scaling_exp(
-    #     0,
-    #     0.5,
-    #     num_atoms=10 ** 4,
-    #     size_minmax=(10, 10 ** 4),
-    #     num_experiments=10,
-    #     num_signals=3,
-    #     data_type=NORMAL_PAPER,
-    #     mips_alg=ADAPTIVE_ACTION_ELIMINATION,
-    #     with_replacement=False,
-    #     is_normalize=False,
-    # )
+    scaling_exp(
+        0,
+        0.5,
+        num_atoms=10 ** 4,
+        size_minmax=(10, 10 ** 4),
+        num_experiments=10,
+        num_signals=3,
+        data_type=NORMAL_PAPER,
+        mips_alg=ADAPTIVE_ACTION_ELIMINATION,
+        with_replacement=False,
+        is_normalize=False,
+    )
     # scaling_exp(
     #     0,
     #     0.5,
