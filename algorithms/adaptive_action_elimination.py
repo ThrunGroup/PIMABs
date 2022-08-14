@@ -84,7 +84,7 @@ def warm_start(
         )
         assert ci_vec_all[signal_idx].shape == (1,) # We have a scalar value since we use a single variance proxy for each
 
-        # Implicit broadcasting, add comment
+        # Implicit broadcasting: lcbs_all[signal_idx] and means_all[signal_idx] are of shape (N, 1) but ci_vec_all[signal_idx] is of shape (1,).
         lcbs_all[signal_idx] = means_all[signal_idx] - ci_vec_all[signal_idx]
         ucbs_all[signal_idx] = means_all[signal_idx] + ci_vec_all[signal_idx]
         candidates_all[signal_idx] = np.where((ucbs_all[signal_idx] >= lcbs_all[signal_idx].max()))[0]
@@ -102,8 +102,8 @@ def adaptive_action_elimination(
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
     seed: int = 0,
-    do_warm_start: bool = True,
-    warm_start_num_idcs: int = BATCH_SIZE,
+    do_warm_start: bool = False,
+    warm_start_num_idcs: int = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     An adaptive AE(Action Elimination) algorithm that adopts sampling without replacement, adaptive variance proxy, and
