@@ -35,7 +35,7 @@ def action_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
-    utils.set_seed(seed)
+    set_seed(seed)
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
     for signal_idx in range(signals.shape[0]):
