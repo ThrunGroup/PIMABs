@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import math
 from typing import Tuple, Optional
+import matplotlib.pyplot as plt
 
 from utils.constants import (
     BATCH_SIZE,
@@ -13,6 +14,7 @@ from utils.constants import (
     ADAPTIVE_ACTION_ELIMINATION,
     HOEFFDING,
     GREEDY_MIPS,
+    NETFLIX,
 )
 import time
 
@@ -76,13 +78,18 @@ def scaling_exp(
     budgets = []
     budgets_std = []
     accuracy_list = []
-    atoms, signals = generate_custom_data(
-        num_atoms=num_atoms,
-        len_signal=sizes_signal[-1],
-        num_signals=num_signals,
-        seed=seed,
-        data_type=data_type,
-    )
+    if data_type is NETFLIX:
+        atoms = np.load("Movie_ratings.npy") #np.load(os.path.join(os.path.join("data", "netflix"), "Movie_ratings.npy"))
+        signals = subset_2d(atoms, np.arange(start=-1, stop=-1-num_signals, step=-1), np.arange(size_minmax[1]))
+        atoms = subset_2d(atoms, np.arange(num_atoms), np.arange(size_minmax[1]))
+    else:
+        atoms, signals = generate_custom_data(
+            num_atoms=num_atoms,
+            len_signal=sizes_signal[-1],
+            num_signals=num_signals,
+            seed=seed,
+            data_type=data_type,
+        )
     maxmin = (1, -1)
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
@@ -170,10 +177,15 @@ def scaling_exp(
         log_df.to_csv(filename, index=False)
     if is_plot:
         if is_logspace:
-            functions = [np.array, np.exp]
-            function_names = ["Linear", "Exp"]
-            sizes_signal = np.log(sizes_signal)
-            xlabel = "signal sizes (natural log scale)"
+            def power10(array):
+                return np.power(10, array)
+            functions = [np.array, power10]
+            function_names = ["$y \propto log x$", "$y \propto x$"]
+            sizes_signal = np.log10(sizes_signal)
+            xlabel = "signal sizes"
+            max_power = int(np.log10(size_minmax[1]))
+            plt.ticklabel_format(style='sci', scilimits=(0, 0))
+            plt.xticks(np.arange(max_power+1), 10 ** np.arange(max_power+1))
         else:
             functions = [np.array, np.sqrt, np.log]
             function_names = ["Linear", "Sqrt", "Logarithm"]
@@ -186,6 +198,7 @@ def scaling_exp(
             ys_std=budgets_std,
             title=f"{mips_alg} + w/ replacement: {with_replacement}",
             xlabel=xlabel,
+            is_logspace=is_logspace,
         )
 
     print(f"Mean accuracy with {mips_alg} for {data_type}: {np.mean(accuracy_list)}")

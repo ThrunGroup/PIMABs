@@ -11,6 +11,7 @@ from utils.constants import (
     ADAPTIVE_ACTION_ELIMINATION,
     NORMAL_PAPER,
     UNIFORM_PAPER,
+    NETFLIX,
 )
 from speedup_precision_exps import speedup_precision_exps
 from scaling_exp import scaling_exp
@@ -72,6 +73,46 @@ if __name__ == "__main__":
     #     with_replacement=True,
     #     is_normalize=False,
     # )
+    # scaling_exp(
+    #     0.01,
+    #     0.01,
+    #     # num_atoms=int(10 ** 2),
+    #     # size_minmax=(10 ** 5, 10 ** 6),
+    #     num_signals=5,
+    #     num_experiments=30,
+    #     data_type=NETFLIX,
+    #     mips_alg=ADAPTIVE_ACTION_ELIMINATION,
+    #     is_normalize=False,
+    #     is_logspace=True,
+    # )
+    # scaling_exp(
+    #     0.01,
+    #     0.01,
+    #     # num_atoms=int(10 ** 2),
+    #     # size_minmax=(10 ** 5, 10 ** 6),
+    #     num_signals=5,
+    #     num_experiments=30,
+    #     data_type=NETFLIX,
+    #     mips_alg=ACTION_ELIMINATION,
+    #     with_replacement=False,
+    #     is_normalize=False,
+    #     is_logspace=True,
+    # )
+    #
+    # scaling_exp(
+    #     0.01,
+    #     0.01,
+    #     # num_atoms=int(10 ** 2),
+    #     # size_minmax=(10 ** 5, 10 ** 6),
+    #     num_signals=5,
+    #     num_experiments=30,
+    #     data_type=NETFLIX,
+    #     mips_alg=ACTION_ELIMINATION,
+    #     with_replacement=True,
+    #     is_normalize=False,
+    #     is_logspace=True,
+    # )
+
     scaling_exp(
         0.01,
         0.01,
@@ -79,23 +120,11 @@ if __name__ == "__main__":
         # size_minmax=(10 ** 5, 10 ** 6),
         num_signals=5,
         num_experiments=30,
-        data_type=NORMAL_CUSTOM,
-        mips_alg=ADAPTIVE_ACTION_ELIMINATION,
-        is_normalize=False,
-        is_logspace=False,
-    )
-    scaling_exp(
-        0.01,
-        0.01,
-        # num_atoms=int(10 ** 2),
-        # size_minmax=(10 ** 5, 10 ** 6),
-        num_signals=5,
-        num_experiments=30,
-        data_type=NORMAL_CUSTOM,
-        mips_alg=ACTION_ELIMINATION,
+        data_type=NETFLIX,
+        mips_alg=MEDIAN_ELIMINATION,
         with_replacement=False,
         is_normalize=False,
-        is_logspace=False,
+        is_logspace=True,
     )
 
     # fixed_confidence_exp(

@@ -283,6 +283,7 @@ def fit_and_plot(
     title: str = None,
     xlabel: str = None,
     ylabel: str = None,
+    is_logspace: bool = False,
 ) -> None:
     """
     Fit xs, ys to function and plot the points and curve.
@@ -312,7 +313,7 @@ def fit_and_plot(
                 hashes,
                 hashes_predict,
                 color=COLORS[idx],
-                label=f"{function_name} fit,  $R^2 = {r2:.4f}$",
+                label=f"{function_name},  $R^2 = {r2:.4f}$",
             )
             plt.legend(loc="lower right")
     if ys_std is None:
