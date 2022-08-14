@@ -4,7 +4,7 @@ import numba as nb
 from utils.constants import HOEFFDING
 
 
-@nb.njit
+#@nb.njit
 def get_ci(
     delta: np.ndarray,
     num_samples: int,
@@ -19,6 +19,8 @@ def get_ci(
     if with_replacement:
         # see https://arxiv.org/pdf/2006.06856.pdf#page=20
         if ci_bound == HOEFFDING:
+            # TODO: Should we also be using sum_var_proxy here?
+            assert var_proxy is not None, "Need to pass var_proxy"
             return np.sqrt(-2 * np.log(delta) * var_proxy / num_samples)
     else:
         # see Corollary 1 in https://arxiv.org/pdf/1812.06360.pdf
@@ -31,4 +33,6 @@ def get_ci(
                 return np.sqrt(
                     -2 * rho * np.log(delta) * sum_var_proxy / num_samples**2
                 )
+
+            assert var_proxy is not None, "Need to pass var_proxy"
             return np.sqrt(-2 * rho * np.log(delta) * var_proxy / num_samples)

@@ -3,6 +3,10 @@ import numba as nb
 import math
 from typing import Tuple
 
+from numba.typed import Dict
+from numba import types
+
+
 from utils.constants import (
     BATCH_SIZE,
     ADVERSARIAL_CUSTOM,
@@ -40,7 +44,7 @@ def np_std(array, axis):
 
 
 # TODO: May not want this njit here since we only call once as we're doing all signals at once?
-@nb.njit
+#@nb.njit
 def warm_start(
         signals: np.ndarray,
         atoms: np.ndarray,
@@ -94,7 +98,7 @@ def warm_start(
     mean_signals = np_mean(sampled_signals, axis=1)
     sum_var_proxy_all = np.outer(mean_signals ** 2, var_proxy)  # Index by signal_idx, atom_idx
     candidates_all = {}
-    ci_vec_all = {}
+    ci_vec_all = dict()
     lcbs_all = np.empty((num_signals, N))
     ucbs_all = np.empty((num_signals, N))
     for signal_idx, signal in enumerate(signals):
@@ -116,7 +120,7 @@ def warm_start(
 
     return budget, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all
 
-@nb.njit
+#@nb.njit
 def adaptive_action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
