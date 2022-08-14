@@ -14,6 +14,7 @@ from typing import List
 from sklearn.linear_model import LinearRegression
 
 import sys
+
 sys.path.append("..")
 from utils.utils import get_args, get_logfile_name, remap_args
 
@@ -40,7 +41,9 @@ def verify_correctness() -> None:
         ]
 
         for bmp_lfile in sorted(bmp_logfiles):
-            mp_lfile = bmp_lfile.replace("-bmp", "")  # Find the corresponding MP logfile
+            mp_lfile = bmp_lfile.replace(
+                "-bmp", ""
+            )  # Find the corresponding MP logfile
             if not os.path.exists(mp_lfile):
                 print("Warning: no MP experiment logfile", mp_lfile)
             else:
@@ -64,7 +67,9 @@ def verify_correctness() -> None:
                     print("OK: Results for", bmp_lfile, mp_lfile, "agree")
 
 
-def plot_slice_sns(dcalls_array: np.ndarray, ds: List, seeds: List, take_log: bool = True) -> None:
+def plot_slice_sns(
+    dcalls_array: np.ndarray, ds: List, seeds: List, take_log: bool = True
+) -> None:
     """
     Plots the number of coordinate-wise distance calls vs. d, for various algorithms and seeds
 
@@ -103,7 +108,7 @@ def plot_slice_sns(dcalls_array: np.ndarray, ds: List, seeds: List, take_log: bo
     sns.scatterplot(x="d", y="cost", data=melt_df, ax=ax, alpha=0.6)
 
     # Plot means and error bars
-    bars = (1.96 / (10 ** 0.5)) * np.std(np_data, axis=1)
+    bars = (1.96 / (10**0.5)) * np.std(np_data, axis=1)
     means = np.mean(np_data, axis=1)
     plt.errorbar(
         xs,
@@ -158,7 +163,9 @@ def show_plots() -> None:
         - searching each logfile for the number of distance calls
         - storing this information in the d_calls array and calling plot_slice_sns
     """
-    args = get_args()  # Uses default values for now as placeholder to instantiate args.Namespace object
+    args = (
+        get_args()
+    )  # Uses default values for now as placeholder to instantiate args.Namespace object
 
     # Decide which experiments to plot. Similar parameters to create_config.py
     # Algorithms to run: Bandit Matching Pursuit (B_MP) and/or Matching Pursuit (MP)

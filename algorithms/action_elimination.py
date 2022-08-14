@@ -1,4 +1,5 @@
 import numpy as np
+import numba as nb
 import math
 from typing import Tuple
 
@@ -10,10 +11,11 @@ from utils.constants import (
     ACTION_ELIMINATION,
     HOEFFDING,
 )
-from utils.utils import subset_2d, fit_and_plot
+from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
+@nb.njit
 def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -33,10 +35,11 @@ def action_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
-    rng = np.random.default_rng(seed)
-    candidates_array = []
-    budgets_array = []
-    for signal in signals:
+    set_seed(seed)
+    candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
+    budgets_array = np.empty(signals.shape[0], dtype=np.int64)
+    for signal_idx in range(signals.shape[0]):
+        signal = signals[signal_idx]
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
@@ -48,7 +51,7 @@ def action_elimination(
         means = np.zeros(D)  # estimated means of arm returns
         if not with_replacement:
             shuffled_idcs = np.arange(d)
-            rng.shuffle(shuffled_idcs)
+            np.random.shuffle(shuffled_idcs)
         else:
             shuffled_idcs = None
         # TODO: Add exact computation if total mnist too big
@@ -84,7 +87,8 @@ def action_elimination(
             signal_sampled = signal[sample_idcs]
             candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
             means[candidates] = (
-                (t * batch_size * means[candidates]) + (candidates_sampled @ signal_sampled)
+                (t * batch_size * means[candidates])
+                + (candidates_sampled @ signal_sampled)
             ) / (
                 (t + 1) * batch_size
             )  # Update the running means of arm returns # Does this np.dot do implicit broadcasting?
@@ -117,6 +121,6 @@ def action_elimination(
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
             candidates = candidates[new_cand_idcs]
-        candidates_array.append(candidates)
-        budgets_array.append(budgets)
-    return np.array(candidates_array), np.array(budgets_array)
+        candidates_array[signal_idx] = candidates
+        budgets_array[signal_idx] = budgets
+    return candidates_array, budgets_array

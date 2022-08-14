@@ -1,8 +1,12 @@
 import numpy as np
+import numba as nb
 import math
 from typing import Tuple
 
+from utils.utils import set_seed
 
+
+@nb.njit
 def median_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -18,11 +22,12 @@ def median_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
-    rng = np.random.default_rng(seed)
+    set_seed(seed)
     len_signal = signals.shape[1]
-    candidates_array = []
-    budgets_array = []
-    for signal in signals:
+    candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
+    budgets_array = np.empty(signals.shape[0], dtype=np.int64)
+    for signal_idx in range(signals.shape[0]):
+        signal = signals[signal_idx]
         candidates = np.arange(atoms.shape[0])
         estimates = np.zeros(atoms.shape[0])
         population_idcs = np.arange(len_signal)
@@ -38,7 +43,8 @@ def median_elimination(
             A helper function for calculating the optimal number of mnist
             """
             return min(
-                (u + 1) / (1 + u / len_signal), (u + u / len_signal) / (1 + u / len_signal),
+                (u + 1) / (1 + u / len_signal),
+                (u + u / len_signal) / (1 + u / len_signal),
             )
 
         while len(candidates) > num_best_atoms:
@@ -53,7 +59,7 @@ def median_elimination(
                         * (math.floor(((len(candidates)) - num_best_atoms) / 2) + 1)
                     )
                 )
-                / (new_epsilon ** 2)
+                / (new_epsilon**2)
             )
             current_num_samples = int(new_T - prev_T)
             prev_T = new_T
@@ -62,8 +68,10 @@ def median_elimination(
             # Sample without replacement using Fisher-Yates shuffle.
             # Time complexity is linear in len(current_num_samples)
             if not is_experiment:
-                idcs = rng.choice(
-                    len_signal - total_num_samples, current_num_samples, replace=False,
+                idcs = np.random.choice(
+                    len_signal - total_num_samples,
+                    current_num_samples,
+                    replace=False,
                 )
             else:
                 # With an adversarial dataset, wan do a worst-case experiment by not shuffling a data
@@ -80,7 +88,7 @@ def median_elimination(
 
             estimates[candidates] = (
                 estimates[candidates] * total_num_samples
-                + (np.matmul(atoms[:, sample_idcs][candidates], signal[sample_idcs]))
+                + (atoms[:, sample_idcs][candidates] @ signal[sample_idcs])
             ) / (total_num_samples + current_num_samples)
 
             candidates = candidates[
@@ -92,6 +100,6 @@ def median_elimination(
             total_num_samples += current_num_samples
         if verbose:
             print(f"budget is {budget}")
-        candidates_array.append(candidates)
-        budgets_array.append(budget)
-    return np.array(candidates_array), np.array(budgets_array)
+        candidates_array[signal_idx] = candidates
+        budgets_array[signal_idx] = budget
+    return candidates_array, budgets_array

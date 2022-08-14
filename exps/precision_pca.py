@@ -8,7 +8,7 @@ from utils.constants import (
     NORMAL_PAPER,
     NUM_EXPERIMENTS,
     NUM_POINTS_PCA,
-    BUFFER
+    BUFFER,
 )
 from utils.utils import subset_2d, fit_and_plot
 from exps.basic_tests import precision_speed_pca
@@ -42,7 +42,7 @@ def main(
             top_k=top_k,
             generate_data=data_name,
             num_points=NUM_POINTS_PCA,
-            depth_minmax=depth_minmax
+            depth_minmax=depth_minmax,
         )
         budgets += budget
         precisions += precision
@@ -56,15 +56,13 @@ def main(
     for i in range(len(top_k)):
         k_budget = budgets[:, i]
         k_precision = precisions[:, i]
-        #sorted_by_budget = np.argsort(-k_budget)
-        #functions = [np.log]
-        #function_names = ["Logarithm"]
-        fit_and_plot(
-            np.max(k_budget)/k_budget, k_precision, [], []
-        )
+        # sorted_by_budget = np.argsort(-k_budget)
+        # functions = [np.log]
+        # function_names = ["Logarithm"]
+        fit_and_plot(np.max(k_budget) / k_budget, k_precision, [], [])
 
 
 if __name__ == "__main__":
-    main(data_name=NORMAL_CUSTOM, top_k=[5, 10], depth_minmax=(0,4))
-    main(data_name=ADVERSARIAL_CUSTOM, top_k=[5, 10], depth_minmax=(0,4))
-    main(data_name=NORMAL_PAPER, top_k=[5, 10], depth_minmax=(0,4))
+    main(data_name=NORMAL_CUSTOM, top_k=[5, 10], depth_minmax=(0, 4))
+    main(data_name=ADVERSARIAL_CUSTOM, top_k=[5, 10], depth_minmax=(0, 4))
+    main(data_name=NORMAL_PAPER, top_k=[5, 10], depth_minmax=(0, 4))

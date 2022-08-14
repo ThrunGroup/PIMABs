@@ -1,5 +1,6 @@
 import numpy as np
-#from numba import jit
+
+# from numba import jit
 
 
 class Tree:
@@ -8,6 +9,7 @@ class Tree:
 
     :j: the index that is delta positions from the end.
     """
+
     def __init__(self):
         self.data = None
         self.root = None
@@ -28,7 +30,7 @@ class Tree:
 
         norms = np.linalg.norm(arr, axis=1)
         phi = np.max(norms)
-        extra_dim = np.sqrt(phi ** 2 - norms ** 2)
+        extra_dim = np.sqrt(phi**2 - norms**2)
         column = extra_dim.reshape(norms.shape[0], 1)
         return np.append(arr, column, axis=1)
 
@@ -45,10 +47,10 @@ class Tree:
         mu = np.mean(arr, axis=0)
 
         M = np.repeat(mu.reshape((D, 1)), N, axis=1)
-        assert (M.shape == (D, N))
+        assert M.shape == (D, N)
 
         W, _, _ = np.linalg.svd(arr.T - M, full_matrices=True)
-        assert (W.shape == (D, D))
+        assert W.shape == (D, D)
 
         return W, mu, np.matmul(W.T, (arr - mu).T)
 

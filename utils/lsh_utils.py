@@ -16,9 +16,7 @@ def g_index_extend(data, m):
     """
     result = []
     for row in data:
-        result.append(
-            (row + [np.dot(row, row) ** (i + 1) for i in range(m)])
-        )
+        result.append((row + [np.dot(row, row) ** (i + 1) for i in range(m)]))
     return result
 
 
@@ -36,9 +34,7 @@ def g_index_simple_extend(data):
     """
     result = []
     for row in data:
-        result.append(
-            (row + [np.sqrt(1 - np.dot(row, row))])
-        )
+        result.append((row + [np.sqrt(1 - np.dot(row, row))]))
     return result
 
 
@@ -46,7 +42,7 @@ def g_query_simple_extend(query):
     """
     [x] => [x;   sqrt(1 - ||x||**2)]
     """
-    assert (round(np.dot(query, query)) == 1)
+    assert round(np.dot(query, query)) == 1
     return query + [0]
 
 

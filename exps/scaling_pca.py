@@ -8,16 +8,13 @@ from utils.constants import (
     NORMAL_PAPER,
     PCA,
     NUM_EXPERIMENTS,
-    NUM_POINTS_SCALING
+    NUM_POINTS_SCALING,
 )
 from utils.utils import subset_2d, fit_and_plot
 from exps.basic_tests import scaling_baseline
 
 
-def main(
-    data_name: str = NORMAL_CUSTOM,
-    size_minmax: Tuple[int] = (10, 10 ** 4)
-):
+def main(data_name: str = NORMAL_CUSTOM, size_minmax: Tuple[int] = (10, 10**4)):
     """
     Calls scaling_baseline NUM_EXPERIMENT times and averages the budgets returned.
     Plots the budgets on a linear scale.
@@ -28,7 +25,9 @@ def main(
     print("---- running PCA-MIPS scaling experiments ----")
     print(f"=> using {data_name} dataset")
     print(f"=> averaging over {NUM_EXPERIMENTS} experiments")
-    print(f"=> plotting {NUM_POINTS_SCALING} points with signal dimension in range {size_minmax}")
+    print(
+        f"=> plotting {NUM_POINTS_SCALING} points with signal dimension in range {size_minmax}"
+    )
 
     budgets = np.zeros(NUM_POINTS_SCALING)
     std_array = []
@@ -46,17 +45,15 @@ def main(
 
     # sort size_signal based on budget (smallest to largest).
     budgets /= NUM_EXPERIMENTS
-    #sorted_by_budget = np.argsort(budgets)
+    # sorted_by_budget = np.argsort(budgets)
     functions = [np.array]
     function_names = ["Linear"]
 
     std = np.std(std_array) / np.sqrt(NUM_EXPERIMENTS)
-    fit_and_plot(
-        xs=sizes_signal, ys=budgets, ys_std=std
-    )
+    fit_and_plot(xs=sizes_signal, ys=budgets, ys_std=std)
 
 
 if __name__ == "__main__":
-    main(data_name=NORMAL_CUSTOM, size_minmax=(10, 10 ** 4))
-    main(data_name=ADVERSARIAL_CUSTOM, size_minmax=(10, 10 ** 4))
-    main(data_name=NORMAL_PAPER, size_minmax=(10, 10 ** 4))
+    main(data_name=NORMAL_CUSTOM, size_minmax=(10, 10**4))
+    main(data_name=ADVERSARIAL_CUSTOM, size_minmax=(10, 10**4))
+    main(data_name=NORMAL_PAPER, size_minmax=(10, 10**4))
