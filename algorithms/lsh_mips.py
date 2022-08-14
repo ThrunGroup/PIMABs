@@ -5,7 +5,7 @@ from collections import defaultdict
 from operator import itemgetter
 
 from utils.lsh_utils import *
-from data.custom_data import generate_normal_data
+from data.custom_data import generate_custom_data
 from utils.constants import SYMMETRIC, ASYMMETRIC
 
 
@@ -58,7 +58,7 @@ class LSH_MIPS:
                 / rand_range
             )
         else:
-            raise Expection("Invalid LSH type declared")
+            raise Exception("Invalid LSH type declared")
 
         self.type = type
         self.num_hfunc = num_hfunc
@@ -171,12 +171,23 @@ if __name__ == "__main__":
     # To compare with the naive mips, check branch test_baselines which has a function called compare_to_naive
     seed = 0
     top_k = 5
-    atoms, signal = generate_normal_data(num_atoms=100, len_signal=1000, seed=seed)
+    atoms, signal = generate_custom_data(num_atoms=100, len_signal=1000000, seed=seed, data_type="NORMAL_PAPER")
+    signal = signal[0]
+    import time
 
-    LSHMIPS = LSH_MIPS(atoms, signal, type=SYMMETRIC)
+    start_time = time.time()
+    LSHMIPS = LSH_MIPS(atoms, signal)
     LSHMIPS.prepare_data()
     LSHMIPS.create_lsh_table(LSHMIPS.ext_data)
+    print(f"Preprocess: {time.time() - start_time}(s)")
+
+    start_time = time.time()
     budget, candidates = LSHMIPS.run(LSHMIPS.ext_data, LSHMIPS.ext_query, top_k=top_k)
+    print(f"lsh_mips: {time.time() - start_time}(s)")
+
+    start_time = time.time()
+    print(f"accuracy: ", len(np.intersect1d(candidates, np.argsort(-atoms @ signal)[:10])) / top_k)
+    print(f"naive: {time.time() - start_time}(s)")
 
     print(f" =>> Top {top_k} candidate(s): ", candidates)
     print(" =>> budget: ", budget)
