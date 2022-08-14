@@ -14,9 +14,33 @@ from utils.constants import (
 from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
+### Taken from https://github.com/numba/numba/issues/1269#issuecomment-472574352
+@nb.njit
+def np_apply_along_axis(func1d, axis, arr):
+  assert arr.ndim == 2
+  assert axis in [0, 1]
+  if axis == 0:
+    result = np.empty(arr.shape[1])
+    for i in range(len(result)):
+      result[i] = func1d(arr[:, i])
+  else:
+    result = np.empty(arr.shape[0])
+    for i in range(len(result)):
+      result[i] = func1d(arr[i, :])
+  return result
+
+@nb.njit
+def np_mean(array, axis):
+  return np_apply_along_axis(np.mean, axis, array)
+
+@nb.njit
+def np_std(array, axis):
+  return np_apply_along_axis(np.std, axis, array)
+
+
 
 # TODO: May not want this njit here since we only call once as we're doing all signals at once?
-#@nb.njit
+@nb.njit
 def warm_start(
         signals: np.ndarray,
         atoms: np.ndarray,
@@ -40,6 +64,7 @@ def warm_start(
     num_signals = len(signals)
     N = len(atoms)
     d = signals.shape[1]  # Need shape[1] here because there are multiple signals
+
     c = warm_start_num_idcs
     warm_start_idcs = np.random.choice(d, warm_start_num_idcs, replace=False)
     budget = N * c  # per-signal budget
@@ -66,7 +91,7 @@ def warm_start(
 
     # Note: we're using mean here, which requires an O(num_signals*d) cost
     # TODO: Make this max or min?
-    mean_signals = np.mean(sampled_signals, axis=1)
+    mean_signals = np_mean(sampled_signals, axis=1)
     sum_var_proxy_all = np.outer(mean_signals ** 2, var_proxy)  # Index by signal_idx, atom_idx
     candidates_all = {}
     ci_vec_all = {}
@@ -76,10 +101,10 @@ def warm_start(
         # TODO: Can we change this to array broadcasting? At least it's compiled with numba
         ci_vec_all[signal_idx] = get_ci(
             delta=new_delta,
-            ci_bound=HOEFFDING,
             num_samples=c,
-            pop_size=d,
+            ci_bound=HOEFFDING,
             with_replacement=False,
+            pop_size=d,
             sum_var_proxy=sum_var_proxy_all[signal_idx],
         )
         assert ci_vec_all[signal_idx].shape == (1,) # We have a scalar value since we use a single variance proxy for each
@@ -91,7 +116,7 @@ def warm_start(
 
     return budget, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all
 
-#@nb.njit
+@nb.njit
 def adaptive_action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -103,7 +128,7 @@ def adaptive_action_elimination(
     batch_size: int = BATCH_SIZE,
     seed: int = 0,
     do_warm_start: bool = False,
-    warm_start_num_idcs: int = None,
+    warm_start_num_idcs: int = BATCH_SIZE, # We need to have warm_start_num_indices passed with a default int value because a None makes numba complain at compile time
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     An adaptive AE(Action Elimination) algorithm that adopts sampling without replacement, adaptive variance proxy, and
@@ -132,8 +157,6 @@ def adaptive_action_elimination(
 
     if do_warm_start:
         budget_all, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all = warm_start(signals, atoms, var_proxy, warm_start_num_idcs, new_delta)
-    else:
-        assert warm_start_num_idcs is None, "Passed warm start number of indices without a warm start"
 
     for signal_idx, signal in enumerate(signals):
         signal = signals[signal_idx]
@@ -187,8 +210,8 @@ def adaptive_action_elimination(
             sum_var_proxy += var_proxy * (max_signal**2)
             ci_vec = get_ci(
                 delta=new_delta,
-                ci_bound=HOEFFDING,
                 num_samples=(t * batch_size),
+                ci_bound=HOEFFDING,
                 pop_size=signal.shape[0],
                 with_replacement=False,
                 sum_var_proxy=sum_var_proxy,

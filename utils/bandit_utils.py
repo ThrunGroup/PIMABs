@@ -4,15 +4,15 @@ import numba as nb
 from utils.constants import HOEFFDING
 
 
-#@nb.njit
+@nb.njit
 def get_ci(
     delta: np.ndarray,
     num_samples: int,
+    var_proxy: np.ndarray = None,  # Variance proxy of sub-gaussian r.v. # Can't have default None argument because of numba
+    sum_var_proxy: float = None, # Can't have default None argument because of numba
     ci_bound: str = HOEFFDING,
-    var_proxy: np.ndarray = None,  # Variance proxy of sub-gaussian r.v.
     with_replacement: bool = True,
     pop_size: int = 10**10,
-    sum_var_proxy: float = None,
 ) -> np.ndarray:
     assert (var_proxy is not None and sum_var_proxy is None) or (var_proxy is None and sum_var_proxy is not None), "Should only pass one of var_proxy and sum_var_proxy"
 
