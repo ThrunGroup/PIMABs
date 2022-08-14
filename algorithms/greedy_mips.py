@@ -18,19 +18,29 @@ from data.custom_data import generate_custom_data
 
 
 def generate_conditer(atoms: np.ndarray) -> np.ndarray:
+    """
+    Query-independent pre-processing procedure in Greedy-MIPS
+
+    :param atoms: Atoms matrix (2d-array)
+    :return: Sorted indices of each column
+    """
     return np.argsort(-atoms, axis=0)
 
 
 @nb.njit
 def generate_heap(atoms: np.ndarray, conditer: np.ndarray, signal: np.ndarray):
     """
-    Query-dependent pre-processing procedure in Greedy-MIPS
+    Query-dependent pre-processing procedure in Greedy-MIPS.
+
+    Heap contains (z, t) where z is the maximum value of inner product between atoms' t-th row and signal's t-th
+    element for every t in range(length of signal).
     """
     for t in range(signal.shape[0]):
         if signal[t] > 0:
             z = -atoms[conditer[0, t], t] * signal[t]  # To make max-heapq
         else:
             z = -atoms[conditer[-1, t], t] * signal[t]
+
         if t == 0:
             Q = [(z, t)]
         else:
@@ -54,6 +64,9 @@ def candidate_screening(
     candidates = []
     complexity = int(0)
     while len(candidates) < budget:
+
+        # Pop the maximum element from heap and find its row index in atom (column index is given)
+        # using conditer array(argsort the columns of atoms)
         z, t = heapq.heappop(Q)
         z = -z  # heapq is min heap but regard it as max heap
         conditer_idx = iters[t]
@@ -61,12 +74,16 @@ def candidate_screening(
             conditer[conditer_idx, t]
             if signal[t] > 0
             else conditer[-1 - conditer_idx, t]
-        )
+        )  # Index from the last if signal is negative
         complexity += 3 + int(np.log2(len(Q)))
+
+        # j is the index of atom that has k-th largest one-element inner product with signal (k=time step of while loop)
         if visited_j[j] == 0:
             candidates.append(j)
             visited_j[j] = 1
             complexity += 1
+
+        # Push new atom index to heap since we pop one item previously
         while conditer_idx < conditer.shape[0]:
             iters[t] += 1
             conditer_idx = iters[t]
@@ -76,12 +93,13 @@ def candidate_screening(
                 else conditer[-1 - conditer_idx, t]
             )
             complexity += 3
+
             if visited_j[j] == 0:
                 z = atoms[j, t] * signal[t]
                 heapq.heappush(Q, (-z, t))
                 complexity += 1 + int(np.log2(len(Q)))
                 break
-    return np.array(candidates), budget
+    return np.array(candidates), complexity
 
 
 def greedy_mips(
@@ -110,10 +128,14 @@ def greedy_mips(
     """
 
     start_time = time.time()
+
+    # Query-independent pre-process
     if conditer is None:
         conditer = generate_conditer(atoms)
+
     if verbose:
         print(f"preprocess time: {time.time() - start_time}")
+
     visited_j = np.zeros(atoms.shape[0])
     best_atom_list = []
     query_dependent_time_list = []
@@ -153,6 +175,7 @@ def greedy_mips(
 
         for candidate in candidates:
             visited_j[candidate] = 0
+
         if is_check:
             assert (
                 np.sum(
@@ -164,6 +187,7 @@ def greedy_mips(
                 / budget
                 == 1.0
             ), "Greedy MIPS algorithm is broken"
+
         if verbose:
             print(
                 f"query dependent preprocess + candidates screening: {query_dependent_time}"
@@ -193,6 +217,7 @@ def reproduce_figure6(seed: int = 0):
             atoms = rng.normal(size=(2**n, 2**k))
             signals = rng.normal(size=(num_experiments, 2**k))
 
+            # Naively compute inner product
             for signal in signals:
                 start_time = time.time()
                 naive_best_arms.append(
@@ -200,6 +225,8 @@ def reproduce_figure6(seed: int = 0):
                 )
                 time_list.append(time.time() - start_time)
             time_list = np.array(time_list)
+
+            # Compute inner product with Greedy MIPS with various parameters
             for budget in np.geomspace(2, 500, 20):
                 conditer = generate_conditer(atoms)
                 (
@@ -214,14 +241,16 @@ def reproduce_figure6(seed: int = 0):
                     num_best_atoms=num_best_atoms,
                     conditer=conditer,
                 )
-                best_arms = np.array(best_arms)
 
+                # Compute accuracy
                 accuracy = 0
+                best_arms = np.array(best_arms)
                 for idx in range(len(best_arms)):
                     accuracy += len(
                         np.intersect1d(naive_best_arms[idx], best_arms[idx])
                     )
                 accuracy /= len(best_arms) * len(best_arms[0])
+
                 accuracy_list.append(accuracy)
                 speedup_list.append(
                     np.mean(time_list)
@@ -230,6 +259,7 @@ def reproduce_figure6(seed: int = 0):
                         + np.mean(ranking_time_list[1:])
                     )
                 )
+
             fit_and_plot(
                 np.array(speedup_list),
                 np.array(accuracy_list),
