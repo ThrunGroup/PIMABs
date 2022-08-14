@@ -65,13 +65,17 @@ def warm_start(
     :param warm_start_idcs: randomly sampled indices to warm start for
     :return: warm start candidates, budgets, lcbs, ucbs, and means
     """
+
+    # TODO: Update budget computations throughout
+
     num_signals = len(signals)
     N = len(atoms)
     d = signals.shape[1]  # Need shape[1] here because there are multiple signals
 
     c = warm_start_num_idcs
-    warm_start_idcs = np.random.choice(d, warm_start_num_idcs, replace=False)
-    budget = N * c  # per-signal budget
+    tmp_batch_size = min(d, c)
+    warm_start_idcs = np.random.choice(d, tmp_batch_size, replace=False)
+    budget = N * tmp_batch_size  # per-signal budget
 
     # Do the large matrix multiplication
 
@@ -95,7 +99,7 @@ def warm_start(
 
     # Note: we're using mean here, which requires an O(num_signals*d) cost
     # TODO: Make this max or min?
-    mean_signals = np_mean(sampled_signals, axis=1)
+    mean_signals = np.max(sampled_signals, axis=1)
     sum_var_proxy_all = np.outer(mean_signals ** 2, var_proxy)  # Index by signal_idx, atom_idx
     candidates_all = {}
     ci_vec_all = dict()
@@ -105,7 +109,7 @@ def warm_start(
         # TODO: Can we change this to array broadcasting? At least it's compiled with numba
         ci_vec_all[signal_idx] = get_ci(
             delta=new_delta,
-            num_samples=c,
+            num_samples=tmp_batch_size,
             ci_bound=HOEFFDING,
             with_replacement=False,
             pop_size=d,
@@ -131,7 +135,7 @@ def adaptive_action_elimination(
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
     seed: int = 0,
-    do_warm_start: bool = False,
+    do_warm_start: bool = True,
     warm_start_num_idcs: int = BATCH_SIZE, # We need to have warm_start_num_indices passed with a default int value because a None makes numba complain at compile time
 ) -> Tuple[np.ndarray, np.ndarray]:
     """

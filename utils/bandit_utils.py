@@ -15,7 +15,6 @@ def get_ci(
     pop_size: int = 10**10,
 ) -> np.ndarray:
     assert (var_proxy is not None and sum_var_proxy is None) or (var_proxy is None and sum_var_proxy is not None), "Should only pass one of var_proxy and sum_var_proxy"
-
     if with_replacement:
         # see https://arxiv.org/pdf/2006.06856.pdf#page=20
         if ci_bound == HOEFFDING:
