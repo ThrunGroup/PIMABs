@@ -11,10 +11,11 @@ from utils.constants import (
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
     MEDIAN_ELIMINATION,
+    LSH,
+    PCA,
 )
 from utils.utils import fit_and_plot
 from typing import List, Any
-
 
 
 def create_baseline_plots_from_data(
@@ -65,8 +66,12 @@ def create_baseline_plots_from_data(
             fit_and_plot(x, y, functions, function_names)
 
         # plot the datapoints
-        plt.plot(x, y, color=COLORS[i], label=f"{alg_name}")
-        plt.legend(loc="upper left")
+        if alg_name == PCA:
+            plt.scatter(x, y, color=COLORS[i], label=f"{alg_name}")
+        else:
+            plt.scatter(x, y, color=COLORS[i], label=f"{alg_name}")
+
+        plt.legend(loc="upper right")
         if include_error_bar:
             error = data["budgets_std"].tolist()
             plt.errorbar(x, y, error, fmt=".", color="black")
@@ -78,7 +83,7 @@ def create_baseline_plots_from_data(
 
 
 if __name__ == "__main__":
-    create_baseline_plots_from_data(is_scaling=True, fit=False, include_error_bar=False)
-    #create_baseline_plots_from_data(is_scaling=False, include_error_bar=False)
+    #create_baseline_plots_from_data(is_scaling=True, fit=False, include_error_bar=False)
+    create_baseline_plots_from_data(is_scaling=False, include_error_bar=False)
 
 

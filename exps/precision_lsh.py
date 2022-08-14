@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import pandas as pd
+import os
 from typing import Tuple, List
 
 from utils.constants import (
@@ -67,23 +69,43 @@ def main(
     for i in range(len(top_k)):
         k_budget = budgets[:, i]
         k_precision = precisions[:, i]
-        # sorted_by_budget = np.argsort(-k_budget)
-        fit_and_plot(np.max(k_budget) / k_budget, k_precision, [], [])
+        sorted_by_budget = np.argsort(-k_budget)
+        log_dict = {
+            "data_type": data_name,
+            "budgets": k_budget[sorted_by_budget],
+            "accuracy": k_precision[sorted_by_budget],
+        }
+        log_df = pd.DataFrame(log_dict)
+        log_dir = "logs"
+        filename = os.path.join(
+            log_dir,
+            type
+            + "_LSH_MIPS"
+            "_SPEEDUP_"
+            + data_name
+            + "_"
+            + str(hfunc_minmax)
+            + "_"
+            + str(table_minmax)
+            + ".csv"
+        )
+        os.makedirs(log_dir, exist_ok=True)
+        log_df.to_csv(filename, index=False)
 
 
 if __name__ == "__main__":
     # run asymmetric lsh
-    # main(data_name=NORMAL_CUSTOM, top_k=[5, 10], hfunc_minmax=(0, NUM_HFUNC), table_minmax=(1, 3), type=ASYMMETRIC)
+    main(data_name=NORMAL_CUSTOM, top_k=[5], hfunc_minmax=(0, NUM_HFUNC), table_minmax=(1, 3), type=ASYMMETRIC)
     main(
-        ADVERSARIAL_CUSTOM,
-        top_k=[5, 10],
-        hfunc_minmax=(0, NUM_HFUNC + 5),
-        table_minmax=(1, 2),
-        type=ASYMMETRIC,
+         ADVERSARIAL_CUSTOM,
+         top_k=[5],
+         hfunc_minmax=(0, NUM_HFUNC + 5),
+         table_minmax=(1, 2),
+         type=ASYMMETRIC,
     )
-    # main(NORMAL_PAPER, top_k=[5, 10], hfunc_minmax=(0, NUM_HFUNC), table_minmax=(1, 2), type=ASYMMETRIC)
+    main(NORMAL_PAPER, top_k=[10], hfunc_minmax=(0, NUM_HFUNC), table_minmax=(1, 2), type=ASYMMETRIC)
 
     # run symmetric lsh
-    # main(NORMAL_CUSTOM, top_k=[5, 10], hfunc_minmax=(0, NUM_HFUNC-5), table_minmax=(1, 4), type=SYMMETRIC)
-    # main(ADVERSARIAL_CUSTOM, top_k=[5, 10], hfunc_minmax=(0, NUM_HFUNC-1), table_minmax=(1, 3), type=SYMMETRIC)
-    # main(NORMAL_PAPER, top_k=[5, 10], hfunc_minmax=(0, NUM_HFUNC-4), table_minmax=(1, 4), type=SYMMETRIC)
+    main(NORMAL_CUSTOM, top_k=[10], hfunc_minmax=(0, NUM_HFUNC-5), table_minmax=(1, 4), type=SYMMETRIC)
+    main(ADVERSARIAL_CUSTOM, top_k=[10], hfunc_minmax=(0, NUM_HFUNC-1), table_minmax=(1, 3), type=SYMMETRIC)
+    main(NORMAL_PAPER, top_k=[10], hfunc_minmax=(0, NUM_HFUNC-4), table_minmax=(1, 4), type=SYMMETRIC)

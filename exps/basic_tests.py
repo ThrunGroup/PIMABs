@@ -34,6 +34,7 @@ def run_pca_mips(data, query, top_k=[1, 3], delta=1, verbose=False):
     PCAMIPS.preprocess()
 
     budgets = []
+    budgets_std = []
     results = []
     for k in top_k:
         budget, candidates = PCAMIPS.run(top_k=k)
@@ -215,14 +216,15 @@ def precision_speed_pca(
     :num_points: Number of points that will be plotted
     :depth_minmax: the min and max of depth of pca-tree
     """
-    atoms, signal = generate_custom_data(
+    atoms, signals = generate_custom_data(
         data_type=generate_data,
-        num_atoms=100,
-        len_signal=sizes_signal[-1],
+        num_atoms=1000,
+        len_signal=10000,
         seed=seed
     )
 
     # by default, we will NOT be needing to normalize
+    signal = signals[0,:]
     if is_normalize:
         atoms_norm = np.linalg.norm(atoms, axis=1, keepdims=True)
         signal_norm = np.linalg.norm(signal, keepdims=True)
@@ -272,13 +274,14 @@ def precision_speed_lsh(
     :type: Either symmetric or asymmetric
     """
     # generate the data
-    atoms, signal = generate_custom_data(
+    atoms, signals = generate_custom_data(
         data_type=generate_data,
-        num_atoms=100,
-        len_signal=sizes_signal[-1],
+        num_atoms=1000,
+        len_signal=10000,
         seed=seed
     )
 
+    signal = signals[0,:]
     # by default, the data is NOT normalized
     if is_normalize:
         atoms_norm = np.linalg.norm(atoms, axis=1, keepdims=True)

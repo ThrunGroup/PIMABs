@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import pandas as pd
+import os
 from typing import Tuple, List
 
 from utils.constants import (
@@ -9,9 +11,11 @@ from utils.constants import (
     NUM_EXPERIMENTS,
     NUM_POINTS_PCA,
     BUFFER,
+    PCA,
 )
 from utils.utils import subset_2d, fit_and_plot
 from exps.basic_tests import precision_speed_pca
+
 
 
 def main(
@@ -56,13 +60,29 @@ def main(
     for i in range(len(top_k)):
         k_budget = budgets[:, i]
         k_precision = precisions[:, i]
-        # sorted_by_budget = np.argsort(-k_budget)
-        # functions = [np.log]
-        # function_names = ["Logarithm"]
-        fit_and_plot(np.max(k_budget) / k_budget, k_precision, [], [])
+        sorted_by_budget = np.argsort(-k_budget)
+        log_dict = {
+            "data_type": data_name,
+            "budgets": k_budget[sorted_by_budget],
+            "accuracy": k_precision[sorted_by_budget],
+        }
+        log_df = pd.DataFrame(log_dict)
+        log_dir = "logs"
+        filename = os.path.join(
+            log_dir,
+            PCA
+            + "_"
+            + "SPEEDUP_"
+            + data_name
+            + "_"
+            + str(depth_minmax)
+            + ".csv"
+        )
+        os.makedirs(log_dir, exist_ok=True)
+        log_df.to_csv(filename, index=False)
 
 
 if __name__ == "__main__":
-    main(data_name=NORMAL_CUSTOM, top_k=[5, 10], depth_minmax=(0, 4))
-    main(data_name=ADVERSARIAL_CUSTOM, top_k=[5, 10], depth_minmax=(0, 4))
-    main(data_name=NORMAL_PAPER, top_k=[5, 10], depth_minmax=(0, 4))
+    main(data_name=NORMAL_CUSTOM, top_k=[10], depth_minmax=(0, 4))
+    main(data_name=ADVERSARIAL_CUSTOM, top_k=[10], depth_minmax=(0, 4))
+    main(data_name=NORMAL_PAPER, top_k=[10], depth_minmax=(0, 4))
