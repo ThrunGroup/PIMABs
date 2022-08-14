@@ -30,6 +30,7 @@ def median_elimination(
             (u + 1) / (1 + u / len_signal),
             (u + u / len_signal) / (1 + u / len_signal),
         )
+
     set_seed(seed)
     len_signal = signals.shape[1]
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)

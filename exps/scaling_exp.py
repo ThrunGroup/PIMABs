@@ -109,6 +109,7 @@ def scaling_exp(
                     -1,
                 )  # Assume that the information on element-wise product is not given.
             if "ELIMINATION" in mips_alg:
+                print("Running exp for size {}".format(size))
                 candidates_array, budget_array = mips_bandit(
                     atoms=atoms_subset,
                     signals=signals_subset,
