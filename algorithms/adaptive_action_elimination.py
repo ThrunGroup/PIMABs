@@ -55,6 +55,7 @@ def warm_start(
     # This way, each row of sampled_signals is contracted with a row (column) of sampled_atoms (sampled_atoms.T)
     # The elements of the result are now mean_ij = <signal_i, atom_j>
     means_all = sampled_signals.dot(sampled_atoms.T)
+    assert means_all.shape == (num_signals, N)
 
     # Now need to compute lcbs and ucbs:
     # Get the variance proxies of the atoms
@@ -67,21 +68,23 @@ def warm_start(
     # TODO: Make this max or min?
     mean_signals = np.mean(sampled_signals, axis=0)
     sum_var_proxy_all = np.outer(mean_signals ** 2, var_proxy)  # Index by signal_idx, atom_idx
-
-    # Broadcast get_ci to get lcbs and ucbs
-    ci_vec = get_ci(
-        delta=new_delta,
-        ci_bound=HOEFFDING,
-        num_samples=(t * batch_size),
-        pop_size=d,
-        with_replacement=False,
-        sum_var_proxy=sum_var_proxy,
-    )
-
-
-
     candidates_all = {}
+    ci_vec_all = {}
+    lcbs_all = np.empty((num_signals, N))
+    ucbs_all = np.empty((num_signals, N))
     for signal_idx, signal in enumerate(signals):
+        # TODO: Can we change this to array broadcasting? At least it's compiled with numba
+        ci_vec_all[signal_idx] = get_ci(
+            delta=new_delta,
+            ci_bound=HOEFFDING,
+            num_samples=c,
+            pop_size=d,
+            with_replacement=False,
+            sum_var_proxy=sum_var_proxy[signal_idx],
+        )
+        assert ci_vec_all.shape == (N,)
+        lcbs_all[signal_idx] = means[signal_idx] - ci_vec_all[signal_idx]
+        ucbs_all[signal_idx] = means[signal_idx] + ci_vec_all[signal_idx]
         candidates_all[i] = np.where((ucbs_all[signal_idx][candidates] >= lcbs[signal_idx][candidates].max()))[0]
 
     return budget, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all
@@ -126,7 +129,7 @@ def adaptive_action_elimination(
     new_delta = delta * batch_size / (d * D)
 
     if warm_start:
-        budget_all, candidates_all, means_all, lcbs_all, ucbs_all = warm_start(signals, atoms, var_proxy, warm_start_num_idcs, new_delta)
+        budget_all, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all = warm_start(signals, atoms, var_proxy, warm_start_num_idcs, new_delta)
     else:
         assert warm_start_num_idcs is None, "Passed warm start number of indices without a warm start"
 
@@ -139,21 +142,19 @@ def adaptive_action_elimination(
             means = means_all[signal_idx]
             lcbs = lcbs_all[signal_idx]
             ucbs = ucbs_all[signal_idx]
-            # TODO: Update new_delta based on warm start?
+            sum_var_proxy = sum_var_proxy_all[signal_idx]
         else:
             budgets = 0  # Number of calculations
             candidates = np.arange(D)  # arms (atoms)
             means = np.zeros(D)  # estimated means of arm returns
             lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
             ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
-
+            sum_var_proxy = 0
 
         # Get the indices of the signal in descending order (- sign -> descending order)
         # Do this after warm start because the sorting order will depend on the signal, can't do it across all
         # signals simultaneously
         sorted_idcs = np.argsort(-np.abs(signal))
-        sum_var_proxy = 0
-
         while len(candidates) > num_best_atoms:
             t += 1
             # Find a true inner product value of candidates if we sample as much as their length (length of atom/signal)
