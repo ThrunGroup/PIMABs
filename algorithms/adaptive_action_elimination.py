@@ -88,6 +88,7 @@ def warm_start(
     # This way, each row of sampled_signals is contracted with a row (column) of sampled_atoms (sampled_atoms.T)
     # The elements of the result are now mean_ij = <signal_i, atom_j>
     means_all = sampled_signals.dot(sampled_atoms.T)
+    means_all /= d  # Need to divide by d to get per-coordinate mean
     assert means_all.shape == (num_signals, N)
 
     # Now need to compute lcbs and ucbs:
@@ -225,7 +226,6 @@ def adaptive_action_elimination(
                 sum_var_proxy=sum_var_proxy,
             )
             budgets += batch_size * len(candidates)
-
             if 4 * ci_vec < epsilon:
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
@@ -233,7 +233,6 @@ def adaptive_action_elimination(
             ucbs[candidates] = means[candidates] + ci_vec
             lcbs[candidates] = means[candidates] - ci_vec
             new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
-
             # Have to return candidates with length num_best_atoms
             if (len(new_cand_idcs) < num_best_atoms):
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]

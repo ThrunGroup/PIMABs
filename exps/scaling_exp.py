@@ -148,6 +148,7 @@ def scaling_exp(
             )
         accuracy /= num_signals * num_best_atoms
         accuracy_list.append(accuracy)
+        print("This run's accuracy:", accuracy)
 
     budgets = np.array(budgets)
     budgets_std = np.array(budgets_std)
