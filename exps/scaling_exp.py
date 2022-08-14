@@ -14,6 +14,8 @@ from utils.constants import (
     HOEFFDING,
     GREEDY_MIPS,
 )
+import time
+
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
 from data.custom_data import generate_custom_data
@@ -28,7 +30,7 @@ def scaling_exp(
     data_type: str = ADVERSARIAL_CUSTOM,
     mips_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = 20,
-    size_minmax: Tuple[int, int] = (10, 10**6),
+    size_minmax: Tuple[int, int] = (10, 10**5),
     num_atoms: int = 10**3,
     num_signals: int = 1,
     num_best_atoms: int = 1,
@@ -98,6 +100,8 @@ def scaling_exp(
                 1,
                 -1,
             )  # Assume that the information on element-wise product is not given.
+
+        start_time = time.time()
         if mips_alg in (ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION):
             candidates_array, budget_array = mips_bandit(
                 atoms=atoms_subset,
@@ -120,13 +124,16 @@ def scaling_exp(
             )
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
+        print(f"our_alg: {time.time() - start_time}")
         budgets.append(np.mean(budget_array))
         budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
+        start_time = time.time()
         naive_candidates_array = (
             np.matmul(-atoms_subset, signals_subset.transpose())
             .argsort(axis=0)[:num_best_atoms]
             .transpose()
         )
+        print(f"naive: {time.time() - start_time}")
         accuracy = 0
         for idx in range(num_signals):
             accuracy += len(
