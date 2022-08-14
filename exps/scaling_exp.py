@@ -30,8 +30,8 @@ def scaling_exp(
     size_minmax: Tuple[int, int] = (10, 10**6),
     num_atoms: int = 10**3,
     num_ds: int = 20,
-    size_minmax: Tuple[int, int] = (10, 10 ** 6),
-    num_atoms: int = 10 ** 3,
+    size_minmax: Tuple[int, int] = (10, 10**6),
+    num_atoms: int = 10**3,
     num_signals: int = 1,
     num_best_atoms: int = 1,
     seed: int = 0,
@@ -73,9 +73,9 @@ def scaling_exp(
         global budget_array
         rng = np.random.default_rng(seed)
         if is_logspace:
-            sizes_signal = np.logspace(np.log(size_minmax[0]), np.log(size_minmax[1]), num_ds, base=np.e).astype(
-                np.int64
-            )
+            sizes_signal = np.logspace(
+                np.log(size_minmax[0]), np.log(size_minmax[1]), num_ds, base=np.e
+            ).astype(np.int64)
         else:
             sizes_signal = np.linspace(size_minmax[0], size_minmax[1], num_ds).astype(
                 np.int64
@@ -162,7 +162,14 @@ def scaling_exp(
             log_dir = "logs" if dirname is None else dirname
             filename = os.path.join(
                 log_dir,
-                "SCALING_" + data_type + "_" + mips_alg + "_" + str(epsilon) + "_" + str(delta),
+                "SCALING_"
+                + data_type
+                + "_"
+                + mips_alg
+                + "_"
+                + str(epsilon)
+                + "_"
+                + str(delta),
             )
             os.makedirs(log_dir, exist_ok=True)
             log_df.to_csv(filename, index=False)

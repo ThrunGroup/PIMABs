@@ -108,6 +108,7 @@ def action_elimination(
                     pop_size=d,
                     with_replacement=False,
                 )
+
             if 4 * ci < epsilon:
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
