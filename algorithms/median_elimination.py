@@ -22,10 +22,19 @@ def median_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
+    def m(u):
+        """
+        A helper function for calculating the optimal number of mnist
+        """
+        return min(
+            (u + 1) / (1 + u / len_signal),
+            (u + u / len_signal) / (1 + u / len_signal),
+        )
     set_seed(seed)
     len_signal = signals.shape[1]
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
+
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
         candidates = np.arange(atoms.shape[0])
@@ -36,16 +45,6 @@ def median_elimination(
         prev_T = 0  # A helper variable for calculating the optimal number of mnist in each round
         total_num_samples = 0
         budget = 0  # Total number of calculations
-
-        # U = (math.log(1 / delta) * (maxmin[0] - maxmin[1]) ** 2) / (2 * epsilon ** 2)
-        def m(u):
-            """
-            A helper function for calculating the optimal number of mnist
-            """
-            return min(
-                (u + 1) / (1 + u / len_signal),
-                (u + u / len_signal) / (1 + u / len_signal),
-            )
 
         while len(candidates) > num_best_atoms:
             # Calculate the optimal number of mnist in the current round
@@ -74,7 +73,7 @@ def median_elimination(
                     replace=False,
                 )
             else:
-                # With an adversarial dataset, wan do a worst-case experiment by not shuffling a data
+                # With an adversarial dataset, we do a worst-case experiment by not shuffling a data
                 # Ex) atoms = np.transpose(np.array([[0, 0, 0, 0, 1, 1, 1, 1],
                 #                                         [1, 1, 1, 1, 0, 0, 0, 0]])
                 #     signal = np.ones(8)
