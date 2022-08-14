@@ -14,13 +14,15 @@ def get_ci(
     pop_size: int = 10**10,
     sum_var_proxy: float = None,
 ) -> np.ndarray:
+    assert (var_proxy is not None and sum_var_proxy is None) or (var_proxy is None and sum_var_proxy is not None), "Should only pass one of var_proxy and sum_var_proxy"
+
     if with_replacement:
-        if ci_bound == HOEFFDING:  # see https://arxiv.org/pdf/2006.06856.pdf#page=20
+        # see https://arxiv.org/pdf/2006.06856.pdf#page=20
+        if ci_bound == HOEFFDING:
             return np.sqrt(-2 * np.log(delta) * var_proxy / num_samples)
     else:
-        if (
-            ci_bound == HOEFFDING
-        ):  # see Corollary 1 in https://arxiv.org/pdf/1812.06360.pdf
+        # see Corollary 1 in https://arxiv.org/pdf/1812.06360.pdf
+        if ci_bound == HOEFFDING:
             rho = min(
                 1 - (num_samples - 1) / pop_size,
                 (1 - num_samples / pop_size) * (1 + 1 / num_samples),
