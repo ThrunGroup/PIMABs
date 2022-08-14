@@ -45,10 +45,9 @@ def adaptive_action_elimination(
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
     set_seed(seed)
-    
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
-    for signal_idx in range(signals.shape[0]):
+    for signal_idx, signal in enumerate(signals):
         signal = signals[signal_idx]
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
@@ -59,16 +58,14 @@ def adaptive_action_elimination(
         lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
         ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
         means = np.zeros(D)  # estimated means of arm returns
-        sorted_idcs = np.argsort(
-            -np.abs(signal)
-        )  # Indices that sorts signal in the descending order
+        # Get the indices of the signal in descending order (- sign -> descending order)
+        sorted_idcs = np.argsort(-np.abs(signal))
         sum_var_proxy = 0
 
         while len(candidates) > num_best_atoms:
             t += 1
-
             # Find a true inner product value of candidates if we sample as much as their length (length of atom/signal)
-            if t * batch_size > d:
+            if t * batch_size >= d:
                 sample_idcs = sorted_idcs[(t - 1) * batch_size :]
                 signal_sampled = signal[sample_idcs]
                 candidates_sampled = subset_2d(
@@ -82,9 +79,6 @@ def adaptive_action_elimination(
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
 
-            batch_size = min(
-                batch_size, d - (t - 1) * batch_size
-            )  # Can't sample more than population size
             sample_idcs = sorted_idcs[(t - 1) * batch_size : t * batch_size]
             signal_sampled = signal[sample_idcs]
             candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
@@ -93,8 +87,9 @@ def adaptive_action_elimination(
                 + (candidates_sampled @ signal_sampled)
             ) / ((t + 1) * batch_size)
 
-            max_signal = np.abs(signal_sampled[0])
-            sum_var_proxy += var_proxy * (max_signal**2)
+            # Last coordinate will be the smallest
+            min_signal = np.abs(signal_sampled[-1])
+            sum_var_proxy = var_proxy * (min_signal**2)
             ci_vec = get_ci(
                 delta=new_delta,
                 var_proxy=var_proxy,
@@ -105,19 +100,23 @@ def adaptive_action_elimination(
                 sum_var_proxy=sum_var_proxy,
             )
             budgets += batch_size * len(candidates)
+
             if 4 * ci_vec < epsilon:
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
+
             ucbs[candidates] = means[candidates] + ci_vec
             lcbs[candidates] = means[candidates] - ci_vec
             new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
 
-            if (
-                len(new_cand_idcs) < num_best_atoms
-            ):  # Have to return candidates with length num_best_atoms
+            # Have to return candidates with length num_best_atoms
+            if (len(new_cand_idcs) < num_best_atoms):
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
+
             candidates = candidates[new_cand_idcs]
+
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
+
     return candidates_array, budgets_array

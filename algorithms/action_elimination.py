@@ -63,7 +63,7 @@ def action_elimination(
         while len(candidates) > num_best_atoms:
             t += 1
             # Find a true inner product value of candidates if we sample more than their dimension (length of atom/signal)
-            if t * batch_size > d:
+            if t * batch_size >= d:
                 if with_replacement:
                     means[candidates] = atoms[candidates] @ signal
                     budgets += d * len(candidates)
@@ -86,6 +86,7 @@ def action_elimination(
                 sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False)
             else:
                 sample_idcs = shuffled_idcs[(t - 1) * batch_size : t * batch_size]
+
             signal_sampled = signal[sample_idcs]
             candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
             means[candidates] = (
