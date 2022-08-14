@@ -11,7 +11,7 @@ from utils.constants import (
     ACTION_ELIMINATION,
     HOEFFDING,
 )
-from utils.utils import subset_2d, fit_and_plot
+from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
@@ -25,6 +25,7 @@ def adaptive_action_elimination(
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
+    seed: int = 0,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     An adaptive AE(Action Elimination) algorithm that adopts sampling without replacement, adaptive variance proxy, and
@@ -43,6 +44,8 @@ def adaptive_action_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
+    set_seed(seed)
+    
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
     for signal_idx in range(signals.shape[0]):
