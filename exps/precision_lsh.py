@@ -95,7 +95,7 @@ def main(
 
 if __name__ == "__main__":
     # run asymmetric lsh
-    main(data_name=NORMAL_CUSTOM, top_k=[5], hfunc_minmax=(0, NUM_HFUNC), table_minmax=(1, 3), type=ASYMMETRIC)
+    main(data_name=NORMAL_CUSTOM, top_k=[10], hfunc_minmax=(0, NUM_HFUNC), table_minmax=(1, 3), type=ASYMMETRIC)
     main(
          ADVERSARIAL_CUSTOM,
          top_k=[5],

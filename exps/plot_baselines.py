@@ -13,6 +13,9 @@ from utils.constants import (
     MEDIAN_ELIMINATION,
     LSH,
     PCA,
+    NORMAL_CUSTOM,
+    ADVERSARIAL_CUSTOM,
+    NORMAL_PAPER,
 )
 from utils.utils import fit_and_plot
 from typing import List, Any
@@ -38,43 +41,46 @@ def create_baseline_plots_from_data(
         xlabel = "speed (i.e. inverse budget)"
         ylabel = "precision"
 
-    for i, f in enumerate(csv_files):
-        data = read_csv(f)
-        if is_scaling:
-            alg_name = f[:f.index("_SCALING")].split("/")[-1]
-            x = data["signal_sizes"].tolist()
-            y = data["budgets"].tolist()
-        else:
-            alg_name = f[:f.index("_SPEEDUP")].split("/")[-1]
-            budget_data = data["budgets"].tolist()
-            x = np.max(budget_data) / budget_data  # speeds is inverse budget
-            y = data["accuracy"].tolist()
+    for datatype in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NORMAL_PAPER]:
+        for i, f in enumerate(csv_files):
+            data = read_csv(f)
 
-        # fit the plots
-        if fit and is_scaling:
-            if alg_name == ACTION_ELIMINATION or alg_name == ADAPTIVE_ACTION_ELIMINATION:
-                functions = [np.log]
-                function_names = ["Logarithm"]
-            elif alg_name == MEDIAN_ELIMINATION:
-                functions = [np.sqrt]
-                function_names = ["Sqrt"]
-            elif alg_name == GREEDY_MIPS:
-                functions = [np.array]
-                function_names = ["Linear"]
+            if f.find(datatype) < 0:
+                continue
+
+            if is_scaling:
+                alg_name = f[:f.index("_SCALING")].split("/")[-1]
+                x = data["signal_sizes"].tolist()
+                y = data["budgets"].tolist()
             else:
-                raise NotImplementedError("invalid alg_name")
-            fit_and_plot(x, y, functions, function_names)
+                alg_name = f[:f.index("_SPEEDUP")].split("/")[-1]
+                budget_data = data["budgets"].tolist()
 
-        # plot the datapoints
-        if alg_name == PCA:
-            plt.scatter(x, y, color=COLORS[i], label=f"{alg_name}")
-        else:
-            plt.scatter(x, y, color=COLORS[i], label=f"{alg_name}")
+                x = np.max(budget_data) / budget_data  # speed is inverse budget
+                x = np.where(x >= 70, 30, x)  # speed over 80 corresponds to zero accuracy (no collisions)
+                y = data["accuracy"].tolist()
 
-        plt.legend(loc="upper right")
-        if include_error_bar:
-            error = data["budgets_std"].tolist()
-            plt.errorbar(x, y, error, fmt=".", color="black")
+            # fit the plots
+            if fit and is_scaling:
+                if alg_name == ACTION_ELIMINATION or alg_name == ADAPTIVE_ACTION_ELIMINATION:
+                    functions = [np.log]
+                    function_names = ["Logarithm"]
+                elif alg_name == MEDIAN_ELIMINATION:
+                    functions = [np.sqrt]
+                    function_names = ["Sqrt"]
+                elif alg_name == GREEDY_MIPS:
+                    functions = [np.array]
+                    function_names = ["Linear"]
+                else:
+                    raise NotImplementedError("invalid alg_name")
+                fit_and_plot(x, y, functions, function_names)
+
+            # plot the datapoints
+            plt.scatter(x, y, color=COLORS[i], label=f"{alg_name}-{datatype}")
+            plt.legend(loc="upper right")
+            if include_error_bar:
+                error = data["budgets_std"].tolist()
+                plt.errorbar(x, y, error, fmt=".", color="black")
 
     plt.title(title)
     plt.ylabel(ylabel)
