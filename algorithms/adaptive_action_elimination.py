@@ -49,7 +49,7 @@ def warm_start(
         signals: np.ndarray,
         atoms: np.ndarray,
         var_proxy: np.ndarray,
-        warm_start_num_idcs: int = BATCH_SIZE,
+        warm_start_num_idcs: int = BATCH_SIZE * 10,
         new_delta: float = None,
 ):
     """
@@ -75,7 +75,7 @@ def warm_start(
     c = warm_start_num_idcs
     tmp_batch_size = min(d, c)
     warm_start_idcs = np.random.choice(d, tmp_batch_size, replace=False)
-    budget = N * tmp_batch_size  # per-signal budget
+    budget = N * tmp_batch_size / num_signals # per-signal budget
 
     # Do the large matrix multiplication
 
