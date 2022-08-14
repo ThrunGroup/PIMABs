@@ -175,6 +175,7 @@ def scaling_exp(
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
+
     if is_plot:
         if is_logspace:
             def power10(array):
@@ -190,6 +191,7 @@ def scaling_exp(
             functions = [np.array, np.sqrt, np.log]
             function_names = ["Linear", "Sqrt", "Logarithm"]
             xlabel = None
+
         fit_and_plot(
             sizes_signal,
             budgets,

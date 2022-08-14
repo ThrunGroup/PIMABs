@@ -1,5 +1,5 @@
 NUM_STDS = 1  # A multiplier on the number of standard deviations we use when creating confidence intervals
-BATCH_SIZE = 30
+BATCH_SIZE = 10
 
 COLORS = [
     "#1f77b4",

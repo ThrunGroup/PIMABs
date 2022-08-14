@@ -16,7 +16,7 @@ from utils.bandit_utils import get_ci
 
 
 # TODO: May not want this njit here since we only call once as we're doing all signals at once?
-@nb.njit
+#@nb.njit
 def warm_start(
         signals: np.ndarray,
         atoms: np.ndarray,
@@ -39,9 +39,9 @@ def warm_start(
     """
     num_signals = len(signals)
     N = len(atoms)
-    d = signals.shape[0]
+    d = signals.shape[1]  # Need shape[1] here because there are multiple signals
     c = warm_start_num_idcs
-    warm_start_idcs = np.random.choice(signals.shape[0], warm_start_num_idcs, replace=False)
+    warm_start_idcs = np.random.choice(d, warm_start_num_idcs, replace=False)
     budget = N * c  # per-signal budget
 
     # Do the large matrix multiplication
@@ -66,7 +66,7 @@ def warm_start(
 
     # Note: we're using mean here, which requires an O(num_signals*d) cost
     # TODO: Make this max or min?
-    mean_signals = np.mean(sampled_signals, axis=0)
+    mean_signals = np.mean(sampled_signals, axis=1)
     sum_var_proxy_all = np.outer(mean_signals ** 2, var_proxy)  # Index by signal_idx, atom_idx
     candidates_all = {}
     ci_vec_all = {}
@@ -80,16 +80,17 @@ def warm_start(
             num_samples=c,
             pop_size=d,
             with_replacement=False,
-            sum_var_proxy=sum_var_proxy[signal_idx],
+            sum_var_proxy=sum_var_proxy_all[signal_idx],
         )
-        assert ci_vec_all.shape == (N,)
+        import ipdb; ipdb.set_trace()
+        assert ci_vec_all[signal_idx].shape == (N,)
         lcbs_all[signal_idx] = means[signal_idx] - ci_vec_all[signal_idx]
         ucbs_all[signal_idx] = means[signal_idx] + ci_vec_all[signal_idx]
         candidates_all[i] = np.where((ucbs_all[signal_idx][candidates] >= lcbs[signal_idx][candidates].max()))[0]
 
     return budget, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all
 
-@nb.njit
+#@nb.njit
 def adaptive_action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -100,8 +101,8 @@ def adaptive_action_elimination(
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
     seed: int = 0,
-    warm_start: bool = None,
-    warm_start_num_idcs: int = None,
+    do_warm_start: bool = True,
+    warm_start_num_idcs: int = BATCH_SIZE,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     An adaptive AE(Action Elimination) algorithm that adopts sampling without replacement, adaptive variance proxy, and
@@ -128,7 +129,7 @@ def adaptive_action_elimination(
     d = atoms.shape[1]  # Dimension of atoms/signal
     new_delta = delta * batch_size / (d * D)
 
-    if warm_start:
+    if do_warm_start:
         budget_all, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all = warm_start(signals, atoms, var_proxy, warm_start_num_idcs, new_delta)
     else:
         assert warm_start_num_idcs is None, "Passed warm start number of indices without a warm start"
@@ -136,7 +137,7 @@ def adaptive_action_elimination(
     for signal_idx, signal in enumerate(signals):
         signal = signals[signal_idx]
         t = 0  # time step
-        if warm_start:
+        if do_warm_start:
             candidates = candidates_all[signal_idx]
             budgets = budget_all  # It's already an int, per-signal budget
             means = means_all[signal_idx]
