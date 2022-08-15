@@ -1,23 +1,30 @@
 import numpy as np
 import math
+import numba as nb
+
+from typing import Iterable
 
 
-def binary_to_num(bnum):
+@nb.njit
+def binary_to_num(bnum: Iterable):
     """
     Converts an array of ints into one integer.
     [1, 0, 1, 1] => 1011
     """
-    return int("".join(map(str, bnum)))
+    num = 0
+    for idx in range(len(bnum)):
+        num += bnum[-1 - idx] * (10 ** idx)
+    return num
 
 
 def g_index_extend(data, m):
     """
     [x] => [x;    ||x||**2; ||x||**4; ...; ||x||**(2*m)]
     """
-    result = []
-    for row in data:
-        result.append((row + [np.dot(row, row) ** (i + 1) for i in range(m)]))
-    return result
+    norms = np.linalg.norm(data, axis=1)
+    columns = np.transpose([norms ** (2 * i) for i in range(1, m+1)])
+    return np.concatenate([data, columns], axis=1)
+
 
 
 def g_query_extend(query, m):
@@ -32,10 +39,7 @@ def g_index_simple_extend(data):
     This should only be called when we're using symmetric hash functions.
     [x] => [x;   sqrt(1 - ||x||**2)]
     """
-    result = []
-    for row in data:
-        result.append((row + [np.sqrt(1 - np.dot(row, row))]))
-    return result
+    return np.concatenate([data, (data * data).sum(axis=1, keepdims=True)], axis=1)
 
 
 def g_query_simple_extend(query):
@@ -54,10 +58,10 @@ def g_transformation(data):
     where M = max_i ||x_i||_2
     """
     U = 0.83
-    norm_list = [math.sqrt(np.dot(dd, dd)) for dd in data]
-    max_norm = max(norm_list)
-    ratio = float(U / max_norm)
-    return ratio, max_norm, [[ratio * dx for dx in dd] for dd in data]
+    norms = np.linalg.norm(data, axis=1)
+    max_norm = np.max(norms)
+    ratio = U / max_norm
+    return ratio, max_norm, ratio * data
 
 
 def g_normalization(query):

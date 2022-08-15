@@ -3,10 +3,17 @@ import numpy as np
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from operator import itemgetter
+from typing import Tuple, List
 
 from utils.lsh_utils import *
-from data.custom_data import generate_normal_data
-from utils.constants import SYMMETRIC, ASYMMETRIC
+from data.custom_data import generate_custom_data
+from utils.constants import (
+    SYMMETRIC,
+    ASYMMETRIC,
+    SCALING_TOPK,
+    SCALING_NUM_HFUNC,
+    SCALING_NUM_TABLES
+)
 
 
 # for debugging purposes
@@ -31,21 +38,19 @@ class LSH_MIPS:
 
     def __init__(
         self,
-        data,
-        query,
-        m=3,
-        rand_range=1.0,
-        num_hfunc=5,
-        num_tables=10,
-        type=ASYMMETRIC,
-    ):
-        kdata = len(data[0])
-        qdata = len(query)  # queries are 1d-array
-        assert kdata == qdata  # can only take inner product if dimensions match
-
-        self.data = data
-        self.query = query
-
+        m: int = 3,
+        rand_range: int = 1.0,
+        num_hfunc: int = 5,
+        num_tables: int = 10,
+        type: str = ASYMMETRIC,
+    ) -> None:
+        """
+        :m: the number of dimensions to extend the data, query by
+        :rand_range: the range for the constant factor of the hash function
+        :num_hfunc: Number of hyperplanes (hash value is an AND construction of hyperplanes)
+        :num_tables: Number of hash tables (hash value is an OR construction of tables)
+        :type: either asymmetric or symmetric
+        """
         if type == SYMMETRIC:
             self.m = 1  # m is always 1 if we're doing symmetric lsh mips
             self.hash_func = lambda data, hyperplanes: np.matmul(data, hyperplanes)
@@ -64,27 +69,47 @@ class LSH_MIPS:
         self.num_hfunc = num_hfunc
         self.num_tables = num_tables
 
-    def prepare_data(self):
+    def preprocess_data(
+        self,
+        atoms: np.ndarray
+    ) -> None:
         """
-        Prepare the data before hashing into buckets. Preprocessing includes these steps:
+        Preprocess the data before hashing into buckets. Preprocessing includes these steps:
             1. scaling transformation of data (to convert from MIPS to NNS)
             2. vector concatenation corresponding to P(.) and Q(.) of the data (symmetric lsh only has P(.))
         """
         # data & query transformation. norm_data is S(x) in the original paper
-        _, _, norm_data = g_transformation(self.data)
-        norm_query = g_normalization(self.query)
-        self.d = len(norm_data[0]) + self.m
+        _, _, norm_data = g_transformation(atoms)
 
         # expand k dimension into k+2m dimension following directions in original paper
         if self.type == SYMMETRIC:
             self.ext_data = np.array(g_index_simple_extend(norm_data))
-            self.ext_query = np.array(g_query_simple_extend(norm_query))
         else:
             self.ext_data = np.array(g_index_extend(norm_data, self.m))
+
+        self.d = len(norm_data[0]) + self.m
+        assert self.d == len(self.ext_data[0])  # num dimensions
+
+        # hash the preprocessed data into the corresponding buckets
+        self.create_lsh_table(self.ext_data)
+
+    def preprocess_query(
+        self,
+        signal: np.ndarray
+    ) -> None:
+        """
+        Preprocess signal to turn into NN search problem.
+
+        :signal: the query to be preprocessed
+        :returns: None
+        """
+        norm_query = g_normalization(signal)
+        if self.type == SYMMETRIC:
+            self.ext_query = np.array(g_query_simple_extend(norm_query))
+        else:
             self.ext_query = np.array(g_query_extend(norm_query, self.m))
 
-        assert self.d == len(self.ext_data[0])  # num dimensions
-        assert self.d == len(self.ext_query)
+        assert len(norm_query) + self.m == len(self.ext_query)  # num dimensions
 
     def create_lsh_table(self, data):
         """
@@ -120,22 +145,20 @@ class LSH_MIPS:
                 bucket = binary_to_num(hash_value)
                 hash_dict[bucket].append(i)
 
-    def run(self, data, query, top_k=1):
+    def run(self, top_k=SCALING_TOPK):
         """
         Run the nearest neighbor search to find the specified number of neighbors (default 1).
 
-        :data: the preprocessed data. Only used when finding the best match out of collisions.
-        :query: the preprocessed query to run NNS on
         :top_k: the number of top candidates you want to find
         """
         # make sure we're using the preprocessed data and queries
-        assert data.shape[1] == self.d
-        assert len(query) == self.d
+        assert self.ext_data.shape[1] == self.d
+        assert len(self.ext_query) == self.d
 
         budget = 0
         candidates = set()  # this prevents duplicates
         for hyperplanes, hash_dict in self.hash_tables:
-            value = self.hash_func(hyperplanes, query)
+            value = self.hash_func(hyperplanes, self.ext_query)
             hash_value = np.where(value > 0, 1, 0)
 
             # get matches
@@ -152,18 +175,54 @@ class LSH_MIPS:
 
         # There aren't enough candidates. Still return the ones that we have
         if len(candidates) < top_k:
-            print(f"have {len(candidates)} collisions but want {top_k}!")
+            #print(f"have {len(candidates)} collisions but want {top_k}!")
             top_k = len(candidates)
 
             if top_k == 0:
-                return budget, []
+                return [], budget
 
         # NN search for the best top_k candidates. Need to check all candidates at least once to compare with query.
         # and one more time since the complexity of np.argpartition is O(n) (uses a heap).
-        dist_vec = np.linalg.norm(data[candidates] - query, axis=1)
+        dist_vec = np.linalg.norm(self.ext_data[candidates] - self.ext_query, axis=1)
         idx = np.argpartition(dist_vec, top_k - 1)
         budget += (len(candidates) + 1) * self.d
-        return budget, candidates[idx[:top_k]]
+        return candidates[idx[:top_k]], budget
+
+
+def run_lsh_mips(
+    atoms: np.ndarray,
+    signals: np.ndarray,
+    num_best_atoms: int = SCALING_TOPK,
+    num_hfunc: int = SCALING_NUM_HFUNC,
+    num_tables: int = SCALING_NUM_TABLES,
+    type: str = ASYMMETRIC
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Run LSH mips to find num_best_atoms candidates for the atoms and signals inputted.
+
+    :param atoms: Atoms array
+    :param signals: Signals array
+    :param num_best_atoms: Number of the best atoms we choose
+    :param num_hfunc: Number of hyperplanes (hash value is an AND construction of hyperplanes)
+    :param num_tables: Number of hash tables (hash value is an OR construction of tables)
+    :return: An array of final answers for MIPS, and array of budgets (number of computations).
+    """
+    lsh_object = LSH_MIPS(
+        num_hfunc=num_hfunc,
+        num_tables=num_tables,
+        type=type
+    )
+    lsh_object.preprocess_data(atoms)
+
+    candidates_array = []
+    budgets_array = []
+    for signal in signals:
+        lsh_object.preprocess_query(signal)
+        candidates, budgets = lsh_object.run(num_best_atoms)
+        candidates_array.append(candidates)
+        budgets_array.append(budgets)
+
+    return np.array(candidates_array, dtype=object), np.array(budgets_array)
 
 
 if __name__ == "__main__":
