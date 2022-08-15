@@ -31,9 +31,10 @@ def action_elimination(
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
     seed: int = 0,
-    do_warm_start: bool = True,
+    weighted_sampling: bool = False,
+    do_warm_start: bool = False,
     # TODO: Update this to have larger warm start
-    warm_start_num_idcs: int = BATCH_SIZE*100, # We need to have warm_start_num_indices passed with a default int value because a None makes numba complain at compile time
+    warm_start_num_idcs: int = BATCH_SIZE*300, # We need to have warm_start_num_indices passed with a default int value because a None makes numba complain at compile time
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -42,6 +43,9 @@ def action_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
+    if weighted_sampling:
+        print("WARNING: You're running weighted sampling; this doesn't work in high dimensions!")
+
     set_seed(seed)
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
@@ -103,7 +107,18 @@ def action_elimination(
             budgets += batch_size * len(candidates)
 
             if with_replacement:
-                sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False)
+                if weighted_sampling:
+                    wj = compute_sampling_weights(
+                        signals=signals,
+                        atoms=atoms,
+                        N_subsampled_atoms=100,
+                        alpha=0.0,
+                    )
+                    # TODO: Should replace=True below?
+                    sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False, p=wj)
+                else:
+                    # TODO: Should replace=True below?
+                    sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False)
             else:
                 sample_idcs = shuffled_idcs[(t - 1) * batch_size : t * batch_size]
 

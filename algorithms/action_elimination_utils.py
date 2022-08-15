@@ -52,7 +52,9 @@ def compute_sampling_weights(
     """
     Compute the sampling weights for each coordinate
     """
-    atoms_subsampled = np.random.choice(atoms, N_subsampled_atoms, replace=False)
+    n = len(atoms)
+    atom_idcs = np.random.choice(n, N_subsampled_atoms, replace=False)
+    atoms_subsampled = atoms[atom_idcs]
     v2 = atoms_subsampled ** 2
     E_v2 = np.mean(v2, axis=0)  # Average across atoms
 
