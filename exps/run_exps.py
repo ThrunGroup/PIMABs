@@ -16,8 +16,8 @@ from utils.constants import (
     GREEDY_MIPS,
 )
 from data.get_data import get_data
-from speedup_precision_exps import speedup_precision_exps
-from scaling_exp import scaling_exp
+from speedup_precision_exps_2 import speedup_precision_exps
+from scaling_exp_2 import scaling_exp
 from fixed_confidence_exp import fixed_confidence_exp
 
 
@@ -34,6 +34,7 @@ def delta_epsilon_exp():
 
 
 def speedup_bandit():
+
     for alg in (ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION):
         speedup_precision_exps(
             data_type=NETFLIX,
@@ -44,6 +45,7 @@ def speedup_bandit():
             num_atoms_list=np.array([10 ** 2, 10 ** 3]),
             len_signals_list=np.array([10 ** 3, 10 ** 4, 10 ** 5])
         )
+
     for alg in (ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION):
         speedup_precision_exps(
             data_type=NETFLIX,
@@ -72,6 +74,8 @@ def scaling_experiment_real():
             is_normalize=False,
             is_logspace=True,
         )
+
+    # Run on Movie Lens dataset
     for mips_alg in [ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, MEDIAN_ELIMINATION, GREEDY_MIPS]:
         scaling_exp(
             0.1,
@@ -90,5 +94,5 @@ def scaling_experiment_real():
 
 if __name__ == "__main__":
     scaling_experiment_real()
-    speedup_bandit()
-    delta_epsilon_exp()
+    #speedup_bandit()
+    #delta_epsilon_exp()

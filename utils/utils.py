@@ -299,12 +299,14 @@ def fit_and_plot(
     :param xlabel: X label of plot
     :param ylabel: Y label of plot
     """
-    plt.ticklabel_format(style="sci", scilimits=(0, 0))
+    #plt.ticklabel_format(style="sci", scilimits=(0, 0))
     if is_logspace:
         max_power = int(xs[-1])
         plt.xticks(np.arange(max_power + 1), 10 ** np.arange(max_power + 1))
+
     lr = LinearRegression()
     hashes = np.linspace(xs[0], xs[-1], 5000)
+
     if (function_list is not None) and (function_name_list is not None):
         for idx in range(len(function_list)):
             function = function_list[idx]
@@ -322,13 +324,15 @@ def fit_and_plot(
                 label=f"{function_name},  $R^2 = {r2:.4f}$",
             )
             plt.legend(loc="upper left")
-    """
+
     if ys_std is None:
         plt.scatter(xs, ys, color="black")
     else:
         plt.errorbar(xs, ys, ys_std, fmt="o", color="black")
+
     if text is not None:
         plt.text(xs[0], ys[-1], text)
+
     title = "Scaling exps" if title is None else title
     xlabel = "signal vector size" if xlabel is None else xlabel
     ylabel = "Number of calculations for MIPS" if ylabel is None else ylabel
@@ -336,4 +340,3 @@ def fit_and_plot(
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
     plt.show()
-    """

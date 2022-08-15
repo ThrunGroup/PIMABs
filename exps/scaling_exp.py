@@ -90,6 +90,7 @@ def scaling_exp(
     for seed in range(NUM_SEEDS):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
+
         if is_logspace:
             sizes_signal = np.logspace(
                 np.log(size_minmax[0]), np.log(size_minmax[1]), num_experiments, base=np.e
@@ -98,6 +99,7 @@ def scaling_exp(
             sizes_signal = np.linspace(
                 size_minmax[0], size_minmax[1], num_experiments
             ).astype(np.int64)
+
         budgets = []
         budgets_std = []
         accuracy_list = []
@@ -117,6 +119,7 @@ def scaling_exp(
                 atoms[:, subset_indices],
                 signals[:, subset_indices],
             )
+
             if is_normalize:
                 atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
                 signal_norm = np.linalg.norm(signals_subset, axis=1, keepdims=True)
@@ -127,6 +130,7 @@ def scaling_exp(
                     1,
                     -1,
                 )  # Assume that the information on element-wise product is not given.
+
             if "ELIMINATION" in mips_alg:
                 log_info = (str(epsilon) + "_" + str(delta))
                 candidates_array, budget_array = mips_bandit(
@@ -182,6 +186,7 @@ def scaling_exp(
                 accuracy += len(
                     np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
                 )
+
             accuracy /= num_signals * num_best_atoms
             accuracy_list.append(accuracy)
 
