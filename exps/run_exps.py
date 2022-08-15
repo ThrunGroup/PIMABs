@@ -81,7 +81,7 @@ def scaling_experiment_real():
     #         0.1,
     #         0.1,
     #         num_atoms=10 ** 3,
-    #         size_minmax=(100, 6000),
+    #         size_minmax=(100, 5000), # Full dataset is size 6040
     #         num_experiments=10,
     #         num_signals=5,
     #         data_type=MOVIE_LENS,

@@ -9,12 +9,14 @@ from utils.constants import (
     BATCH_SIZE,
     ADVERSARIAL_CUSTOM,
     NORMAL_CUSTOM,
+    UNIFORM_PAPER,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
     HOEFFDING,
     GREEDY_MIPS,
     NETFLIX,
+    MOVIE_LENS,
 )
 import time
 
@@ -25,6 +27,34 @@ from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
+
+
+def translate_alg_name(alg_name: str):
+    if alg_name == ACTION_ELIMINATION:
+        return "BanditMIPS"
+    elif alg_name == ADAPTIVE_ACTION_ELIMINATION:
+        return "BanditMIPS-$\\alpha$"
+    elif alg_name == MEDIAN_ELIMINATION:
+        return "BoundedME"
+    elif alg_name == GREEDY_MIPS:
+        return "GREEDY-MIPS"
+    else:
+        raise Exception("Bad algorithm name")
+
+
+def translate_dataset_name(dataset_name: str):
+    if dataset_name == ADVERSARIAL_CUSTOM:
+        return "Synthetic Adversarial"
+    elif dataset_name == NORMAL_CUSTOM:
+        return "Synthetic Gaussian"
+    elif dataset_name == UNIFORM_PAPER:
+        return "Synthetic Uniform"
+    elif dataset_name == NETFLIX:
+        return "Netflix"
+    elif dataset_name == MOVIE_LENS:
+        return "Movie Lens"
+    else:
+        raise Exception("Bad dataset name {}".format(dataset_name))
 
 
 def scaling_exp(
@@ -44,6 +74,7 @@ def scaling_exp(
     is_plot: bool = True,
     is_logspace: bool = True,
     dirname: str = None,
+    title_accuracy: bool = False,
 ) -> None:
     """
     Check that the time complexity of bandit algorithm scales with the square root of the signal size.
@@ -73,7 +104,6 @@ def scaling_exp(
         sizes_signal = np.logspace(
             np.log(size_minmax[0]), np.log(size_minmax[1]), num_experiments, base=np.e
         ).astype(np.int64)
-        print(sizes_signal)
     else:
         sizes_signal = np.linspace(
             size_minmax[0], size_minmax[1], num_experiments
@@ -204,21 +234,26 @@ def scaling_exp(
                 "$y \propto x$",
             ]
             sizes_signal = np.log10(sizes_signal)
-            xlabel = "signal sizes"
+            xlabel = "signal size"
         else:
             functions = [np.array, np.sqrt, np.log]
-            function_names = ["Linear fit", "Sqrt fit", "Logarithm fit"]
+            function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
             xlabel = None
+
+        title = f"{translate_alg_name(mips_alg)} on {translate_dataset_name(data_type)}"
+        if title_accuracy:
+            title += f", Accuracy: ({accuracy_list.mean():.2f})"
+
         fit_and_plot(
             sizes_signal,
             budgets,
             functions,
             function_names,
             ys_std=budgets_std,
-            title=f"{mips_alg} + {data_type}",
+            title=title,
             xlabel=xlabel,
             is_logspace=is_logspace,
-            text=f"Accuracy: {np.mean(accuracy_list)}",
+            #text=f"Accuracy: {np.mean(accuracy_list)}",
         )
 
     print(f"Mean accuracy with {mips_alg} for {data_type}: {np.mean(accuracy_list)}")
