@@ -80,7 +80,7 @@ def scaling_exp(
     accuracy_list = []
     if data_type is NETFLIX:
         atoms = np.load("Movie_ratings.npy") #np.load(os.path.join(os.path.join("data", "netflix"), "Movie_ratings.npy"))
-        signals = subset_2d(atoms, np.arange(start=-1, stop=-1-num_signals, step=-1), np.arange(size_minmax[1]))
+        signals = subset_2d(atoms, np.arange(start=-30, stop=-30-num_signals, step=-1), np.arange(size_minmax[1]))
         atoms = subset_2d(atoms, np.arange(num_atoms), np.arange(size_minmax[1]))
     else:
         atoms, signals = generate_custom_data(

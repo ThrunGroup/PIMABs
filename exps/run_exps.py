@@ -73,45 +73,45 @@ if __name__ == "__main__":
     #     with_replacement=True,
     #     is_normalize=False,
     # )
-    # scaling_exp(
-    #     0.01,
-    #     0.01,
-    #     # num_atoms=int(10 ** 2),
-    #     # size_minmax=(10 ** 5, 10 ** 6),
-    #     num_signals=5,
-    #     num_experiments=30,
-    #     data_type=NETFLIX,
-    #     mips_alg=ADAPTIVE_ACTION_ELIMINATION,
-    #     is_normalize=False,
-    #     is_logspace=True,
-    # )
-    # scaling_exp(
-    #     0.01,
-    #     0.01,
-    #     # num_atoms=int(10 ** 2),
-    #     # size_minmax=(10 ** 5, 10 ** 6),
-    #     num_signals=5,
-    #     num_experiments=30,
-    #     data_type=NETFLIX,
-    #     mips_alg=ACTION_ELIMINATION,
-    #     with_replacement=False,
-    #     is_normalize=False,
-    #     is_logspace=True,
-    # )
-    #
-    # scaling_exp(
-    #     0.01,
-    #     0.01,
-    #     # num_atoms=int(10 ** 2),
-    #     # size_minmax=(10 ** 5, 10 ** 6),
-    #     num_signals=5,
-    #     num_experiments=30,
-    #     data_type=NETFLIX,
-    #     mips_alg=ACTION_ELIMINATION,
-    #     with_replacement=True,
-    #     is_normalize=False,
-    #     is_logspace=True,
-    # )
+    scaling_exp(
+        0.01,
+        0.01,
+        # num_atoms=int(10 ** 2),
+        # size_minmax=(10 ** 5, 10 ** 6),
+        num_signals=10,
+        num_experiments=30,
+        data_type=NETFLIX,
+        mips_alg=ADAPTIVE_ACTION_ELIMINATION,
+        is_normalize=False,
+        is_logspace=True,
+    )
+    scaling_exp(
+        0.01,
+        0.01,
+        # num_atoms=int(10 ** 2),
+        # size_minmax=(10 ** 5, 10 ** 6),
+        num_signals=10,
+        num_experiments=30,
+        data_type=NETFLIX,
+        mips_alg=ACTION_ELIMINATION,
+        with_replacement=False,
+        is_normalize=False,
+        is_logspace=True,
+    )
+
+    scaling_exp(
+        0.01,
+        0.01,
+        # num_atoms=int(10 ** 2),
+        # size_minmax=(10 ** 5, 10 ** 6),
+        num_signals=10,
+        num_experiments=30,
+        data_type=NETFLIX,
+        mips_alg=ACTION_ELIMINATION,
+        with_replacement=True,
+        is_normalize=False,
+        is_logspace=True,
+    )
 
     scaling_exp(
         0.01,
