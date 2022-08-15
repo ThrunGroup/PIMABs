@@ -11,8 +11,8 @@ from utils.constants import (
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
     MEDIAN_ELIMINATION,
-    LSH,
-    PCA,
+    LSH_MIPS,
+    PCA_MIPS,
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NORMAL_PAPER,
@@ -22,29 +22,38 @@ from typing import List, Any
 
 
 def create_baseline_plots_from_data(
-        function_list: List[np.ufunc] = None,
-        function_name_list: List[str] = None,
-        is_scaling: bool = True,
-        fit: bool = True,
-        include_error_bar: bool = False
+    function_list: List[np.ufunc] = None,
+    function_name_list: List[str] = None,
+    is_scaling: bool = True,
+    fit: bool = True,
+    include_error_bar: bool = False
 ):
     # get all csv files
     path = os.path.join(os.getcwd(), "logs")
     if is_scaling:
+        path = os.path.join(path, "scaling")
         csv_files = glob.glob(os.path.join(path, "*SCALING*"))
-        title = "Scaling Baselines"
+        exp = f"Scaling Baselines"
         xlabel = "signal vector size"
         ylabel = "budget"
+        loc = "upper left"
     else:
+        path = os.path.join(path, "precision_speed")
         csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
-        title = "Precision-Speed Tradeoff Baselines"
+        exp = "Precision-Speed Tradeoff Baselines"
         xlabel = "speed (i.e. inverse budget)"
         ylabel = "precision"
+        loc = "upper right"
 
+    color_i = 0
+    num_colors = len(COLORS)
     for datatype in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NORMAL_PAPER]:
-        for i, f in enumerate(csv_files):
+        title = exp + f": {datatype}"
+        color_i = 0
+        for f in csv_files:
             data = read_csv(f)
 
+            # plot per datatype
             if f.find(datatype) < 0:
                 continue
 
@@ -57,7 +66,8 @@ def create_baseline_plots_from_data(
                 budget_data = data["budgets"].tolist()
 
                 x = np.max(budget_data) / budget_data  # speed is inverse budget
-                x = np.where(x >= 70, 30, x)  # speed over 80 corresponds to zero accuracy (no collisions)
+                if datatype is ADVERSARIAL_CUSTOM:
+                    x = np.where(x >= 70, 30, x)  # speed over 80 corresponds to zero accuracy (no collisions)
                 y = data["accuracy"].tolist()
 
             # fit the plots
@@ -76,20 +86,21 @@ def create_baseline_plots_from_data(
                 fit_and_plot(x, y, functions, function_names)
 
             # plot the datapoints
-            plt.scatter(x, y, color=COLORS[i], label=f"{alg_name}-{datatype}")
-            plt.legend(loc="upper right")
+            plt.scatter(x, y, color=COLORS[color_i % num_colors], label=f"{alg_name}")
+            plt.legend(loc=loc)
             if include_error_bar:
-                error = data["budgets_std"].tolist()
+                error = data["budgets_std"].tolist() if is_scaling else data["accuracy_std"].tolist()
                 plt.errorbar(x, y, error, fmt=".", color="black")
+            color_i += 1
 
-    plt.title(title)
-    plt.ylabel(ylabel)
-    plt.xlabel(xlabel)
-    plt.show()
+        plt.title(title)
+        plt.ylabel(ylabel)
+        plt.xlabel(xlabel)
+        plt.show()
 
 
 if __name__ == "__main__":
-    #create_baseline_plots_from_data(is_scaling=True, fit=False, include_error_bar=False)
+    #create_baseline_plots_from_data(is_scaling=True, fit=False, include_error_bar=True)
     create_baseline_plots_from_data(is_scaling=False, include_error_bar=False)
 
 

@@ -1,6 +1,5 @@
 import numpy as np
-
-# from numba import jit
+from typing import Tuple, List
 
 
 class Tree:
@@ -15,33 +14,44 @@ class Tree:
         self.root = None
 
     @staticmethod
-    def first_reduction(arr, is_query=False):
+    def first_reduction(
+        arr: np.ndarray,
+        is_query: bool = False
+    ) -> np.ndarray:
         """
         Apply the first reduction in the preprocessing step and return the concatenated arr.
         Conversion is described below where phi = max_i ||x_i||, and ";" signifies concatenation.
         (X is the dataset matrix and y is the query vector):
-            x_i -> [sqrt(phi^2 - ||x_i||^2);  x_i]
-            y -> [0; y]
+            x_i -> [x_i; sqrt(phi^2 - ||x_i||^2)]
+            y -> [y; 0]
 
         :arr: 1d array if is_query, otherwise 2d array
+        :returns: The concatenated array
         """
         if is_query:
             return np.append(arr, 0)
 
         norms = np.linalg.norm(arr, axis=1)
         phi = np.max(norms)
-        extra_dim = np.sqrt(phi**2 - norms**2)
+        temp = phi**2 - norms**2
+        extra_dim = np.sqrt(
+            np.where(temp < 0, 0, temp)
+        )
         column = extra_dim.reshape(norms.shape[0], 1)
         return np.append(arr, column, axis=1)
 
     @staticmethod
-    def second_reduction(arr):
+    def second_reduction(
+        arr: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Apply the second reduction in the pre-processing step and return the transformed arr.
         Note that the components are in decreasing order of variance.
         Converts X -> W^T (X - mu) where
             - mu: 1/n * sum(X_i)
             - (X - M) = W Sig U^T where M is mu concatenated as columns
+
+        :returns: the pca matrix, mu, and the transformed array
         """
         N, D = arr.shape
         mu = np.mean(arr, axis=0)
@@ -54,7 +64,12 @@ class Tree:
 
         return W, mu, np.matmul(W.T, (arr - mu).T)
 
-    def pca_tree_rec(self, node, j, max_j):
+    def pca_tree_rec(
+        self,
+        node: object,
+        j: int,
+        max_j: int
+    ) -> None:
         """
         Recursive helper function that helps build the pca-tree.
 
@@ -81,12 +96,16 @@ class Tree:
         self.pca_tree_rec(node.right, j + 1, max_j)
         return
 
-    def construct_pca_tree(self, j):
+    def construct_pca_tree(
+        self,
+        j: int
+    ) -> object:
         """
         Construct the pca-tree (similar to kd-trees) data structure.
 
         :j: the index that is delta positions from the end where delta is the
             number of principle components that you want to use as the dimensions of the split.
+        :returns: the root node
         """
         N, D = self.data.shape
         root = Node(np.arange(N))
@@ -94,7 +113,17 @@ class Tree:
         self.root = root
         return root
 
-    def print_tree_rec(self, node, space):
+    def print_tree_rec(
+        self,
+        node,
+        space
+    ) -> None:
+        """
+        Debugging function that prints the contents of the tree
+
+        :node: the root node
+        :space: indent space for printing
+        """
         if node.m is None:
             print(space + "node idcs: ", node.idcs)
             return
