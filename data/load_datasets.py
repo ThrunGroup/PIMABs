@@ -1,149 +1,104 @@
 import os
-import pandas as pd
 import numpy as np
-
 from utils.constants import (
-    NETFLIX,
-    YAHOO,
-    INDEX,
-    CUST_ID,
-    RATING,
-    MOVIE_ID,
     NUM_NETFLIX_USERS,
     NUM_NETFLIX_MOVIES,
     NUM_DATA_FILES,
     NUM_YAHOO_USERS,
     NUM_YAHOO_ITEMS,
+    SAMPLE_SIZE_FOR_N,
+    SEED,
 )
 
-def load_data(filename, dataset=NETFLIX):
-    if dataset == YAHOO:
-        name_field = ITEM_ID
-    elif dataset == NETFLIX:
-        name_field= CUST_ID
-    else:
-        raise ValueError("Invalid dataset")
 
-    return pd.read_csv(
-        filename,
-        header=None,
-        names=[name_field, RATING],
-        usecols=[0, 1],
-    )
+def initialize_sampling_necessities(
+    upper_limit: int = NUM_NETFLIX_MOVIES, num_users: int = NUM_NETFLIX_USERS
+):
+    """
+    Initializes numpy ndarray of SAMPLE_SIZE_FOR_N randomly chosen numbers in the appropriate range and empty ndarray to hold the users' ratings of movies or items
+    :param upper_limit: Upper limit of random numbers (not inclusive)
+    :param num_users: Number of users
+    :return: ndarray of users' ratings of movies or items and ndarray of randomly chosen numbers
+    """
+    np.random.seed(SEED)
+    chosen = np.random.choice(upper_limit, SAMPLE_SIZE_FOR_N)
+    # Sorting to make populating X easier later
+    chosen.sort()
+    X = np.empty(shape=(SAMPLE_SIZE_FOR_N, num_users), dtype="uint8")
+    return X, chosen
 
 
 def load_netflix():
     """
-    Loads 4 Netflix data .txt files and transforms the data into a numpy ndarray of users by movies,
+    Reads 4 Netflix data .txt files and transforms the data into a numpy ndarray of movies by users,
     with each cell representing a rating
 
-    :return: numpy ndarray of users by movies
+    :return: numpy ndarray of movies by users
     """
-    # Join the shards into one
+    X, movies = initialize_sampling_necessities(NUM_NETFLIX_MOVIES, NUM_NETFLIX_USERS)
+
+    # For loop iterates through 4 data files
     for idx in range(NUM_DATA_FILES):
-        if idx == 0:
-            df = load_data(os.path.join("raw_data", "combined_data_" + str(idx + 1) + ".txt"))
-        else:
-            new_shard = load_data(os.path.join("raw_data", "combined_data_" + str(idx + 1) + ".txt"))
-            df = df.append(new_shard)
+        raw_fp = os.path.join("raw_data", "combined_data_" + str(idx + 1) + ".txt")
 
-    df[RATING] = df[RATING].astype(float)
-    df.index = np.arange(0, len(df))
+        with open(raw_fp, "r") as fin:
+            # represents the mapping between a movie_id and a number between 0 and 9999
+            movie_idx = None
+            # says if current customer row is for a randomly chosen movie
+            chosen_movie = False
+            for line in fin:
+                # if this line declares a movie
+                if ":" in line:
+                    # Gets the movie id and subtracts 1 since it is 1-indexed
+                    movie_id = int(line.split(":")[0]) - 1
+                    # Returns the index at which movie_id appears in movies if found, otherwise empty ndarray
+                    movie_idx = np.where(movies == movie_id)[0]
+                    # If movie is randomly chosen one
+                    if len(movie_idx) != 0:
+                        chosen_movie = True
+                        # Gets numerical value of the index
+                        movie_idx = movie_idx[0]
+                    else:
+                        chosen_movie = False
+                # else this line declares a customer
+                else:
+                    if chosen_movie:
+                        user_row_parts = line.split(",")
+                        # Subtracts 1 since customer id is 1-indexed
+                        cust_id = int(user_row_parts[0]) - 1
+                        rating = int(user_row_parts[1])
+                        X[movie_idx][cust_id] = rating
 
-    df_nan = pd.DataFrame(pd.isnull(df.Rating))  # TODO: Should this be RATING?
-    df_nan = df_nan[df_nan[RATING] == True]
-    df_nan = df_nan.reset_index()
+    np.save("netflix_dataset_array", X)
 
-    movie_np = []
-    movie_id = 1
-
-    # df_nan holds the rows that indicate the start of a movie's ratings
-    # i holds values representing the second to the last such rows
-    # j holds values representing the first to the second-to-last such rows
-    for i, j in zip(df_nan[INDEX][1:], df_nan[INDEX][:-1]):
-        # we create a numpy ndarray with the right amount of movie_id elements to match the amount of that movie's ratings
-        temp = np.full((1, i - j - 1), movie_id)
-        movie_np = np.append(movie_np, temp)
-        movie_id += 1
-
-    # Manually handle the last user, which was excluded from the loop above
-    # TODO: Merge this into loop above
-    last_record = np.full((1, len(df) - df_nan.iloc[-1, 0] - 1), movie_id)
-    movie_np = np.append(movie_np, last_record)
-
-    # Keep only non-missing ratings
-    df = df[pd.notnull(df[RATING])]
-    df[MOVIE_ID] = movie_np.astype(int)
-    df[CUST_ID] = df[CUST_ID].astype(int)
-
-    # Assign the appropriate values to X by getting each user's ID and the movie ID
-    X = np.ndarray(shape=(NUM_NETFLIX_USERS, NUM_NETFLIX_MOVIES), dtype=float)
-    for idx in range(len(df)):
-        # Customer IDs and movie IDs are 1-indexed, but numpy arrays are 0-indexed
-        cust_id = df[CUST_ID].iloc[idx] - 1
-        movie_id = df[MOVIE_ID].iloc[idx] - 1
-        rating = df.iloc[idx][RATING]
-        X[cust_id][movie_id] = rating
-
-    return X
 
 def load_yahoo():
     """
-    Loads Yahoo! Music data .txt file and transforms the data into a numpy ndarray of users by items, with each cell representing a rating
+    Reads Yahoo! Music data .txt file and transforms the data into a numpy ndarray of items by users, with each cell representing a rating
 
-    :return: numpy ndarray of users by items
+    :return: numpy ndarray of items by users
     """
+    X, items = initialize_sampling_necessities(NUM_YAHOO_ITEMS, NUM_YAHOO_USERS)
     raw_fp = os.path.join("raw_data", "trainIdx1.txt")
-    cleaned_fp = os.path.join("raw_data", "trainIdx1_modified.txt")
-    if not os.path.exists(cleaned_fp):
-        with open(raw_fp, "r") as fin:
-            data = fin.read()
-            data = data.replace("\t", ",")
 
-        with open(cleaned_fp, "w") as fout:
-            fout.write(data)
+    with open(raw_fp, "r") as fin:
+        # holds the current user id
+        user_id = None
+        for line in fin:
+            # if this line declares a user
+            if "|" in line:
+                # Gets the user id
+                user_id = int(line.split("|")[0])
+            # else this line declares an item
+            else:
+                item_row_parts = line.split("\t")
+                item_id = int(item_row_parts[0])
+                # Returns the index at which item_id appears in items if found, otherwise empty ndarray
+                item_idx = np.where(items == item_id)[0]
+                # If item is randomly chosen one
+                if len(item_idx) != 0:
+                    rating = int(item_row_parts[1])
+                    # item_idx[0] gets numerical value of the index
+                    X[item_idx[0]][user_id] = rating
 
-    df = load_data(cleaned_fp)
-    df[RATING] = df[RATING].astype(float)
-    df.index = np.arange(0, len(df))
-
-    df_nan = pd.DataFrame(pd.isnull(df.Rating))
-    df_nan = df_nan[df_nan[RATING] == True]
-    # Reset the index to be continguous integers. The old index corresponds to the original ID, and we specifically
-    # pass drop=False to keep that value in the new "index" field
-    df_nan = df_nan.reset_index(drop=False)
-
-    user_np = []
-    user_id = 0
-
-    # df_nan contains rows that have a user rating
-    # INDEX corresponds to the original user ID
-    # TODO: df_nan has columns <...>
-    for i, j in zip(df_nan[INDEX][1:], df_nan[INDEX][:-1]):
-        # i holds values representing the second to the last such columns
-        # j holds values representing the first to the second-to-last such columns
-        # we create a numpy ndarray with the right amount of user_id elements to match the amount of that user's ratings
-        # Create a row with each user's ratings
-        temp = np.full((1, i - j - 1), user_id)
-        user_np = np.append(user_np, temp)
-        user_id += 1
-
-    # Manually handle the last user, which was excluded from the loop above
-    # TODO: Merge this into loop above
-    last_record = np.full((1, len(df) - df_nan.iloc[-1, 0] - 1), user_id)
-    user_np = np.append(user_np, last_record)
-
-    # Keep only non-null ratings
-    df = df[pd.notnull(df[RATING])]
-    df[USER_ID] = user_np.astype(int)
-    df[ITEM_ID] = df[ITEM_ID].astype(int)
-
-    # Assign the appropriate values to X by getting each user's ID and the item ID
-    X = np.ndarray(shape=(NUM_YAHOO_USERS, NUM_YAHOO_ITEMS), dtype=float)
-    for idx in range(len(df)):
-        user_id = df[USER_ID].iloc[idx]
-        item_id = df[ITEM_ID].iloc[idx]
-        rating = df.iloc[idx][RATING]
-        X[user_id][item_id] = rating
-
-    return X
+    np.save("yahoo_dataset_array", X)
