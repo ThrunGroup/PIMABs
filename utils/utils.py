@@ -3,10 +3,11 @@ import argparse
 import numpy as np
 import numba as nb
 import matplotlib.pyplot as plt
+
 from typing import List, Any
 from sklearn.linear_model import LinearRegression
-
 from utils.constants import COLORS
+from pandas import read_csv
 
 
 @nb.njit
@@ -320,7 +321,8 @@ def fit_and_plot(
                 color=COLORS[idx],
                 label=f"{function_name},  $R^2 = {r2:.4f}$",
             )
-            plt.legend(loc="lower right")
+            plt.legend(loc="upper left")
+    """
     if ys_std is None:
         plt.scatter(xs, ys, color="black")
     else:
@@ -334,3 +336,4 @@ def fit_and_plot(
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
     plt.show()
+    """
