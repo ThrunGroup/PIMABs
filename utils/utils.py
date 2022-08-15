@@ -299,7 +299,10 @@ def fit_and_plot(
     :param xlabel: X label of plot
     :param ylabel: Y label of plot
     """
-    #plt.ticklabel_format(style="sci", scilimits=(0, 0))
+    plt.figure(figsize=(6, 4.5))
+    plt.ticklabel_format(style="sci", axis='y', scilimits=(0, 0))
+    plt.ticklabel_format(style="sci", axis='x', scilimits=(0, 0))
+
     if is_logspace:
         max_power = int(xs[-1])
         plt.xticks(np.arange(max_power + 1), 10 ** np.arange(max_power + 1))
@@ -332,6 +335,7 @@ def fit_and_plot(
 
     if text is not None:
         plt.text(xs[0], ys[-1], text)
+
 
     title = "Scaling exps" if title is None else title
     xlabel = "signal vector size" if xlabel is None else xlabel
