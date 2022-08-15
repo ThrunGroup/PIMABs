@@ -42,7 +42,7 @@ if __name__ == "__main__":
         0,
         0.5,
         num_atoms=10 ** 2,
-        size_minmax=(10**2, 10 ** 6),
+        size_minmax=(10**3, 10 ** 6),
         num_experiments=10,
         num_signals=10,
         data_type=NORMAL_CUSTOM,

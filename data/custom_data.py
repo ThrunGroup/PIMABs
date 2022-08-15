@@ -29,6 +29,7 @@ def generate_custom_data(
     """
     rng = np.random.default_rng(seed)
     atoms_array = np.empty((num_atoms, len_signal))
+
     if data_type is UNIFORM_PAPER:
         print("WARNING: You're using the UNIFORM_PAPER dataset. Don't expect our algo to scale logarithmically!")
         # Implicitly use variance proxy (sub-gaussian distribution) is 1
@@ -54,4 +55,5 @@ def generate_custom_data(
         signal = rng.normal(loc=rng.normal(), size=(num_signals, len_signal))
     else:
         raise NotImplementedError(f"{data_type} is not implemented.")
+
     return atoms_array, signal

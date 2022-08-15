@@ -31,8 +31,9 @@ def action_elimination(
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
     seed: int = 0,
-    do_warm_start: bool = False,
-    warm_start_num_idcs: int = BATCH_SIZE, # We need to have warm_start_num_indices passed with a default int value because a None makes numba complain at compile time
+    do_warm_start: bool = True,
+    # TODO: Update this to have larger warm start
+    warm_start_num_idcs: int = BATCH_SIZE*100, # We need to have warm_start_num_indices passed with a default int value because a None makes numba complain at compile time
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -54,6 +55,7 @@ def action_elimination(
 
     for signal_idx, signal in enumerate(signals):
         t = 0  # time step
+
         if do_warm_start:
             candidates = candidates_all[signal_idx]
             budgets = budget_all  # It's already an int, per-signal budget
@@ -66,7 +68,6 @@ def action_elimination(
             means = np.zeros(D)  # estimated means of arm returns
             lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
             ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
-
 
         if not with_replacement:
             shuffled_idcs = np.arange(d)

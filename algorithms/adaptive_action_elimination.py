@@ -35,6 +35,7 @@ def adaptive_action_elimination(
     batch_size: int = BATCH_SIZE,
     seed: int = 0,
     do_warm_start: bool = True,
+    # TODO: Update this to have larger warm start
     warm_start_num_idcs: int = BATCH_SIZE, # We need to have warm_start_num_indices passed with a default int value because a None makes numba complain at compile time
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
