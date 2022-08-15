@@ -86,7 +86,7 @@ def scaling_exp(
         seed=seed,
         data_type=data_type,
     )
-    maxmin = (1, -1)
+    maxmin = (5, 0)
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
         atoms_subset, signals_subset = (
@@ -164,14 +164,14 @@ def scaling_exp(
         log_dir = "logs" if dirname is None else dirname
         filename = os.path.join(
             log_dir,
+            mips_alg
+            + "_"
             "SCALING_"
             + data_type
             + ":"
             + str(size_minmax)
             + "_"
             + str(num_atoms)
-            + "_"
-            + mips_alg
             + "_"
             + str(epsilon)
             + "_"
@@ -181,7 +181,6 @@ def scaling_exp(
         log_df.to_csv(filename, index=False)
     if is_plot:
         if is_logspace:
-
             def power10(array):
                 return np.power(10, array)
 
@@ -196,9 +195,6 @@ def scaling_exp(
             ]
             sizes_signal = np.log10(sizes_signal)
             xlabel = "signal sizes"
-            max_power = int(np.log10(size_minmax[1]))
-            plt.ticklabel_format(style="sci", scilimits=(0, 0))
-            plt.xticks(np.arange(max_power + 1), 10 ** np.arange(max_power + 1))
         else:
             functions = [np.array, np.sqrt, np.log]
             function_names = ["Linear fit", "Sqrt fit", "Logarithm fit"]
@@ -209,9 +205,10 @@ def scaling_exp(
             functions,
             function_names,
             ys_std=budgets_std,
-            title=f"{mips_alg} + w/ replacement: {with_replacement}",
+            title=f"{mips_alg} + {data_type}",
             xlabel=xlabel,
             is_logspace=is_logspace,
+            text=f"Accuracy: {np.mean(accuracy_list)}",
         )
 
     print(f"Mean accuracy with {mips_alg} for {data_type}: {np.mean(accuracy_list)}")
