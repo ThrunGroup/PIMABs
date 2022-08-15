@@ -16,8 +16,8 @@ from surprise.model_selection import cross_validate
 
 def main1():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    yahoo_fp = os.path.join(dir_path, "..", "data", "raw_data", "yahoo_dataset_array.npy")
-    yahoo_numpy =  np.load(yahoo_fp)
+    yahoo_fp = os.path.join(dir_path, "../..", "data", "raw_data", "yahoo_dataset_array.npy")
+    yahoo_numpy = np.load(yahoo_fp)
 
     # TODO: Need to add headers to yahoo_numpy to use pandas code?
     df = pd.read_csv(yahoo_fp)
@@ -33,7 +33,7 @@ def main1():
     np.save("Yahoo_items_biases_20_new", model.bu)
     np.save("Yahoo_Customer_factors_20_new", model.qi)
     np.save("Yahoo_Customer_biases_20_new", model.bi)
-    print(movie_factors.shape, customer_factors.shape)
+
 
 def main2():
     item_factors = np.load("Yahoo_items_factors_20_new.npy")
@@ -41,10 +41,9 @@ def main2():
     customer_factors = np.load("Yahoo_Customer_factors_20_new.npy")
     customer_biases = np.load("Yahoo_Customer_biases_20_new.npy")
 
-    start_time = time.time()
     yahoo_data = (item_factors + np.expand_dims(item_biases, axis=1)) @ \
            ((customer_factors + np.expand_dims(customer_biases, axis=1)).transpose())
-    np.save("Yahoo_ratings", data)
+    np.save("Yahoo_ratings", yahoo_data)
 
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@ import time
 
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
+from data.get_data import get_data
 from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
@@ -32,8 +33,8 @@ def scaling_exp(
     data_type: str = ADVERSARIAL_CUSTOM,
     mips_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = 20,
-    size_minmax: Tuple[int, int] = (10, 10**5),
-    num_atoms: int = 10**3,
+    size_minmax: Tuple[int, int] = (100, 10 ** 5),
+    num_atoms: int = 10 ** 3,
     num_signals: int = 1,
     num_best_atoms: int = 1,
     seed: int = 0,
@@ -78,18 +79,13 @@ def scaling_exp(
     budgets = []
     budgets_std = []
     accuracy_list = []
-    if data_type is NETFLIX:
-        atoms = np.load("Movie_ratings.npy") #np.load(os.path.join(os.path.join("data", "netflix"), "Movie_ratings.npy"))
-        signals = subset_2d(atoms, np.arange(start=-30, stop=-30-num_signals, step=-1), np.arange(size_minmax[1]))
-        atoms = subset_2d(atoms, np.arange(num_atoms), np.arange(size_minmax[1]))
-    else:
-        atoms, signals = generate_custom_data(
-            num_atoms=num_atoms,
-            len_signal=sizes_signal[-1],
-            num_signals=num_signals,
-            seed=seed,
-            data_type=data_type,
-        )
+    atoms, signals = get_data(
+        num_atoms=num_atoms,
+        len_signal=sizes_signal[-1],
+        num_signals=num_signals,
+        seed=seed,
+        data_type=data_type,
+    )
     maxmin = (1, -1)
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
@@ -109,7 +105,11 @@ def scaling_exp(
             )  # Assume that the information on element-wise product is not given.
 
         start_time = time.time()
-        if mips_alg in (ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION):
+        if mips_alg in (
+            ACTION_ELIMINATION,
+            ADAPTIVE_ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+        ):
             candidates_array, budget_array = mips_bandit(
                 atoms=atoms_subset,
                 signals=signals_subset,
@@ -166,6 +166,10 @@ def scaling_exp(
             log_dir,
             "SCALING_"
             + data_type
+            + ":"
+            + str(size_minmax)
+            + "_"
+            + str(num_atoms)
             + "_"
             + mips_alg
             + "_"
@@ -177,18 +181,27 @@ def scaling_exp(
         log_df.to_csv(filename, index=False)
     if is_plot:
         if is_logspace:
+
             def power10(array):
                 return np.power(10, array)
-            functions = [np.array, power10]
-            function_names = ["$y \propto log x$", "$y \propto x$"]
+
+            def power10_sqrt(array):
+                return np.power(10, array) ** (1 / 2)
+
+            functions = [np.array, power10_sqrt, power10]
+            function_names = [
+                "$y \propto log x$",
+                "$y \propto x^{1/2}$",
+                "$y \propto x$",
+            ]
             sizes_signal = np.log10(sizes_signal)
             xlabel = "signal sizes"
             max_power = int(np.log10(size_minmax[1]))
-            plt.ticklabel_format(style='sci', scilimits=(0, 0))
-            plt.xticks(np.arange(max_power+1), 10 ** np.arange(max_power+1))
+            plt.ticklabel_format(style="sci", scilimits=(0, 0))
+            plt.xticks(np.arange(max_power + 1), 10 ** np.arange(max_power + 1))
         else:
             functions = [np.array, np.sqrt, np.log]
-            function_names = ["Linear", "Sqrt", "Logarithm"]
+            function_names = ["Linear fit", "Sqrt fit", "Logarithm fit"]
             xlabel = None
         fit_and_plot(
             sizes_signal,
