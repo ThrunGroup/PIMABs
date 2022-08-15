@@ -65,7 +65,7 @@ def scaling_experiment_real():
             0.1,
             0.1,
             num_atoms=10 ** 3,
-            size_minmax=(100, 10 ** 5 / 2),
+            size_minmax=(100, 10**4),  # Original setting was 10**5/2, fulldataset size is 143458
             num_experiments=10,
             num_signals=5,
             data_type=NETFLIX,

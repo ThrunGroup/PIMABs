@@ -68,14 +68,17 @@ def scaling_exp(
     :param dirname: Directory name to log the results
     """
     rng = np.random.default_rng(seed)
+
     if is_logspace:
         sizes_signal = np.logspace(
             np.log(size_minmax[0]), np.log(size_minmax[1]), num_experiments, base=np.e
         ).astype(np.int64)
+        print(sizes_signal)
     else:
         sizes_signal = np.linspace(
             size_minmax[0], size_minmax[1], num_experiments
         ).astype(np.int64)
+
     budgets = []
     budgets_std = []
     accuracy_list = []
@@ -87,12 +90,14 @@ def scaling_exp(
         data_type=data_type,
     )
     maxmin = (5, 0)
+
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
         atoms_subset, signals_subset = (
             atoms[:, subset_indices],
             signals[:, subset_indices],
         )
+
         if is_normalize:
             atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
             signal_norm = np.linalg.norm(signals_subset, axis=1, keepdims=True)
@@ -105,6 +110,7 @@ def scaling_exp(
             )  # Assume that the information on element-wise product is not given.
 
         start_time = time.time()
+
         if mips_alg in (
             ACTION_ELIMINATION,
             ADAPTIVE_ACTION_ELIMINATION,
@@ -131,6 +137,7 @@ def scaling_exp(
             )
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
+
         print(f"our_alg: {time.time() - start_time}")
         budgets.append(np.mean(budget_array))
         budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
@@ -142,10 +149,12 @@ def scaling_exp(
         )
         print(f"naive: {time.time() - start_time}")
         accuracy = 0
+
         for idx in range(num_signals):
             accuracy += len(
                 np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
             )
+
         accuracy /= num_signals * num_best_atoms
         accuracy_list.append(accuracy)
 
