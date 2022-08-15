@@ -108,7 +108,7 @@ def greedy_mips(
     :return: Arrays of final answers of MIPS, signal(query)-dependent runtime, signal-independent runtime, and
     number of calculations.
     """
-    assert (budget < atoms.shape[0])
+    assert (budget <= atoms.shape[0])
     start_time = time.time()
     if conditer is None:
         conditer = generate_conditer(atoms)

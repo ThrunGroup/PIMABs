@@ -24,7 +24,6 @@ def median_elimination(
     """
     epsilon = max(epsilon, 0.001)
     delta = max(delta, 0.001)
-    print(epsilon)
     set_seed(seed)
     len_signal = signals.shape[1]
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
