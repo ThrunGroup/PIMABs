@@ -22,6 +22,11 @@ def median_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
+    set_seed(seed)
+    len_signal = signals.shape[1]
+    candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
+    budgets_array = np.empty(signals.shape[0], dtype=np.int64)
+
     def m(u):
         """
         A helper function for calculating the optimal number of mnist

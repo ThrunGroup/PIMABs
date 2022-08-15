@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from typing import Tuple
+import matplotlib.pyplot as plt
 
 from utils.constants import (
     BATCH_SIZE,
@@ -13,6 +14,7 @@ from utils.constants import (
     NORMAL_PAPER,
 )
 from data.custom_data import generate_custom_data
+from data.get_data import get_data
 
 from algorithms.mips_bandit import mips_bandit
 
@@ -20,11 +22,14 @@ from algorithms.mips_bandit import mips_bandit
 def fixed_confidence_exp(
     epsilons: Tuple[float, ...],
     deltas: Tuple[float, ...],
+    num_atoms: int = 10 ** 3,
+    len_signal: int = 10 ** 3,
     data_type: str = ADVERSARIAL_CUSTOM,
     bandit_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = 20,
     verbose: bool = False,
     with_replacement: bool = True,
+    num_best_atoms: int = 1,
 ) -> None:
     """
     Validate that bandit algorithm for fixed confidence setting works well. In other words, observed failure
@@ -40,20 +45,28 @@ def fixed_confidence_exp(
     :param with_replacement: Whether the algorithm mnist with replacement
     """
     for epsilon in epsilons:
+        observed_deltas = []
         for delta in deltas:
             failure_counts = 0
             print(f"Doing an experiment with epsilon={epsilon} and delta={delta}")
             for seed in range(num_experiments):
+                rng = np.random.default_rng(seed)
                 if verbose:
                     print(f"-seed: {seed}")
-                atoms, signals = generate_custom_data(
-                    seed=seed, data_type=data_type, num_signals=5
+                atoms, signals = get_data(
+                    num_atoms=num_atoms,
+                    len_signal=len_signal,
+                    seed=seed,
+                    data_type=data_type,
+                    num_signals=5,
                 )
                 maxmin = (1, -1)
                 if verbose:
                     print("--data generated")
                 true_inner_products = atoms @ signals.transpose()
-                true_best_idcs = np.argmax(true_inner_products, axis=0)
+                true_best_idcs = (
+                    np.argsort(-true_inner_products, axis=0)[:num_best_atoms, :]
+                ).transpose()
                 if verbose:
                     print("--naively solved")
                 estimated_best_idcs, _ = mips_bandit(
@@ -70,23 +83,26 @@ def fixed_confidence_exp(
                 )
                 if verbose:
                     print("--stochastically solved")
-                best_arm_means = (
-                    true_inner_products[(true_best_idcs, np.arange(signals.shape[0]))]
-                    / signals.shape[1]
-                )
-                estimated_best_arm_mean = (
-                    true_inner_products[
-                        (estimated_best_idcs, np.arange(signals.shape[0]))
-                    ]
-                    / signals.shape[1]
-                )
-                failure_counts += np.sum(
-                    np.abs(best_arm_means - estimated_best_arm_mean) > epsilon
-                )
+                for signal_idx in range(len(signals)):
+                    failure_counts += np.sum(
+                        true_inner_products[estimated_best_idcs[signal_idx], signal_idx]
+                        + epsilon * signals.shape[1]
+                        < true_inner_products[true_best_idcs[signal_idx], signal_idx]
+                    )
             observed_delta = failure_counts / (num_experiments * signals.shape[0])
+            observed_deltas.append(observed_delta)
             print(f"delta: {delta}, epsilon: {epsilon}")
             print(f"observed failure probability: {observed_delta}")
             print(f"upper bound of failure probability: {delta}\n")
             assert (
                 observed_delta < delta
             ), f"{bandit_alg} is theoretically wrong in fixed confidence setting"
+
+        plt.title(f"Fixed Confidence Experiment (epsilon: {epsilon})")
+        plt.xlabel("Failure probability $\delta$")
+        plt.ylabel("Observed failure probability")
+        plt.ticklabel_format(style="sci", scilimits=(0, 0))
+        plt.plot(deltas, deltas, label="$\delta$ = observed failure probability")
+        plt.plot(deltas, observed_deltas, label=f"{bandit_alg}", marker='o')
+        plt.legend(loc="upper left")
+        plt.show()

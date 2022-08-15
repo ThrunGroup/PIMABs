@@ -9,22 +9,20 @@ from typing import Tuple, Optional
 from utils.constants import (
     BATCH_SIZE,
     HOEFFDING,
-
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NORMAL_PAPER,
-
     # algorithms
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
+    HOEFFDING,
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
     SYMMETRIC,
     ASYMMETRIC,
-
     # constants
     NUM_SEEDS,
     TRADEOFF_NUM_EXPERIMENTS,
@@ -36,17 +34,15 @@ from utils.constants import (
     GREEDY_BUDGET_MINMAX,
     TRADEOFF_VAR,
     TRADEOFF_MAXMIN,
-
     TRADEOFF_PCA_NUM_EXPERIMENTS,
     TRADEOFF_DEPTH_MINMAX,
-
     TRADEOFF_LSH_NUM_EXPERIMENTS,
     TRADEOFF_HFUNC_MINMAX,
     TRADEOFF_TABLES_MINMAX,
 )
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
-from data.custom_data import generate_custom_data
+from data.get_data import get_data
 
 from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips, generate_conditer
@@ -155,7 +151,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is GREEDY_MIPS:
             conditer = generate_conditer(atoms)
             for budget in np.linspace(GREEDY_BUDGET_MINMAX[0], GREEDY_BUDGET_MINMAX[1], num_experiments):
@@ -171,7 +166,6 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is PCA_MIPS:
             for depth in np.linspace(
                     TRADEOFF_DEPTH_MINMAX[0], TRADEOFF_DEPTH_MINMAX[1], num_experiments
@@ -187,7 +181,6 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is LSH_MIPS:
             table_diff = TRADEOFF_TABLES_MINMAX[1] - TRADEOFF_TABLES_MINMAX[0] + 1
             num_hfuncs = np.linspace(
@@ -212,7 +205,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 

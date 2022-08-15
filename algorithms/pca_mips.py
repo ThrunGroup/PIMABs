@@ -146,10 +146,14 @@ if __name__ == "__main__":
     delta = 2  # corresponds to the depth of PCA-tree
     top_k = 5
 
-    atoms, signal = generate_normal_data(num_atoms=100, len_signal=1000)
+    import time
+
+    atoms, signal = generate_custom_data(num_atoms=100, len_signal=100000)
+    signal = signal[0]
+    start_time = time.time()
     PCAMIPS = PCA_MIPS(atoms, signal, delta=delta)
     PCAMIPS.preprocess()
-
     budget, candidates = PCAMIPS.run(top_k=top_k)
+    print(time.time() - start_time)
     print(f" =>> Top {top_k} candidates: ", candidates)
     print(" =>> budget: ", budget)

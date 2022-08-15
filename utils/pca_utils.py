@@ -38,7 +38,7 @@ class Tree:
             np.where(temp < 0, 0, temp)
         )
         column = extra_dim.reshape(norms.shape[0], 1)
-        return np.append(arr, column, axis=1)
+        return np.append(column, arr, axis=1)
 
     @staticmethod
     def second_reduction(

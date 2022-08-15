@@ -283,12 +283,12 @@ if __name__ == "__main__":
             delta=None,
             data_type=dataset,
             mips_alg=GREEDY_MIPS,
-            size_minmax=(30, 10**4),
+            size_minmax=(10 ** 3, 10 ** 4),
             num_experiments=10,
             dirname=os.path.join(
                 os.path.dirname(os.path.dirname(__file__)), os.path.join("exps", "logs")
             ),
-            num_signals=10,
+            num_signals=3,
             is_logspace=True,
         )
     reproduce_figure6()

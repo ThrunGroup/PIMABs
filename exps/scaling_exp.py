@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import math
 from typing import Tuple, Optional
+import matplotlib.pyplot as plt
 
 from utils.constants import (
     BATCH_SIZE,
@@ -13,6 +14,7 @@ from utils.constants import (
     ACTION_ELIMINATION,
     HOEFFDING,
     GREEDY_MIPS,
+    NETFLIX,
     SCALING_NUM_EXPERIMENTS,
     NUM_SEEDS,
 
@@ -28,8 +30,11 @@ from utils.constants import (
     SYMMETRIC,
     ASYMMETRIC
 )
+import time
+
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
+from data.get_data import get_data
 from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
@@ -203,21 +208,40 @@ def scaling_exp(
             + "_"
             "SCALING_"
             + data_type
+            + ":"
+            + str(size_minmax)
             + "_"
+            + str(num_atoms)
+            + "_"
+            + str(epsilon)
+            + "_"
+            + str(delta),
+            + "_",
             + log_info
             + ".csv",
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
+
     if is_plot:
         if is_logspace:
-            functions = [np.array, np.exp]
-            function_names = ["Linear", "Exp"]
-            sizes_signal = np.log(sizes_signal)
-            xlabel = "signal sizes (natural log scale)"
+            def power10(array):
+                return np.power(10, array)
+
+            def power10_sqrt(array):
+                return np.power(10, array) ** (1 / 2)
+
+            functions = [np.array, power10_sqrt, power10]
+            function_names = [
+                "$y \propto log x$",
+                "$y \propto x^{1/2}$",
+                "$y \propto x$",
+            ]
+            sizes_signal = np.log10(sizes_signal)
+            xlabel = "signal sizes"
         else:
             functions = [np.array, np.sqrt, np.log]
-            function_names = ["Linear", "Sqrt", "Logarithm"]
+            function_names = ["Linear fit", "Sqrt fit", "Logarithm fit"]
             xlabel = None
 
     print(f"Mean accuracy with {mips_alg} for {data_type}: {np.mean(avg_accuracy)}")
