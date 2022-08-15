@@ -60,36 +60,36 @@ def speedup_bandit():
 
 def scaling_experiment_real():
     # Run on Netflix dataset
-    for mips_alg in [ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, MEDIAN_ELIMINATION, GREEDY_MIPS]:
-        scaling_exp(
-            0.1,
-            0.1,
-            num_atoms=10 ** 3,
-            size_minmax=(100, 10**4),  # Original setting was 10**5/2, fulldataset size is 143458
-            num_experiments=10,
-            num_signals=5,
-            data_type=NETFLIX,
-            mips_alg=mips_alg,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-
-    # # Run on Movie Lens dataset
     # for mips_alg in [ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, MEDIAN_ELIMINATION, GREEDY_MIPS]:
     #     scaling_exp(
     #         0.1,
     #         0.1,
     #         num_atoms=10 ** 3,
-    #         size_minmax=(100, 5000), # Full dataset is size 6040
+    #         size_minmax=(100, 10**4),  # Original setting was 10**5/2, fulldataset size is 143458
     #         num_experiments=10,
     #         num_signals=5,
-    #         data_type=MOVIE_LENS,
+    #         data_type=NETFLIX,
     #         mips_alg=mips_alg,
     #         with_replacement=False,
     #         is_normalize=False,
     #         is_logspace=True,
     #     )
+
+    # # Run on Movie Lens dataset
+    for mips_alg in [ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, MEDIAN_ELIMINATION, GREEDY_MIPS]:
+        scaling_exp(
+            0.1,
+            0.1,
+            num_atoms=10 ** 3,
+            size_minmax=(100, 5000), # Full dataset is size 6040
+            num_experiments=10,
+            num_signals=5,
+            data_type=MOVIE_LENS,
+            mips_alg=mips_alg,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=True,
+        )
 
 
 if __name__ == "__main__":
