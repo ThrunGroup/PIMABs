@@ -118,7 +118,7 @@ def speedup_precision_exps(
             seed=seed,
             data_type=data_type,
         )
-        maxmin = (1, -1)
+        maxmin = (4, -4)
         naive_candidates_array = (
             np.matmul(-atoms, signals.transpose())
             .argsort(axis=0)[:num_best_atoms]

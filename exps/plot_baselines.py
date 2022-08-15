@@ -135,11 +135,11 @@ if __name__ == "__main__":
     #     include_error_bar=True
     # )
     create_baseline_plots_from_data(
-        max_speedup=20,
+        #max_speedup=20,
         is_scaling=False,
         include_error_bar=False,
-        #alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION]
-        alg_names = [LSH_MIPS, PCA_MIPS]
+        alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION]
+        #alg_names = [LSH_MIPS, PCA_MIPS]
     )
 
 
