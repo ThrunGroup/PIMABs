@@ -29,14 +29,14 @@ def generate_custom_data(
     """
     rng = np.random.default_rng(seed)
     atoms_array = np.empty((num_atoms, len_signal))
-    if (
-        data_type is UNIFORM_PAPER
-    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+    if data_type is UNIFORM_PAPER:
+        print("WARNING: You're using the UNIFORM_PAPER dataset. Don't expect our algo to scale logarithmically!")
+        # Implicitly use variance proxy (sub-gaussian distribution) is 1
         signal = rng.uniform(low=0, high=2, size=(num_signals, len_signal))
         atoms_array = rng.uniform(low=0, high=2, size=(num_atoms, len_signal))
-    elif (
-        data_type is NORMAL_PAPER
-    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+    elif data_type is NORMAL_PAPER:
+        print("WARNING: You're using the NORMAL_PAPER dataset. Don't expect our algo to scale logarithmically!")
+        # Implicitly use variance proxy (sub-gaussian distribution) is 1
         signal = rng.normal(loc=2, size=(num_signals, len_signal))
         atoms_array = rng.normal(size=(num_atoms, len_signal))
     elif data_type is ADVERSARIAL_CUSTOM:
@@ -45,9 +45,8 @@ def generate_custom_data(
         for idx in range(num_atoms):
             atoms_array[idx][: math.floor(p[idx] * len_signal)] = 1
         signal = np.ones((num_signals, len_signal))
-    elif (
-        data_type is NORMAL_CUSTOM
-    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+    elif data_type is NORMAL_CUSTOM:
+        # Implicitly use variance proxy (sub-gaussian distribution) is 1
         means = rng.normal(size=num_atoms)
         atoms_array = np.empty((num_atoms, len_signal))
         for idx in range(num_atoms):
