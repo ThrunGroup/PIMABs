@@ -66,7 +66,6 @@ def adaptive_action_elimination(
         budget_all, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all = warm_start(signals, atoms, var_proxy, warm_start_num_idcs, new_delta)
 
     for signal_idx, signal in enumerate(signals):
-        signal = signals[signal_idx]
         t = 0  # time step
         if do_warm_start:
             candidates = candidates_all[signal_idx]

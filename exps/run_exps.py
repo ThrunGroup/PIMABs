@@ -46,7 +46,7 @@ if __name__ == "__main__":
         num_experiments=10,
         num_signals=10,
         data_type=NORMAL_PAPER,
-        mips_alg=ADAPTIVE_ACTION_ELIMINATION,
+        mips_alg=ACTION_ELIMINATION,
         with_replacement=False,
         is_normalize=False,
     )

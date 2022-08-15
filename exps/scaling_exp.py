@@ -67,6 +67,7 @@ def scaling_exp(
     :param dirname: Directory name to log the results
     """
     rng = np.random.default_rng(seed)
+
     if is_logspace:
         sizes_signal = np.logspace(
             np.log(size_minmax[0]), np.log(size_minmax[1]), num_experiments, base=np.e
@@ -75,9 +76,11 @@ def scaling_exp(
         sizes_signal = np.linspace(
             size_minmax[0], size_minmax[1], num_experiments
         ).astype(np.int64)
+
     budgets = []
     budgets_std = []
     accuracy_list = []
+
     if data_type is NETFLIX:
         atoms = np.load("Movie_ratings.npy") #np.load(os.path.join(os.path.join("data", "netflix"), "Movie_ratings.npy"))
         signals = subset_2d(atoms, np.arange(start=-1, stop=-1-num_signals, step=-1), np.arange(size_minmax[1]))
@@ -90,6 +93,7 @@ def scaling_exp(
             seed=seed,
             data_type=data_type,
         )
+
     maxmin = (1, -1)
     for size in sizes_signal:
         subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
@@ -97,6 +101,7 @@ def scaling_exp(
             atoms[:, subset_indices],
             signals[:, subset_indices],
         )
+
         if is_normalize:
             atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
             signal_norm = np.linalg.norm(signals_subset, axis=1, keepdims=True)
@@ -109,6 +114,7 @@ def scaling_exp(
             )  # Assume that the information on element-wise product is not given.
 
         start_time = time.time()
+
         if mips_alg in (ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION):
             candidates_array, budget_array = mips_bandit(
                 atoms=atoms_subset,
@@ -131,6 +137,7 @@ def scaling_exp(
             )
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
+
         print(f"our_alg: {time.time() - start_time}")
         budgets.append(np.mean(budget_array))
         budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))

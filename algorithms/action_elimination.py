@@ -14,8 +14,12 @@ from utils.constants import (
 from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
+from algorithms.action_elimination_utils import (
+    compute_sampling_weights,
+    warm_start
+)
 
-@nb.njit
+#@nb.njit
 def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -27,6 +31,8 @@ def action_elimination(
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
     seed: int = 0,
+    do_warm_start: bool = False,
+    warm_start_num_idcs: int = BATCH_SIZE, # We need to have warm_start_num_indices passed with a default int value because a None makes numba complain at compile time
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -39,17 +45,28 @@ def action_elimination(
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
 
+    D = atoms.shape[0]  # Number of atoms
+    d = atoms.shape[1]  # Dimension of atoms/signal
+    new_delta = delta * batch_size / (d * D)
+
+    if do_warm_start:
+        budget_all, candidates_all, means_all, lcbs_all, ucbs_all, sum_var_proxy_all = warm_start(signals, atoms, var_proxy, warm_start_num_idcs, new_delta)
+
     for signal_idx, signal in enumerate(signals):
-        signal = signals[signal_idx]
-        D = atoms.shape[0]  # Number of atoms
-        d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
-        new_delta = delta * batch_size / (d * D)
-        budgets = 0  # Number of calculations
-        candidates = np.arange(D)  # arms (atoms)
-        lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
-        ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
-        means = np.zeros(D)  # estimated means of arm returns
+        if do_warm_start:
+            candidates = candidates_all[signal_idx]
+            budgets = budget_all  # It's already an int, per-signal budget
+            means = means_all[signal_idx]
+            lcbs = lcbs_all[signal_idx]
+            ucbs = ucbs_all[signal_idx]
+        else:
+            budgets = 0  # Number of calculations
+            candidates = np.arange(D)  # arms (atoms)
+            means = np.zeros(D)  # estimated means of arm returns
+            lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
+            ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
+
 
         if not with_replacement:
             shuffled_idcs = np.arange(d)
@@ -78,8 +95,10 @@ def action_elimination(
                         + (candidates_sampled @ signal_sampled)
                     ) / d
                     budgets += (d - (t - 1) * batch_size) * len(candidates)
+
                 candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
+
             budgets += batch_size * len(candidates)
 
             if with_replacement:
