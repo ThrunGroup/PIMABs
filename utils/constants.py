@@ -14,6 +14,19 @@ COLORS = [
     "#17becf",
 ]
 
+MARKERS = [
+    "o",
+    ",",
+    "v",
+    "^",
+    "<",
+    ">",
+    "1",
+    "2",
+    "3",
+    "4",
+]
+
 # MAB Algorithms
 MEDIAN_ELIMINATION = "MEDIAN_ELIMINATION"
 ACTION_ELIMINATION = "ACTION_ELIMINATION"
@@ -51,10 +64,10 @@ SCALING_NUM_TABLES = 5
 
 # Precision-Speed Tradeoff Experiments
 TRADEOFF_NUM_EXPERIMENTS = 10  # corresponds to the number of points on the plot
-TRADEOFF_NUM_ATOMS = 100
-TRADEOFF_DIMENSION = 100
+TRADEOFF_NUM_ATOMS = 1000
+TRADEOFF_DIMENSION = 10000
 TRADEOFF_NUM_SIGNALS = 3
-TRADEOFF_DELTA_MINMAX = (0, 0.5)
+TRADEOFF_DELTA_MINMAX = (0, 0.01)
 TRADEOFF_TOPK = 10
 GREEDY_BUDGET_MINMAX = (10, 50)
 

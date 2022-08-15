@@ -22,8 +22,8 @@ def median_elimination(
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
-    epsilon = max(epsilon, 0.01)
-    delta = max(delta, 0.01)
+    epsilon = max(epsilon, 0.001)
+    delta = max(delta, 0.001)
     print(epsilon)
     set_seed(seed)
     len_signal = signals.shape[1]
