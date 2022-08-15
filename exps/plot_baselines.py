@@ -113,7 +113,7 @@ def create_baseline_plots_from_data(
             else:
                 plt.scatter(
                     x, y,
-                    marker=MARKERS[color_i % num_colors],
+                    #marker=MARKERS[color_i % num_colors],
                     color=COLORS[color_i % num_colors],
                     label=f"{alg_name}"
                 )

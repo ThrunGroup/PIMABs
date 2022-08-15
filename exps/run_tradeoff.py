@@ -54,14 +54,14 @@ if __name__ == "__main__":
             mips_alg=MEDIAN_ELIMINATION,
             with_replacement=False,
         )
-        speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=GREEDY_MIPS,
-            with_replacement=False,
-        )
+        # speedup_precision_exps(
+        #     num_atoms=TRADEOFF_NUM_ATOMS,
+        #     num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+        #     num_signals=TRADEOFF_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=GREEDY_MIPS,
+        #     with_replacement=False,
+        # )
         # speedup_precision_exps(
         #     num_atoms=TRADEOFF_NUM_ATOMS,
         #     num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
