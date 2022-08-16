@@ -213,7 +213,7 @@ def scaling_exp(
             + "_"
             "SCALING_"
             + data_type
-            + ":"
+            + "--"
             + str(size_minmax)
             + "_"
             + str(num_atoms)
