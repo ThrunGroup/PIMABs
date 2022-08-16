@@ -69,7 +69,7 @@ def create_baseline_plots_from_data(
         exp = "Precision-Speed Tradeoff Baselines"
         xlabel = "speed (i.e. inverse budget)"
         ylabel = "precision"
-        loc = "upper right"
+        loc = "lower right"
 
     color_i = 0
     num_colors = len(COLORS)
@@ -87,11 +87,7 @@ def create_baseline_plots_from_data(
             if f.find(datatype) < 0:
                 continue
 
-            for alg_name in alg_names:
-                if f.find(alg_name) < 0:
-                    not_found += 1
-
-            if not_found == len(alg_names) and not_found > 0:
+            if alg_name not in alg_names and len(alg_names) > 0:
                 continue
 
             if is_scaling:
@@ -169,8 +165,8 @@ if __name__ == "__main__":
         #max_speedup=20,
         is_scaling=False,
         include_error_bar=False,
-        alg_names=[ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION],
-        data_types=[NORMAL_CUSTOM]
+        #alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, MEDIAN_ELIMINATION, GREEDY_MIPS],
+        data_types=[NORMAL_CUSTOM, NORMAL_PAPER]
         #alg_names = [LSH_MIPS, PCA_MIPS]
     )
 
