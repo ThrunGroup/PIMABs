@@ -87,7 +87,6 @@ def scaling_exp(
     avg_budget = np.zeros(num_experiments)
     avg_budget_std = np.zeros(num_experiments)
     avg_accuracy = np.zeros(num_experiments)
-
     for seed in range(NUM_SEEDS):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)

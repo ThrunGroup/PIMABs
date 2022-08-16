@@ -60,8 +60,8 @@ def create_baseline_plots_from_data(
         path = os.path.join(path, "scaling")
         csv_files = glob.glob(os.path.join(path, "*SCALING*"))
         exp = f"Scaling Baselines"
-        xlabel = "signal vector size"
-        ylabel = "budget"
+        xlabel = "Signal Vector Size"
+        ylabel = "Sample Complexity"
         loc = "upper left"
     else:
         path = os.path.join(path, "precision_speed")
@@ -156,18 +156,18 @@ def create_baseline_plots_from_data(
 
 
 if __name__ == "__main__":
-    # create_baseline_plots_from_data(
-    #     is_scaling=True,
-    #     fit=False,
-    #     include_error_bar=True
-    # )
     create_baseline_plots_from_data(
-        #max_speedup=20,
-        is_scaling=False,
-        include_error_bar=False,
-        alg_names=[ADAPTIVE_ACTION_ELIMINATION],
-        data_types=[NORMAL_PAPER]
-        #alg_names = [LSH_MIPS, PCA_MIPS]
+        is_scaling=True,
+        fit=False,
+        include_error_bar=True
     )
+    # create_baseline_plots_from_data(
+    #     #max_speedup=20,
+    #     is_scaling=False,
+    #     include_error_bar=False,
+    #     alg_names=[ADAPTIVE_ACTION_ELIMINATION],
+    #     data_types=[NORMAL_PAPER]
+    #     #alg_names = [LSH_MIPS, PCA_MIPS]
+    # )
 
 

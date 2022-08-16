@@ -38,7 +38,7 @@ if __name__ == "__main__":
             mips_alg=ADAPTIVE_ACTION_ELIMINATION,
             with_replacement=False,
             is_normalize=False,
-            is_logspace=False,
+            is_logspace=True,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             mips_alg=ACTION_ELIMINATION,
             with_replacement=False,
             is_normalize=False,
-            is_logspace=False,
+            is_logspace=True,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -60,7 +60,7 @@ if __name__ == "__main__":
             mips_alg=MEDIAN_ELIMINATION,
             with_replacement=False,
             is_normalize=False,
-            is_logspace=False,
+            is_logspace=True,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -71,7 +71,7 @@ if __name__ == "__main__":
             mips_alg=GREEDY_MIPS,
             with_replacement=False,
             is_normalize=False,
-            is_logspace=False,
+            is_logspace=True,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -82,7 +82,7 @@ if __name__ == "__main__":
             mips_alg=PCA_MIPS,
             with_replacement=False,
             is_normalize=False,
-            is_logspace=False,
+            is_logspace=True,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -93,6 +93,6 @@ if __name__ == "__main__":
             mips_alg=LSH_MIPS,
             with_replacement=False,
             is_normalize=False,
-            is_logspace=False,
+            is_logspace=True,
         )
 
