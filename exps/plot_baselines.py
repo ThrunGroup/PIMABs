@@ -126,13 +126,14 @@ def create_baseline_plots_from_data(
                 fit_and_plot(x, y, functions, function_names)
 
             # plot the datapoints
+            x_sorted, y_sorted = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))
             if is_scaling:
                 plt.scatter(
                     x, y,
                     color=ALG_TO_COLOR[alg_name],
                     label=f"{alg_name}"
                 )
-                plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
+                plt.plot(x_sorted, y_sorted, color=ALG_TO_COLOR[alg_name])
             else:
                 plt.scatter(
                     x, y,
@@ -140,6 +141,7 @@ def create_baseline_plots_from_data(
                     color=ALG_TO_COLOR[alg_name],
                     label=f"{alg_name}"
                 )
+                plt.plot(x_sorted, y_sorted, color=ALG_TO_COLOR[alg_name])
 
             # Sort the legend entries (labels and handles) by labels
             handles, labels = plt.gca().get_legend_handles_labels()
@@ -163,12 +165,12 @@ if __name__ == "__main__":
         fit=False,
         include_error_bar=True
     )
-    # create_baseline_plots_from_data(
-    #     max_speedup=20,
-    #     is_scaling=False,
-    #     include_error_bar=False,
-    #     alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION]
-    #     #alg_names = [LSH_MIPS, PCA_MIPS]
-    # )
+    create_baseline_plots_from_data(
+        max_speedup=20,
+        is_scaling=False,
+        include_error_bar=False,
+        alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION]
+        #alg_names = [LSH_MIPS, PCA_MIPS]
+    )
 
 
