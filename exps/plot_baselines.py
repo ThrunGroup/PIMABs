@@ -17,9 +17,27 @@ from utils.constants import (
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NORMAL_PAPER,
+    ALG_TO_COLOR,
 )
 from utils.utils import fit_and_plot
 from typing import List, Any
+
+
+def extract_alg(filename: str):
+    if ADAPTIVE_ACTION_ELIMINATION in filename:
+        return ADAPTIVE_ACTION_ELIMINATION
+    elif ACTION_ELIMINATION in filename:
+        return ACTION_ELIMINATION
+    elif MEDIAN_ELIMINATION in filename:
+        return MEDIAN_ELIMINATION
+    elif GREEDY_MIPS in filename:
+        return GREEDY_MIPS
+    elif LSH_MIPS in filename:
+        return LSH_MIPS
+    elif PCA_MIPS in filename:
+        return PCA_MIPS
+    else:
+        raise Exception("No algorithm was able to be extracted from " + filname)
 
 
 def create_baseline_plots_from_data(
@@ -55,10 +73,13 @@ def create_baseline_plots_from_data(
 
     color_i = 0
     num_colors = len(COLORS)
+
     for datatype in data_types:
         title = exp + f": {datatype}"
         color_i = 0
         for f in csv_files:
+            alg_name = extract_alg(f)
+
             not_found = 0
             data = read_csv(f)
 
@@ -69,6 +90,7 @@ def create_baseline_plots_from_data(
             for alg_name in alg_names:
                 if f.find(alg_name) < 0:
                     not_found += 1
+
             if not_found == len(alg_names) and not_found > 0:
                 continue
 
@@ -107,19 +129,26 @@ def create_baseline_plots_from_data(
             if is_scaling:
                 plt.scatter(
                     x, y,
-                    color=COLORS[color_i % num_colors],
+                    color=ALG_TO_COLOR[alg_name],
                     label=f"{alg_name}"
                 )
+                plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
             else:
                 plt.scatter(
                     x, y,
                     #marker=MARKERS[color_i % num_colors],
-                    color=COLORS[color_i % num_colors],
+                    color=ALG_TO_COLOR[alg_name],
                     label=f"{alg_name}"
                 )
-            plt.legend(loc=loc)
+
+            # Sort the legend entries (labels and handles) by labels
+            handles, labels = plt.gca().get_legend_handles_labels()
+            labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+            plt.legend(handles, labels, loc=loc)
+
             if include_error_bar:
                 plt.errorbar(x, y, error, fmt=".", color="black")
+
             color_i += 1
 
         plt.title(title)
@@ -129,17 +158,17 @@ def create_baseline_plots_from_data(
 
 
 if __name__ == "__main__":
-    # create_baseline_plots_from_data(
-    #     is_scaling=True,
-    #     fit=False,
-    #     include_error_bar=True
-    # )
     create_baseline_plots_from_data(
-        max_speedup=20,
-        is_scaling=False,
-        include_error_bar=False,
-        alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION]
-        #alg_names = [LSH_MIPS, PCA_MIPS]
+        is_scaling=True,
+        fit=False,
+        include_error_bar=True
     )
+    # create_baseline_plots_from_data(
+    #     max_speedup=20,
+    #     is_scaling=False,
+    #     include_error_bar=False,
+    #     alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION]
+    #     #alg_names = [LSH_MIPS, PCA_MIPS]
+    # )
 
 

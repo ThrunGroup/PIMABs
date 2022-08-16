@@ -17,6 +17,7 @@ from utils.constants import (
     GREEDY_MIPS,
     NETFLIX,
     MOVIE_LENS,
+    ALG_TO_COLOR,
 )
 import time
 
