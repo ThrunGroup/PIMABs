@@ -28,7 +28,7 @@ from utils.constants import (
 
 if __name__ == "__main__":
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, NORMAL_PAPER]:
+    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NORMAL_PAPER]:
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
             size_minmax=SCALING_SIZE_MINMAX,
@@ -38,6 +38,7 @@ if __name__ == "__main__":
             mips_alg=ADAPTIVE_ACTION_ELIMINATION,
             with_replacement=False,
             is_normalize=False,
+            is_logspace=False,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -48,6 +49,7 @@ if __name__ == "__main__":
             mips_alg=ACTION_ELIMINATION,
             with_replacement=False,
             is_normalize=False,
+            is_logspace=False,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -58,6 +60,7 @@ if __name__ == "__main__":
             mips_alg=MEDIAN_ELIMINATION,
             with_replacement=False,
             is_normalize=False,
+            is_logspace=False,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -68,6 +71,7 @@ if __name__ == "__main__":
             mips_alg=GREEDY_MIPS,
             with_replacement=False,
             is_normalize=False,
+            is_logspace=False,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -78,6 +82,7 @@ if __name__ == "__main__":
             mips_alg=PCA_MIPS,
             with_replacement=False,
             is_normalize=False,
+            is_logspace=False,
         )
         scaling_exp(
             num_atoms=SCALING_NUM_ATOMS,
@@ -88,5 +93,6 @@ if __name__ == "__main__":
             mips_alg=LSH_MIPS,
             with_replacement=False,
             is_normalize=False,
+            is_logspace=False,
         )
 

@@ -36,6 +36,7 @@ from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
 from data.get_data import get_data
 from data.custom_data import generate_custom_data
+from data.get_data import get_data
 
 from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
@@ -57,7 +58,7 @@ def scaling_exp(
     is_normalize: bool = False,
     is_log: bool = True,
     is_plot: bool = True,
-    is_logspace: bool = True,
+    is_logspace: bool = False,
     dirname: str = None,
 ) -> None:
     """
@@ -103,7 +104,7 @@ def scaling_exp(
         budgets = []
         budgets_std = []
         accuracy_list = []
-        atoms, signals = generate_custom_data(
+        atoms, signals = get_data(
             num_atoms=num_atoms,
             len_signal=sizes_signal[-1],
             num_signals=num_signals,
@@ -113,7 +114,7 @@ def scaling_exp(
         maxmin = (1, -1)
 
         for size in sizes_signal:
-            print(f"    => signal size {size}")
+            #print(f"    => signal size {size}")
             subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
             atoms_subset, signals_subset = (
                 atoms[:, subset_indices],
@@ -220,8 +221,8 @@ def scaling_exp(
             + "_"
             + str(epsilon)
             + "_"
-            + str(delta),
-            + "_",
+            + str(delta)
+            + "_"
             + log_info
             + ".csv",
         )

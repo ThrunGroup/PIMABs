@@ -45,6 +45,13 @@ from utils.constants import (
     EPSILON_BINS,
     EPSILON_MINMAX_MEDIAN,
     GREEDY_BUDGET_BY,
+
+    # Normal Paper
+    PAPER_MAXMIN,
+    PAPER_DELTA_MINMAX,
+    PAPER_VAR,
+    PAPER_EPSILON_MINMAX_ADAPTIVE,
+    PAPER_DELTA_BINS,
 )
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
@@ -112,6 +119,19 @@ def speedup_precision_exps(
     avg_accuracy = np.zeros(num_experiments)
     avg_accuracy_std = np.zeros(num_experiments)
 
+    # setting up params
+    if data_type is NORMAL_CUSTOM:
+        maxmin = MAXMIN
+        delta_minmax = DELTA_MINMAX
+        delta_bins = DELTA_BINS
+        var = NORMAL_VAR
+    else:
+        maxmin = PAPER_MAXMIN
+        delta_minmax = PAPER_DELTA_MINMAX
+        delta_bins = PAPER_DELTA_BINS
+        var = PAPER_VAR
+
+
     for seed in range(NUM_SEEDS):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
@@ -122,7 +142,6 @@ def speedup_precision_exps(
             seed=seed,
             data_type=data_type,
         )
-        maxmin = MAXMIN
         naive_candidates_array = (
             np.matmul(-atoms, signals.transpose())
             .argsort(axis=0)[:num_best_atoms]
@@ -133,19 +152,31 @@ def speedup_precision_exps(
         accuracies = []
         accuracies_std = []
         if mips_alg is ADAPTIVE_ACTION_ELIMINATION:
-            constants = np.linspace(0, NORMAL_VAR, num_experiments // DELTA_BINS)
-            deltas = np.linspace(DELTA_MINMAX[0], DELTA_MINMAX[1], DELTA_BINS)
+            constants = np.linspace(0, var, num_experiments // delta_bins)
+            deltas = np.linspace(delta_minmax[0], delta_minmax[1], delta_bins)
             assert len(constants) * len(deltas) == num_experiments
+
+            if data_type is NORMAL_PAPER:
+                epsilons = np.linspace(
+                    PAPER_EPSILON_MINMAX_ADAPTIVE[0], PAPER_EPSILON_MINMAX_ADAPTIVE[1], num_experiments // delta_bins
+                )
+                constants = epsilons
+
             for constant in constants:
                 for delta in deltas:
                     new_maxmin = (maxmin[0] + constant, maxmin[1] - constant)
-                    #print(f"    => (maxmin, delta) is {(new_maxmin, delta)}")
+
+                    if data_type is NORMAL_PAPER:
+                        new_maxmin = maxmin
+                        epsilon = constant
+
+                    print(f"epsilon {epsilon}, delta {delta}")
                     candidates_array, budget_array = mips_bandit(
                         atoms=atoms,
                         signals=signals,
                         maxmin=new_maxmin,
                         bandit_alg=mips_alg,
-                        epsilon=epsilon,  # default 0
+                        epsilon=epsilon,
                         delta=delta,
                         num_best_atoms=num_best_atoms,
                         seed=seed,
@@ -158,7 +189,7 @@ def speedup_precision_exps(
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
 
         elif mips_alg is ACTION_ELIMINATION:
-            epsilons = np.linspace(EPSILON_MINMAX_ACTION[0], EPSILON_MINMAX_ACTION[1], num_experiments//EPSILON_BINS)
+            epsilons = np.linspace(EPSILON_MINMAX_ACTION[0], EPSILON_MINMAX_ACTION[1], num_experiments // EPSILON_BINS)
             deltas = np.linspace(DELTA_MINMAX[0], DELTA_MINMAX[1], EPSILON_BINS)
             for epsilon in epsilons:
                 for delta in deltas:
