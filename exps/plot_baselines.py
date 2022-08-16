@@ -166,7 +166,7 @@ if __name__ == "__main__":
         is_scaling=False,
         include_error_bar=False,
         #alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, MEDIAN_ELIMINATION, GREEDY_MIPS],
-        data_types=[NORMAL_CUSTOM, NORMAL_PAPER]
+        data_types=[NORMAL_PAPER]
         #alg_names = [LSH_MIPS, PCA_MIPS]
     )
 
