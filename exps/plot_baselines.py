@@ -75,6 +75,7 @@ def create_baseline_plots_from_data(
     num_colors = len(COLORS)
 
     for datatype in data_types:
+        plt.figure(figsize=(6, 4.5))
         title = exp + f": {datatype}"
         color_i = 0
         for f in csv_files:
