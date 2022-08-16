@@ -160,16 +160,17 @@ def create_baseline_plots_from_data(
 
 
 if __name__ == "__main__":
+    # create_baseline_plots_from_data(
+    #     is_scaling=True,
+    #     fit=False,
+    #     include_error_bar=True
+    # )
     create_baseline_plots_from_data(
-        is_scaling=True,
-        fit=False,
-        include_error_bar=True
-    )
-    create_baseline_plots_from_data(
-        max_speedup=20,
+        #max_speedup=20,
         is_scaling=False,
         include_error_bar=False,
-        alg_names=[ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION]
+        alg_names=[ACTION_ELIMINATION, GREEDY_MIPS, MEDIAN_ELIMINATION],
+        data_types=[NORMAL_CUSTOM]
         #alg_names = [LSH_MIPS, PCA_MIPS]
     )
 

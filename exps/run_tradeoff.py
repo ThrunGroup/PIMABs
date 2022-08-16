@@ -29,7 +29,7 @@ from utils.constants import (
 
 if __name__ == "__main__":
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NORMAL_PAPER]:
+    for data_type in [NORMAL_CUSTOM]:
         speedup_precision_exps(
             num_atoms=TRADEOFF_NUM_ATOMS,
             num_experiments=TRADEOFF_NUM_EXPERIMENTS,

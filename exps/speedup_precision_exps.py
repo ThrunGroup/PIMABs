@@ -39,10 +39,13 @@ from utils.constants import (
     TRADEOFF_LSH_NUM_EXPERIMENTS,
     TRADEOFF_HFUNC_MINMAX,
     TRADEOFF_TABLES_MINMAX,
+    TRADEOFF_EPSILON_MINMAX,
+    DELTA_VAR_RATIO,
+    AE_MAXMIN
 )
 from utils.utils import subset_2d, fit_and_plot
 from utils.bandit_utils import get_ci
-from data.get_data import get_data
+from data.custom_data import generate_custom_data
 
 from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips, generate_conditer
@@ -126,10 +129,9 @@ def speedup_precision_exps(
         budgets = []
         accuracies = []
         accuracies_std = []
-        if "ELIMINATION" in mips_alg:
-            diff = TRADEOFF_VAR + 1
-            constants = np.linspace(0, TRADEOFF_VAR, num_experiments // diff)
-            deltas = np.linspace(TRADEOFF_DELTA_MINMAX[0], TRADEOFF_DELTA_MINMAX[1], diff)
+        if mips_alg is ADAPTIVE_ACTION_ELIMINATION:
+            constants = np.linspace(0, TRADEOFF_VAR, num_experiments // DELTA_VAR_RATIO)
+            deltas = np.linspace(TRADEOFF_DELTA_MINMAX[0], TRADEOFF_DELTA_MINMAX[1], DELTA_VAR_RATIO)
             assert len(constants) * len(deltas) == num_experiments
             for constant in constants:
                 for delta in deltas:
@@ -151,6 +153,47 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
+        elif mips_alg is ACTION_ELIMINATION:
+            for delta in np.linspace(TRADEOFF_DELTA_MINMAX[0], TRADEOFF_DELTA_MINMAX[1], num_experiments):
+                print(f"    => delta is {delta}")
+                candidates_array, budget_array = mips_bandit(
+                    atoms=atoms,
+                    signals=signals,
+                    maxmin=AE_MAXMIN,
+                    bandit_alg=mips_alg,
+                    epsilon=0.0,
+                    delta=delta,
+                    num_best_atoms=num_best_atoms,
+                    seed=seed,
+                    is_experiment=False,
+                    with_replacement=with_replacement,
+                )
+                budgets.append(np.mean(budget_array))
+                accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
+                accuracies.append(np.sum(accuracy_array))
+                accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
+        elif mips_alg is MEDIAN_ELIMINATION:
+            for epsilon in np.linspace(TRADEOFF_EPSILON_MINMAX[0], TRADEOFF_EPSILON_MINMAX[1], num_experiments):
+                print(f"    => epsilon is {epsilon}")
+                candidates_array, budget_array = mips_bandit(
+                    atoms=atoms,
+                    signals=signals,
+                    maxmin=(1.0, -1.0), # this param doesn't matter
+                    bandit_alg=MEDIAN_ELIMINATION,
+                    epsilon=epsilon,
+                    delta=0.5,
+                    num_best_atoms=num_best_atoms,
+                    seed=seed,
+                    is_experiment=False,
+                    with_replacement=with_replacement,
+                )
+                budgets.append(np.mean(budget_array))
+                accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
+                accuracies.append(np.sum(accuracy_array))
+                accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         elif mips_alg is GREEDY_MIPS:
             conditer = generate_conditer(atoms)
             for budget in np.linspace(GREEDY_BUDGET_MINMAX[0], GREEDY_BUDGET_MINMAX[1], num_experiments):
