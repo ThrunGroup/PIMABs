@@ -60,7 +60,7 @@ def create_baseline_plots_from_data(
         path = os.path.join(path, "scaling")
         csv_files = glob.glob(os.path.join(path, "*SCALING*"))
         exp = f"Scaling Baselines"
-        xlabel = "Signal Vector Size"
+        xlabel = "Signal Vector Size (d)"
         ylabel = "Sample Complexity"
         loc = "upper left"
     else:
