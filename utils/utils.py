@@ -4,10 +4,15 @@ import numpy as np
 import numba as nb
 import matplotlib.pyplot as plt
 
-from typing import List, Any
+from typing import Tuple, List, Any
 from sklearn.linear_model import LinearRegression
-from utils.constants import COLORS
 from pandas import read_csv
+from utils.constants import (
+    COLORS,
+    SCALING_SIZE_MINMAX,
+    SCALING_NUM_EXPERIMENTS
+)
+
 
 
 @nb.njit
@@ -344,3 +349,26 @@ def fit_and_plot(
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
     plt.show()
+
+
+def get_sizes_arr(
+    is_logspace: bool = True,
+    size_minmax: Tuple[int, int] = SCALING_SIZE_MINMAX,
+    num_experiments: int = SCALING_NUM_EXPERIMENTS,
+) -> np.ndarray:
+    """
+    Create an array of signal sizes that corresponds to the dimension "d".
+
+    :is_logspace: determines whether "d" should be mapped logarithmically
+    :size_minmax: the mininum and maximum of dimension "d".
+    :num_experiments: corresponds to how many points you want to plot
+    """
+    if is_logspace:
+        sizes_signal = np.logspace(
+            np.log(size_minmax[0]), np.log(size_minmax[1]), num_experiments, base=np.e
+        ).astype(np.int64)
+    else:
+        sizes_signal = np.linspace(
+            size_minmax[0], size_minmax[1], num_experiments
+        ).astype(np.int64)
+    return sizes_signal

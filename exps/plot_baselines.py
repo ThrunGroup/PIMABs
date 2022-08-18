@@ -5,22 +5,54 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pandas import read_csv
+from typing import List, Any
 from utils.constants import (
     COLORS,
-    MARKERS,
-    GREEDY_MIPS,
-    ACTION_ELIMINATION,
-    ADAPTIVE_ACTION_ELIMINATION,
-    MEDIAN_ELIMINATION,
-    LSH_MIPS,
-    PCA_MIPS,
+    ALG_TO_COLOR,
+
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
-    NORMAL_PAPER,
-    ALG_TO_COLOR,
+    NETFLIX,
+    MOVIE_LENS,
+
+    MEDIAN_ELIMINATION,
+    ACTION_ELIMINATION,
+    ADAPTIVE_ACTION_ELIMINATION,
+    GREEDY_MIPS,
+    LSH_MIPS,
+    PCA_MIPS,
 )
 from utils.utils import fit_and_plot
-from typing import List, Any
+
+
+def translate_alg_name(alg_name: str):
+    if alg_name == ACTION_ELIMINATION:
+        return "BanditMIPS"
+    elif alg_name == ADAPTIVE_ACTION_ELIMINATION:
+        return "BanditMIPS-$\\alpha$"
+    elif alg_name == MEDIAN_ELIMINATION:
+        return "BoundedME"
+    elif alg_name == GREEDY_MIPS:
+        return "GREEDY-MIPS"
+    elif alg_name == LSH_MIPS:
+        return "LSH-MIPS"
+    elif alg_name == PCA_MIPS:
+        return "PCA-MIPS"
+    else:
+        raise Exception("Bad algorithm name")
+
+
+def translate_dataset_name(dataset_name: str):
+    if dataset_name == ADVERSARIAL_CUSTOM:
+        return "Synthetic Adversarial"
+    elif dataset_name == NORMAL_CUSTOM:
+        return "Synthetic Gaussian"
+    elif dataset_name == NETFLIX:
+        return "Netflix"
+    elif dataset_name == MOVIE_LENS:
+        return "Movie Lens"
+    else:
+        raise Exception("Bad dataset name {}".format(dataset_name))
 
 
 def extract_alg(filename: str):
@@ -44,11 +76,7 @@ def create_baseline_plots_from_data(
     function_list: List[np.ufunc] = None,
     function_name_list: List[str] = None,
     max_speedup: int = None,
-    data_types: List[str] = [
-        NORMAL_CUSTOM,
-        ADVERSARIAL_CUSTOM,
-        NORMAL_PAPER
-    ],
+    data_types: List[str] = [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM],
     alg_names: List[str] = [],
     is_scaling: bool = True,
     fit: bool = True,
@@ -67,8 +95,8 @@ def create_baseline_plots_from_data(
         path = os.path.join(path, "precision_speed")
         csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
         exp = "Precision-Speed Tradeoff Baselines"
-        xlabel = "speed (i.e. inverse budget)"
-        ylabel = "precision"
+        xlabel = "Speedup"
+        ylabel = "Precision at 10"
         loc = "lower right"
 
     color_i = 0
@@ -109,18 +137,40 @@ def create_baseline_plots_from_data(
 
             # fit the plots
             if fit and is_scaling:
-                if alg_name == ACTION_ELIMINATION or alg_name == ADAPTIVE_ACTION_ELIMINATION:
-                    functions = [np.log]
-                    function_names = ["Logarithm"]
-                elif alg_name == MEDIAN_ELIMINATION:
-                    functions = [np.sqrt]
-                    function_names = ["Sqrt"]
-                elif alg_name == GREEDY_MIPS:
-                    functions = [np.array]
-                    function_names = ["Linear"]
+                if is_logspace:
+                    def power10(array):
+                        return np.power(10, array)
+
+                    def power10_sqrt(array):
+                        return np.power(10, array) ** (1 / 2)
+
+                    functions = [np.array, power10_sqrt, power10]
+                    function_names = [
+                        "$y \propto log x$",
+                        "$y \propto x^{1/2}$",
+                        "$y \propto x$",
+                    ]
+                    x = np.log10(x)
+                    xlabel = "signal size"
                 else:
-                    raise NotImplementedError("invalid alg_name")
-                fit_and_plot(x, y, functions, function_names)
+                    functions = [np.array, np.sqrt, np.log]
+                    function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
+                    xlabel = None
+
+                title = f"{translate_alg_name(mips_alg)} on {translate_dataset_name(data_type)}"
+                if title_accuracy:
+                    title += f", Accuracy: ({accuracy_list.mean():.2f})"
+
+                fit_and_plot(
+                    x,
+                    y,
+                    functions,
+                    function_names,
+                    ys_std=budgets_std,
+                    title=title,
+                    xlabel=xlabel,
+                    is_logspace=is_logspace,
+                )
 
             # plot the datapoints
             x_sorted, y_sorted = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))
@@ -128,7 +178,7 @@ def create_baseline_plots_from_data(
                 plt.scatter(
                     x, y,
                     color=ALG_TO_COLOR[alg_name],
-                    label=f"{alg_name}"
+                    label=f"{translate_alg_name(alg_name)}"
                 )
                 plt.plot(x_sorted, y_sorted, color=ALG_TO_COLOR[alg_name])
             else:
@@ -136,7 +186,7 @@ def create_baseline_plots_from_data(
                     x, y,
                     #marker=MARKERS[color_i % num_colors],
                     color=ALG_TO_COLOR[alg_name],
-                    label=f"{alg_name}"
+                    label=f"{translate_alg_name(alg_name)}"
                 )
                 plt.plot(x_sorted, y_sorted, color=ALG_TO_COLOR[alg_name])
 
@@ -157,17 +207,31 @@ def create_baseline_plots_from_data(
 
 
 if __name__ == "__main__":
+    # scaling experiments (synthetic and real datasets)
     create_baseline_plots_from_data(
         is_scaling=True,
+        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM],
         fit=False,
         include_error_bar=True
     )
+    create_baseline_plots_from_data(
+        is_scaling=True,
+        data_types=[NETFLIX, ADVERSARIAL_CUSTOM],
+        fit=False,
+        include_error_bar=True
+    )
+
+    # create_baseline_plots_from_data(
+    #     is_scaling=True,
+    #     fit=False,
+    #     include_error_bar=True
+    # )
     # create_baseline_plots_from_data(
     #     #max_speedup=20,
     #     is_scaling=False,
     #     include_error_bar=False,
-    #     alg_names=[ADAPTIVE_ACTION_ELIMINATION],
-    #     data_types=[NORMAL_PAPER]
+    #     #alg_names=[ADAPTIVE_ACTION_ELIMINATION],
+    #     data_types=[NORMAL_CUSTOM]
     #     #alg_names = [LSH_MIPS, PCA_MIPS]
     # )
 

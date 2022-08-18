@@ -1,6 +1,5 @@
 NUM_STDS = 1  # A multiplier on the number of standard deviations we use when creating confidence intervals
 BATCH_SIZE = 30
-
 COLORS = [
     "#1f77b4",
     "#ff7f0e",
@@ -12,19 +11,6 @@ COLORS = [
     "#7f7f7f",
     "#bcbd22",
     "#17becf",
-]
-
-MARKERS = [
-    "o",
-    ",",
-    "v",
-    "^",
-    "<",
-    ">",
-    "1",
-    "2",
-    "3",
-    "4",
 ]
 
 # MAB Algorithms
@@ -63,16 +49,20 @@ HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
 NUM_SEEDS = 5
+DEFAULT_MAXMIN = (5, 0)
+NORMALIZED_MAXMIN = (1, -1)
+DEFAULT_GREEDY_BUDGET = 50
 SCALING_NUM_EXPERIMENTS = 10  # corresponds to the number of points on the plot
 SCALING_NUM_ATOMS = 1000
 SCALING_NUM_SIGNALS = 3  # this is to get the confidence intervals
 SCALING_SIZE_MINMAX = (
     100, 10 ** 4,
 )
-SCALING_EPSILON = 0.0
+
 SCALING_DELTA = 0.3
 SCALING_DEPTH = 2
 SCALING_TOPK = 1
+SCALING_EPSILON = 0.0
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
 

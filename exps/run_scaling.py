@@ -9,6 +9,8 @@ from utils.constants import (
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NORMAL_PAPER,
+    NETFLIX,
+    MOVIE_LENS,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -73,26 +75,26 @@ if __name__ == "__main__":
             is_normalize=False,
             is_logspace=True,
         )
-        scaling_exp(
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=SCALING_SIZE_MINMAX,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=PCA_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=SCALING_SIZE_MINMAX,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=LSH_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
+        # scaling_exp(
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=SCALING_SIZE_MINMAX,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=PCA_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
+        # scaling_exp(
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=SCALING_SIZE_MINMAX,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=LSH_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
 

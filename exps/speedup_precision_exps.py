@@ -9,10 +9,12 @@ from typing import Tuple, Optional
 from utils.constants import (
     BATCH_SIZE,
     HOEFFDING,
+
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NORMAL_PAPER,
+
     # algorithms
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -23,6 +25,7 @@ from utils.constants import (
     PCA_MIPS,
     SYMMETRIC,
     ASYMMETRIC,
+
     # constants
     NUM_SEEDS,
     TRADEOFF_NUM_EXPERIMENTS,
@@ -65,14 +68,14 @@ from algorithms.pca_mips import run_pca_mips
 
 def get_accuracy_array(
     true_candidates: np.ndarray,
-    mips_candidates: np.ndarray,
+    mipxs_candidates: np.ndarray,
 ) -> np.ndarray:
     """
     Returns the average accuracies of the candidates across the signals
 
     :true_candidates: the candidates retrieved naively
     :mip_candidates: the candidates returned by the mips algorithm
-    :returns: an array of accurarices
+    :returns: an array of accuracies
     """
     accuracy = []
     for idx in range(TRADEOFF_NUM_SIGNALS):
@@ -131,7 +134,6 @@ def speedup_precision_exps(
         delta_bins = PAPER_DELTA_BINS
         var = PAPER_VAR
 
-
     for seed in range(NUM_SEEDS):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
@@ -151,6 +153,7 @@ def speedup_precision_exps(
         budgets = []
         accuracies = []
         accuracies_std = []
+        start_time = time.time()
         if mips_alg is ADAPTIVE_ACTION_ELIMINATION:
             constants = np.linspace(0, var, num_experiments // delta_bins)
             deltas = np.linspace(delta_minmax[0], delta_minmax[1], delta_bins)
