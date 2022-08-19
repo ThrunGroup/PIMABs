@@ -1,18 +1,31 @@
-# Matching Pursuit and Permutation-Invariant Multi-Armed Bandits (PIMABs)
+# Faster Maximum Inner Product Search in High Dimensions
 
-## Usage
+# Dear Reviewer:
 
-Run `python mp_tests.py --seed 0 -d 1000` to run the tests in `mp_tests.py`. This should provide some sanity checks
-that Bandit Matching Pursuit is returning the correct results.
+We thank you for your time in reviewing our submission. 
+We understand that you are performing a service to the community.
+In order to ensure that review of this code is as easy as possible, we have:
+- Included a one-line script to recreate all results (`repro_script.sh`)
+- Heavily commented and documented the code
+- Included an overview of the codebase and the files.
 
-## Description of files
+Thank you for reviewing our submission!
 
-- `matching_pursuit_algs.py`: Contains the two algorithms for the matching pursuit problem, canonical Matching Pursuit and Bandit Matching Pursuit
-- `mp_tests.py`: Runs a variety of tests comparing Bandit Matching Pursuit to Matching Pursuit
-- `utils.py`: some helper functions used to run experiments
-- `constants.py`: for some constants used in the various algorithms
-- `Book1.xlsx`: I'm not really sure, but it looks like this contained some experimental results for running BanditMP for
-various dataset sizes over 10 runs. The scaling does not look linear (which is a good thing), though I can't remember
-exactly how to recreate these results.
-- `data/`: Contains the MNIST dataset
-- `exps/`: Contains helper code for running many experiments in serial or in parallel, and then saving and analyzing the results. This subdirectory's code hasn't been cleaned yet
+# Description of Files
+
+The files are organized as follows:
+
+- `algorithms/` contains the different MIPS algorithms: BanditMIPS is implemented in `action_elimination.py` and BanditMIPS-$\alpha$ is implemented in `adaptive_action_elimination.py`. The most recently-developed baseline algorithm, BoundedME, is implemented in `median_elimination.py`.
+- `data/` contains the data used in the experiments. If you choose to reproduce the results, please download the data files into their respective folders and run `data/netflix/preproces_netflix.py` and `data/movie_lens/preprocess_movie_lens_1m.py`.
+- `exps/` contains the scripts for the experiments.
+- `utils/` contains helper functions used across the codebase.
+- `logs/` contains the logs of the experiments.
+- `figures/` contains the figures from analyzing the experimental results.
+
+# Obtaining the datasets
+
+- The Netflix Prize dataset is available from [here]().
+- The Movie Lens 1m data is available from [here]().
+
+# Reproduce the results
+- To reproduce all of the experimental logs and create the figures, run `chmod +x repro_script.sh && ./repro_script.sh`
