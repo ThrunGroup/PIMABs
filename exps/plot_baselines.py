@@ -21,6 +21,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    MAX_SPEEDUP
 )
 from utils.utils import fit_and_plot
 
@@ -155,7 +156,7 @@ def create_scaling_plots(
                     color=ALG_TO_COLOR[alg_name],
                     label=f"{translate_alg_name(alg_name)}"
                 )
-                plt.plot(x_sorted, y_sorted, color=ALG_TO_COLOR[alg_name])
+                plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
                 # Sort the legend entries (labels and handles) by labels
                 handles, labels = plt.gca().get_legend_handles_labels()
@@ -241,38 +242,41 @@ def create_tradeoff_plots(
         plt.show()
 
 
-if __name__ == "__main__":
-    # scaling experiments (synthetic and real datasets)
-    # create_scaling_plots(
-    #     is_fit=False,
-    #     include_error_bar=True,
-    #     data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
-    #     alg_names=[
-    #         ADAPTIVE_ACTION_ELIMINATION,
-    #         ACTION_ELIMINATION,
-    #         MEDIAN_ELIMINATION,
-    #         GREEDY_MIPS,
-    #         PCA_MIPS,
-    #         LSH_MIPS
-    #     ]
-    # )
-    # create_scaling_plots(
-    #     is_fit=True,
-    #     is_logspace=True,
-    #     include_error_bar=True,
-    #     data_types=[NETFLIX, MOVIE_LENS],
-    #     alg_names=[
-    #         ADAPTIVE_ACTION_ELIMINATION,
-    #         ACTION_ELIMINATION,
-    #         MEDIAN_ELIMINATION,
-    #         GREEDY_MIPS
-    #     ]
-    # )
+def generate_scaling_plots():
+    # basic scaling plots (synthetic and real datasets)
+    create_scaling_plots(
+        is_fit=False,
+        include_error_bar=True,
+        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
+        alg_names=[
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS,
+            PCA_MIPS,
+            LSH_MIPS
+        ]
+    )
 
+    # fit the bandit algorithms and greedy-mips for better comparison
+    create_scaling_plots(
+        is_fit=True,
+        is_logspace=True,
+        include_error_bar=True,
+        data_types=[NETFLIX, MOVIE_LENS],
+        alg_names=[
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS
+        ]
+    )
+
+
+def generate_tradeoff_plots():
     # precision-accuracy tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
-        max_speedup=10,
-        data_types=[ADVERSARIAL_CUSTOM],
+        data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
@@ -283,5 +287,21 @@ if __name__ == "__main__":
         ],
         include_error_bar=False
     )
+    create_tradeoff_plots(
+        data_types=[ADVERSARIAL_CUSTOM],
+        alg_names=[
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS,
+            PCA_MIPS,
+            LSH_MIPS
+        ],
+        max_speedup=MAX_SPEEDUP,
+        include_error_bar=False
+    )
 
 
+if __name__ == "__main__":
+    generate_scaling_plots()
+    generate_tradeoff_plots()

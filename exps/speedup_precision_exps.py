@@ -143,10 +143,9 @@ def speedup_precision_exps(
         tradeoff_delta_minmax = TRADEOFF_DELTA_MINMAX_REAL
         tradeoff_delta_bins = DELTA_BINS_AD
         tradeoff_maxmin = MAXMIN_AD
-        tradeoff_var = NORMAL_VAR
+        tradeoff_var = TRADEOFF_VAR_REAL
         tradeoff_depth_minmax = TRADEOFF_DEPTH_MINMAX
         tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
-        tradeoff_batch_size = BATCH_SIZE
         greedy_budget = num_atoms - 1
 
     else:
@@ -272,6 +271,11 @@ def speedup_precision_exps(
                         is_experiment=False,
                         with_replacement=with_replacement,
                     )
+                    runtimes.append(time.time() - start_time)
+                    budgets.append(np.mean(budget_array))
+                    accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
+                    accuracies.append(np.sum(accuracy_array))
+                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
             else:
                 epsilons = np.linspace(EPSILON_MINMAX_MEDIAN[0], EPSILON_MINMAX_MEDIAN[1], num_experiments)
                 for epsilon in epsilons:
@@ -292,11 +296,11 @@ def speedup_precision_exps(
                         is_experiment=False,
                         with_replacement=with_replacement,
                     )
-            runtimes.append(time.time() - start_time)
-            budgets.append(np.mean(budget_array))
-            accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
-            accuracies.append(np.sum(accuracy_array))
-            accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+                    runtimes.append(time.time() - start_time)
+                    budgets.append(np.mean(budget_array))
+                    accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
+                    accuracies.append(np.sum(accuracy_array))
+                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
 
         elif mips_alg is GREEDY_MIPS:
             conditer = generate_conditer(atoms)

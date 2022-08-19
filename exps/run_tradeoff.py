@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from typing import Tuple
-from speedup_precision_exps import speedup_precision_exps
+from exps.speedup_precision_exps import speedup_precision_exps
 from utils.constants import (
     BATCH_SIZE,
 
@@ -26,62 +26,76 @@ from utils.constants import (
     TRADEOFF_PCA_NUM_EXPERIMENTS,
     TRADEOFF_LSH_NUM_EXPERIMENTS,
     TRADEOFF_DIMENSION,
-    TRADEOFF_DIMENSION_MOVIE
+    TRADEOFF_DIMENSION_MOVIE,
+    NUM_ATOMS_REAL,
+    NUM_ATOMS_SIGNAL
 )
 
 
-if __name__ == "__main__":
+def run_tradeoff():
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NETFLIX, MOVIE_LENS]:
-        if data_type is MOVIE_LENS:
-            len_signals = TRADEOFF_DIMENSION
+    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
+        if data_type in [NETFLIX, MOVIE_LENS]:
+            num_atoms = NUM_ATOMS_REAL
+            len_signals = NUM_ATOMS_SIGNAL
         else:
-            len_signals = TRADEOFF_DIMENSION_MOVIE
+            num_atoms = TRADEOFF_NUM_ATOMS
+            len_signals = TRADEOFF_DIMENSION
 
         speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
+            num_atoms=num_atoms,
             num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+            len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=ADAPTIVE_ACTION_ELIMINATION,
             with_replacement=False,
         )
         speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
+            num_atoms=num_atoms,
             num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+            len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=ACTION_ELIMINATION,
             with_replacement=False,
         )
         speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
+            num_atoms=num_atoms,
             num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+            len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=MEDIAN_ELIMINATION,
             with_replacement=False,
         )
         speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
+            num_atoms=num_atoms,
             num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+            len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=GREEDY_MIPS,
             with_replacement=False,
         )
         speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
+            num_atoms=num_atoms,
             num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
+            len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=PCA_MIPS,
         )
         speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
+            num_atoms=num_atoms,
             num_experiments=TRADEOFF_LSH_NUM_EXPERIMENTS,
+            len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=LSH_MIPS,
         )
+
+
+if __name__ == "__main__":
+   run_tradeoff()
 

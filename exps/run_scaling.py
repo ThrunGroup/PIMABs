@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from typing import Tuple
-from scaling_exp import scaling_exp
+from exps.scaling_exp import scaling_exp
 from utils.constants import (
     BATCH_SIZE,
 
@@ -33,7 +33,7 @@ from utils.constants import (
 )
 
 
-if __name__ == "__main__":
+def run_scaling():
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
     for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
         if data_type is MOVIE_LENS:
@@ -126,4 +126,8 @@ if __name__ == "__main__":
             is_normalize=False,
             is_logspace=True,
         )
+
+
+if __name__ == "__main__":
+    run_scaling
 
