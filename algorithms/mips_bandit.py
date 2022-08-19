@@ -8,6 +8,7 @@ from utils.constants import (
     ADAPTIVE_ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
     HOEFFDING,
+    BATCH_SIZE,
 )
 from algorithms.median_elimination import median_elimination
 from algorithms.action_elimination import action_elimination
@@ -26,33 +27,29 @@ def mips_bandit(
     is_experiment: bool = False,
     verbose: bool = False,
     with_replacement: bool = False,
+    batch_size: int = BATCH_SIZE,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
-    MIPS problem: To find a best atom vector in data_atoms
-     set that has maximum inner product with a signal vector.
+    MIPS problem: To find a best atom vector in data_atoms set that has maximum inner product with a signal vector.
 
-    :param atoms: 2d array that contains atoms
-     in rows. atoms
-      are the vectors one of which will be selected
-    as the vector with maximum inner product with a signal vector.
+    :param atoms: 2d array that contains atoms in rows. Atoms are the vectors one of which will be selected
+                    as the vector with maximum inner product with a signal vector.
     :param signals: A matrix whose each row contains a signal vector.
-    :param maxmin: A tuple with two elements which are the maximum and minimum of data_atoms
-     array
+    :param maxmin: A tuple with two elements which are the maximum and minimum of data_atoms array
     :param bandit_alg: A name of multi-armed bandit algorithm
     :param epsilon: A maximum additive error between the true best arm and the best arm identified by our
-    bandit algorithm
+                    bandit algorithm
     :param delta: A probability that the difference between the reward of the true best arm and the identified
-    best arm is beyond epsilon
+                  best arm is beyond epsilon
     :param num_best_atoms
-    : Number of atoms
-     that bandit algorithm identify as top/best arms.
+    : Number of atoms that bandit algorithm identify as top/best arms.
     :param seed: A random seed
     :param is_experiment: Whether to do worst-case experiment
     :param verbose: Verbosity of function
     :param with_replacement: Whether to sample with replacement
     :return: Indices of best atom that have maximum inner product with a signal vector and the budget (total number of
-    calculations)
+            calculations)
     """
     assert len(atoms.shape) == 2, "Invalid size of data atoms" " matrix"
     assert len(signals.shape) == 2, "Invalid size of signal vector"
@@ -66,6 +63,7 @@ def mips_bandit(
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,
+                batch_size=batch_size
             )
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")
@@ -89,6 +87,7 @@ def mips_bandit(
                 delta=delta,
                 num_best_atoms=num_best_atoms,
                 with_replacement=False,
+                batch_size=batch_size
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
@@ -98,6 +97,7 @@ def mips_bandit(
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,
+                batch_size=batch_size
             )
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")

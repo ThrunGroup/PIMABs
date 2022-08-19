@@ -44,9 +44,11 @@ def translate_alg_name(alg_name: str):
 
 def translate_dataset_name(dataset_name: str):
     if dataset_name == ADVERSARIAL_CUSTOM:
-        return "Synthetic Adversarial"
+        # return "Synthetic Adversarial"
+        return ADVERSARIAL_CUSTOM
     elif dataset_name == NORMAL_CUSTOM:
-        return "Synthetic Gaussian"
+        # return "Synthetic Gaussian"
+        return NORMAL_CUSTOM
     elif dataset_name == NETFLIX:
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
@@ -72,78 +74,57 @@ def extract_alg(filename: str):
         raise Exception("No algorithm was able to be extracted from " + filname)
 
 
-def create_baseline_plots_from_data(
-    function_list: List[np.ufunc] = None,
-    function_name_list: List[str] = None,
-    max_speedup: int = None,
-    data_types: List[str] = [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM],
+def power10(array):
+    return np.power(10, array)
+
+
+def power10_sqrt(array):
+    return np.power(10, array) ** (1 / 2)
+
+
+def create_scaling_plots(
+    data_types: List[str] = [],
     alg_names: List[str] = [],
-    is_scaling: bool = True,
-    fit: bool = True,
-    include_error_bar: bool = False
+    include_error_bar: bool = False,
+    is_fit: bool = False,
+    is_logspace: bool = False,
 ):
+    """
+    Plot the scaling experiments from the data stored in the logs file.
+
+    :data_types: the datasets that you want to plot. If empty, warning is triggered.
+    :alg_names: the algorithms that you want to plot. If empty, warning is triggered.
+    :include_error_bar: shows the standard deviation
+    :is_fit: whether to fit the plots or not
+    """
     # get all csv files
     path = os.path.join(os.getcwd(), "logs")
-    if is_scaling:
-        path = os.path.join(path, "scaling")
-        csv_files = glob.glob(os.path.join(path, "*SCALING*"))
-        exp = f"Scaling Baselines"
-        xlabel = "Signal Vector Size (d)"
-        ylabel = "Sample Complexity"
-        loc = "upper left"
-    else:
-        path = os.path.join(path, "precision_speed")
-        csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
-        exp = "Precision-Speed Tradeoff Baselines"
-        xlabel = "Speedup"
-        ylabel = "Precision at 10"
-        loc = "lower right"
+    path = os.path.join(path, "scaling")
+    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
-    color_i = 0
-    num_colors = len(COLORS)
+    if len(data_types) == 0:
+        raise Exception("At least one dataset must be specified")
+    if len(alg_names) == 0:
+        raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
         plt.figure(figsize=(6, 4.5))
-        title = exp + f": {datatype}"
-        color_i = 0
+        title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
         for f in csv_files:
             alg_name = extract_alg(f)
-
-            not_found = 0
             data = read_csv(f)
 
-            # plot per datatype
-            if f.find(datatype) < 0:
+            # only get relevant data
+            if f.find(datatype) < 0 or alg_name not in alg_names:
                 continue
 
-            if alg_name not in alg_names and len(alg_names) > 0:
-                continue
-
-            if is_scaling:
-                alg_name = f[:f.index("_SCALING")].split("/")[-1]
-                x = data["signal_sizes"].tolist()
-                y = data["budgets"].tolist()
-                error = data["budgets_std"].tolist()
-            else:
-                alg_name = f[:f.index("_SPEEDUP")].split("/")[-1]
-                budget_data = data["budgets"].tolist()
-
-                x = np.max(budget_data) / budget_data  # speed is inverse budget
-                y = data["accuracy"].tolist()
-                error = data["accuracy_std"].tolist()
-
-            if max_speedup is not None:
-                x = np.where(x > max_speedup, max_speedup, x)
-
-            # fit the plots
-            if fit and is_scaling:
+            x = data["signal_sizes"].tolist()
+            y = data["budgets"].tolist()
+            error = data["budgets_std"].tolist()
+            x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+            if is_fit:
+                title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
                 if is_logspace:
-                    def power10(array):
-                        return np.power(10, array)
-
-                    def power10_sqrt(array):
-                        return np.power(10, array) ** (1 / 2)
-
                     functions = [np.array, power10_sqrt, power10]
                     function_names = [
                         "$y \propto log x$",
@@ -151,88 +132,156 @@ def create_baseline_plots_from_data(
                         "$y \propto x$",
                     ]
                     x = np.log10(x)
-                    xlabel = "signal size"
                 else:
                     functions = [np.array, np.sqrt, np.log]
                     function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
-                    xlabel = None
-
-                title = f"{translate_alg_name(mips_alg)} on {translate_dataset_name(data_type)}"
-                if title_accuracy:
-                    title += f", Accuracy: ({accuracy_list.mean():.2f})"
-
                 fit_and_plot(
-                    x,
-                    y,
-                    functions,
-                    function_names,
-                    ys_std=budgets_std,
-                    title=title,
-                    xlabel=xlabel,
+                    xs=x,
+                    ys=y,
+                    function_list=functions,
+                    function_name_list=function_names,
+                    ys_std=error,
                     is_logspace=is_logspace,
                 )
+                plt.title(title)
+                xlabel = "Signal Vector Size (d)"
+                ylabel = "Sample Complexity"
+                plt.ylabel(ylabel)
+                plt.xlabel(xlabel)
 
-            # plot the datapoints
-            x_sorted, y_sorted = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))
-            if is_scaling:
-                plt.scatter(
-                    x, y,
-                    color=ALG_TO_COLOR[alg_name],
-                    label=f"{translate_alg_name(alg_name)}"
-                )
-                plt.plot(x_sorted, y_sorted, color=ALG_TO_COLOR[alg_name])
             else:
                 plt.scatter(
                     x, y,
-                    #marker=MARKERS[color_i % num_colors],
                     color=ALG_TO_COLOR[alg_name],
                     label=f"{translate_alg_name(alg_name)}"
                 )
                 plt.plot(x_sorted, y_sorted, color=ALG_TO_COLOR[alg_name])
+
+                # Sort the legend entries (labels and handles) by labels
+                handles, labels = plt.gca().get_legend_handles_labels()
+                labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+                plt.legend(handles, labels, loc="upper left")
+
+                if include_error_bar:
+                    plt.errorbar(x, y, error, fmt=".", color="black")
+                plt.title(title)
+                xlabel = "Signal Vector Size (d)"
+                ylabel = "Sample Complexity"
+                plt.ylabel(ylabel)
+                plt.xlabel(xlabel)
+
+        plt.show()
+
+
+def create_tradeoff_plots(
+    data_types: List[str] = [],
+    alg_names: List[str] = [],
+    include_error_bar: bool = False,
+    max_speedup: int = None
+):
+    """
+    Plot the tradeoff experiments from the data stored in the logs file.
+
+    :data_types: the datasets that you want to plot. If empty, warning is triggered.
+    :alg_names: the algorithms that you want to plot. If empty, warning is triggered.
+    :include_error_bar: shows the standard deviation
+    :max_speedup: only displays speedup up to max_speedup
+    """
+    # get all csv files
+    path = os.path.join(os.getcwd(), "logs")
+    path = os.path.join(path, "precision_speed")
+    csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
+
+    if len(data_types) == 0:
+        raise Exception("At least one dataset must be specified")
+    if len(alg_names) == 0:
+        raise Exception("At least one algorithm must be specified")
+
+    for datatype in data_types:
+        plt.figure(figsize=(6, 4.5))
+        title = f"Precision-Speed Tradeoff Baselines: {translate_dataset_name(datatype)}"
+        for f in csv_files:
+            alg_name = extract_alg(f)
+            data = read_csv(f)
+
+            # only get relevant data
+            if f.find(datatype) < 0 or alg_name not in alg_names:
+                continue
+
+            budget_data = data["budgets"].tolist()
+            x = np.max(budget_data) / budget_data  # speed is inverse budget
+            y = data["accuracy"].tolist()
+            error = data["accuracy_std"].tolist()
+            if max_speedup is not None:
+                x = np.where(x > max_speedup, max_speedup, x)
+            x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))
+
+            # plot the datapoints
+            plt.scatter(
+                x, y,
+                color=ALG_TO_COLOR[alg_name],
+                label=f"{translate_alg_name(alg_name)}"
+            )
+            plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
             # Sort the legend entries (labels and handles) by labels
             handles, labels = plt.gca().get_legend_handles_labels()
             labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
-            plt.legend(handles, labels, loc=loc)
+            plt.legend(handles, labels, loc="lower right")
 
             if include_error_bar:
                 plt.errorbar(x, y, error, fmt=".", color="black")
 
-            color_i += 1
+            plt.title(title)
+            xlabel = "Speedup"
+            ylabel = "Precision at 10"
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
 
-        plt.title(title)
-        plt.ylabel(ylabel)
-        plt.xlabel(xlabel)
         plt.show()
 
 
 if __name__ == "__main__":
     # scaling experiments (synthetic and real datasets)
-    create_baseline_plots_from_data(
-        is_scaling=True,
-        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM],
-        fit=False,
-        include_error_bar=True
-    )
-    create_baseline_plots_from_data(
-        is_scaling=True,
-        data_types=[NETFLIX, ADVERSARIAL_CUSTOM],
-        fit=False,
-        include_error_bar=True
-    )
+    # create_scaling_plots(
+    #     is_fit=False,
+    #     include_error_bar=True,
+    #     data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
+    #     alg_names=[
+    #         ADAPTIVE_ACTION_ELIMINATION,
+    #         ACTION_ELIMINATION,
+    #         MEDIAN_ELIMINATION,
+    #         GREEDY_MIPS,
+    #         PCA_MIPS,
+    #         LSH_MIPS
+    #     ]
+    # )
+    # create_scaling_plots(
+    #     is_fit=True,
+    #     is_logspace=True,
+    #     include_error_bar=True,
+    #     data_types=[NETFLIX, MOVIE_LENS],
+    #     alg_names=[
+    #         ADAPTIVE_ACTION_ELIMINATION,
+    #         ACTION_ELIMINATION,
+    #         MEDIAN_ELIMINATION,
+    #         GREEDY_MIPS
+    #     ]
+    # )
 
-    # create_baseline_plots_from_data(
-    #     is_scaling=True,
-    #     fit=False,
-    #     include_error_bar=True
-    # )
-    # create_baseline_plots_from_data(
-    #     #max_speedup=20,
-    #     is_scaling=False,
-    #     include_error_bar=False,
-    #     #alg_names=[ADAPTIVE_ACTION_ELIMINATION],
-    #     data_types=[NORMAL_CUSTOM]
-    #     #alg_names = [LSH_MIPS, PCA_MIPS]
-    # )
+    # precision-accuracy tradeoff experiments (synthetic and real datasets)
+    create_tradeoff_plots(
+        max_speedup=10,
+        data_types=[ADVERSARIAL_CUSTOM],
+        alg_names=[
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS,
+            PCA_MIPS,
+            LSH_MIPS
+        ],
+        include_error_bar=False
+    )
 
 

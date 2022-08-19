@@ -286,11 +286,7 @@ def fit_and_plot(
     function_list: List[np.ufunc] = None,
     function_name_list: List[str] = None,
     ys_std: np.ndarray = None,
-    title: str = None,
-    xlabel: str = None,
-    ylabel: str = None,
     is_logspace: bool = False,
-    text: str = None,
 ) -> None:
     """
     Fit xs, ys to function and plot the points and curve.
@@ -300,9 +296,6 @@ def fit_and_plot(
     :param function_list: List of functions
     :param function_name_list: List of function name
     :param ys_std: Standard Deviation of Output array (used for error bar plot)
-    :param title: Title of plot
-    :param xlabel: X label of plot
-    :param ylabel: Y label of plot
     """
     plt.figure(figsize=(6, 4.5))
     plt.ticklabel_format(style="sci", axis='y', scilimits=(0, 0))
@@ -337,18 +330,6 @@ def fit_and_plot(
         plt.scatter(xs, ys, color="black")
     else:
         plt.errorbar(xs, ys, ys_std, fmt="o", color="black")
-
-    if text is not None:
-        plt.text(xs[0], ys[-1], text)
-
-
-    title = "Scaling exps" if title is None else title
-    xlabel = "signal vector size" if xlabel is None else xlabel
-    ylabel = "Number of calculations for MIPS" if ylabel is None else ylabel
-    plt.title(title, fontsize=12)
-    plt.ylabel(ylabel)
-    plt.xlabel(xlabel)
-    plt.show()
 
 
 def get_sizes_arr(
