@@ -402,7 +402,7 @@ def speedup_precision_exps(
             + "_"
             "SPEEDUP_"
             + data_type
-            + ":"
+            + "_"
             + "atoms"
             + str(num_atoms)
             + "signal_size"

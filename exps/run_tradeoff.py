@@ -32,7 +32,7 @@ from utils.constants import (
 
 if __name__ == "__main__":
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [ADVERSARIAL_CUSTOM]:
+    for data_type in [NETFLIX, MOVIE_LENS]:
         if data_type is MOVIE_LENS:
             len_signals = TRADEOFF_DIMENSION
         else:
