@@ -61,7 +61,7 @@ from utils.constants import (
     TRADEOFF_BATCH_SIZE_REAL,
     DELTA_POWER_MINMAX,
     DELTA_BINS_AD,
-    MAXMIN_AD
+    MAXMIN_AD,
 )
 from data.get_data import get_data
 
@@ -78,9 +78,9 @@ def get_accuracy_array(
     """
     Returns the average accuracies of the candidates across the signals
 
-    :true_candidates: the candidates retrieved naively
-    :mip_candidates: the candidates returned by the mips algorithm
-    :returns: an array of accuracies
+    :param true_candidates: the candidates retrieved naively
+    :param mip_candidates: the candidates returned by the mips algorithm
+    :param returns: an array of accuracies
     """
     accuracy = []
     for idx in range(TRADEOFF_NUM_SIGNALS):
@@ -112,13 +112,12 @@ def speedup_precision_exps(
     :param epsilon: A epsilon (an additive error allowed)
     :param data_type: A name of data generating function
     :param mips_alg: A name of algorithm
-    :param num_experiments: Number of experiments
     :param len_signals: The dimension "d" of the signals
     :param num_atoms: Number of atoms
+    :param num_experiments: Number of experiments
     :param num_signals: Number of signals
     :param num_best_atoms: Number of atoms we rank in the descending order of inner product
     :param with_replacement: Whether to sample with replacement
-    :param is_normalize: Whether to normalize atoms and signal
     :param is_log: Whether to log the results
     :param is_plot: Whether to plot the results
     :param dirname: Directory name to log the results

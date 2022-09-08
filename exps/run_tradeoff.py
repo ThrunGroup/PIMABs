@@ -33,6 +33,10 @@ from utils.constants import (
 
 
 def run_tradeoff():
+    """
+    Run speedup_precision tradeoff experiment for the two synthetic datasets (normal custom, adversarial custom) and
+    the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
+    """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
     for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
         if data_type in [NETFLIX, MOVIE_LENS]:
@@ -97,5 +101,14 @@ def run_tradeoff():
 
 
 if __name__ == "__main__":
-   run_tradeoff()
+   # run_tradeoff()
+   speedup_precision_exps(
+       num_atoms=TRADEOFF_NUM_ATOMS,
+       num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+       len_signals=TRADEOFF_DIMENSION,
+       num_signals=TRADEOFF_NUM_SIGNALS,
+       data_type=ADVERSARIAL_CUSTOM,
+       mips_alg=MEDIAN_ELIMINATION,
+       with_replacement=False,
+   )
 

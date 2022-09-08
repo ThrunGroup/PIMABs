@@ -27,6 +27,12 @@ from utils.utils import fit_and_plot
 
 
 def translate_alg_name(alg_name: str):
+    """
+    Translates algorithm names from the codebase into algorithm names consistent with the paper.
+
+    :param alg_name: the algorithm name used throughout the code
+    :returns: the translated algorithm name.
+    """
     if alg_name == ACTION_ELIMINATION:
         return "BanditMIPS"
     elif alg_name == ADAPTIVE_ACTION_ELIMINATION:
@@ -44,6 +50,12 @@ def translate_alg_name(alg_name: str):
 
 
 def translate_dataset_name(dataset_name: str):
+    """
+    Translates the dataset names from the codebase into dataset names consistent with the paper.
+
+    :param dataset_name: the dataset name used throughout the code
+    :returns: the translated dataset name.
+    """
     if dataset_name == ADVERSARIAL_CUSTOM:
         # return "Synthetic Adversarial"
         return ADVERSARIAL_CUSTOM
@@ -59,6 +71,9 @@ def translate_dataset_name(dataset_name: str):
 
 
 def extract_alg(filename: str):
+    """
+    Extracts algorithm name from given filename. Used to search for specific algorithms in the log files.
+    """
     if ADAPTIVE_ACTION_ELIMINATION in filename:
         return ADAPTIVE_ACTION_ELIMINATION
     elif ACTION_ELIMINATION in filename:
@@ -93,10 +108,11 @@ def create_scaling_plots(
     """
     Plot the scaling experiments from the data stored in the logs file.
 
-    :data_types: the datasets that you want to plot. If empty, warning is triggered.
-    :alg_names: the algorithms that you want to plot. If empty, warning is triggered.
-    :include_error_bar: shows the standard deviation
-    :is_fit: whether to fit the plots or not
+    :param data_types: the datasets that you want to plot. If empty, warning is triggered.
+    :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
+    :param include_error_bar: shows the standard deviation
+    :param is_fit: whether to fit the plots or not
+    :param is_logspace: whether to plot in logspace or not
     """
     # get all csv files
     path = os.path.join(os.getcwd(), "logs")
@@ -243,6 +259,10 @@ def create_tradeoff_plots(
 
 
 def generate_scaling_plots():
+    """
+    Generate scaling plots for the two synthetic datasets (normal custom, adversarial custom) and
+    the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
+    """
     # basic scaling plots (synthetic and real datasets)
     create_scaling_plots(
         is_fit=False,
@@ -274,6 +294,10 @@ def generate_scaling_plots():
 
 
 def generate_tradeoff_plots():
+    """
+    Generate tradeoff plots for the two synthetic datasets (normal custom, adversarial custom) and
+    the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
+    """
     # precision-accuracy tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
         data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
@@ -304,4 +328,4 @@ def generate_tradeoff_plots():
 
 if __name__ == "__main__":
     generate_scaling_plots()
-    generate_tradeoff_plots()
+    #generate_tradeoff_plots()
