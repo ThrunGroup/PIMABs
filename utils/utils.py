@@ -4,10 +4,15 @@ import numpy as np
 import numba as nb
 import matplotlib.pyplot as plt
 
-from typing import List, Any
+from typing import Tuple, List, Any
 from sklearn.linear_model import LinearRegression
-from utils.constants import COLORS
 from pandas import read_csv
+from utils.constants import (
+    COLORS,
+    SCALING_SIZE_MINMAX,
+    SCALING_NUM_EXPERIMENTS
+)
+
 
 
 @nb.njit
@@ -281,11 +286,7 @@ def fit_and_plot(
     function_list: List[np.ufunc] = None,
     function_name_list: List[str] = None,
     ys_std: np.ndarray = None,
-    title: str = None,
-    xlabel: str = None,
-    ylabel: str = None,
     is_logspace: bool = False,
-    text: str = None,
 ) -> None:
     """
     Fit xs, ys to function and plot the points and curve.
@@ -295,16 +296,18 @@ def fit_and_plot(
     :param function_list: List of functions
     :param function_name_list: List of function name
     :param ys_std: Standard Deviation of Output array (used for error bar plot)
-    :param title: Title of plot
-    :param xlabel: X label of plot
-    :param ylabel: Y label of plot
     """
-    plt.ticklabel_format(style="sci", scilimits=(0, 0))
+    plt.figure(figsize=(6, 4.5))
+    plt.ticklabel_format(style="sci", axis='y', scilimits=(0, 0))
+    plt.ticklabel_format(style="sci", axis='x', scilimits=(0, 0))
+
     if is_logspace:
         max_power = int(xs[-1])
         plt.xticks(np.arange(max_power + 1), 10 ** np.arange(max_power + 1))
+
     lr = LinearRegression()
     hashes = np.linspace(xs[0], xs[-1], 5000)
+
     if (function_list is not None) and (function_name_list is not None):
         for idx in range(len(function_list)):
             function = function_list[idx]
@@ -322,18 +325,31 @@ def fit_and_plot(
                 label=f"{function_name},  $R^2 = {r2:.4f}$",
             )
             plt.legend(loc="upper left")
-    """
+
     if ys_std is None:
         plt.scatter(xs, ys, color="black")
     else:
         plt.errorbar(xs, ys, ys_std, fmt="o", color="black")
-    if text is not None:
-        plt.text(xs[0], ys[-1], text)
-    title = "Scaling exps" if title is None else title
-    xlabel = "signal vector size" if xlabel is None else xlabel
-    ylabel = "Number of calculations for MIPS" if ylabel is None else ylabel
-    plt.title(title, fontsize=12)
-    plt.ylabel(ylabel)
-    plt.xlabel(xlabel)
-    plt.show()
+
+
+def get_sizes_arr(
+    is_logspace: bool = True,
+    size_minmax: Tuple[int, int] = SCALING_SIZE_MINMAX,
+    num_experiments: int = SCALING_NUM_EXPERIMENTS,
+) -> np.ndarray:
     """
+    Create an array of signal sizes that corresponds to the dimension "d".
+
+    :is_logspace: determines whether "d" should be mapped logarithmically
+    :size_minmax: the mininum and maximum of dimension "d".
+    :num_experiments: corresponds to how many points you want to plot
+    """
+    if is_logspace:
+        sizes_signal = np.logspace(
+            np.log(size_minmax[0]), np.log(size_minmax[1]), num_experiments, base=np.e
+        ).astype(np.int64)
+    else:
+        sizes_signal = np.linspace(
+            size_minmax[0], size_minmax[1], num_experiments
+        ).astype(np.int64)
+    return sizes_signal
