@@ -130,7 +130,7 @@ def scaling_exp(
                 candidates_array, budget_array = mips_bandit(
                     atoms=atoms_subset,
                     signals=signals_subset,
-                    maxmin=maxmin,
+                    maxmin=(2,0),
                     bandit_alg=mips_alg,
                     epsilon=epsilon,
                     delta=delta,
