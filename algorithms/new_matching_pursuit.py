@@ -14,7 +14,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 
 from algorithms.mips_bandit import mips_bandit
 
-def omp(
+def orthogonal_matching_pursuit(
     atoms: np.ndarray,
     signal: np.ndarray,
     n_nonzero_coefs: int = 5,
@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
     # naive version
     print("\n------ running naive OMP ------")
-    candidates, budget = omp(
+    candidates, budget = orthogonal_matching_pursuit(
         atoms=atoms.T,
         signal=signals[0],
         n_nonzero_coefs=3,
@@ -171,7 +171,7 @@ if __name__ == "__main__":
 
     # bandit version
     print("\n------ running bandit OMP ------")
-    candidates, budget = omp(
+    candidates, budget = orthogonal_matching_pursuit(
         atoms=atoms.T,
         signal=signals[0],
         n_nonzero_coefs=3,
