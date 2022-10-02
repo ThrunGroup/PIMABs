@@ -22,6 +22,7 @@ def action_elimination(
     var_proxy: np.ndarray,
     epsilon: float,
     delta: float,
+    abs: bool,
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,

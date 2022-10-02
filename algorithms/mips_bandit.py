@@ -25,6 +25,7 @@ def mips_bandit(
     num_best_atoms: int = 1,
     seed: int = 0,
     is_experiment: bool = False,
+    abs: bool = False,
     verbose: bool = False,
     with_replacement: bool = False,
     batch_size: int = BATCH_SIZE,
@@ -62,6 +63,7 @@ def mips_bandit(
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
                 delta=delta,
+                abs=abs,
                 num_best_atoms=num_best_atoms,
                 batch_size=batch_size
             )
@@ -74,6 +76,7 @@ def mips_bandit(
                 signals=signals,
                 epsilon=epsilon,
                 delta=delta,
+                abs=abs,
                 num_best_atoms=num_best_atoms,
                 is_experiment=is_experiment,
                 seed=seed,
@@ -85,6 +88,7 @@ def mips_bandit(
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
                 delta=delta,
+                abs=abs,
                 num_best_atoms=num_best_atoms,
                 with_replacement=False,
                 batch_size=batch_size
@@ -96,6 +100,7 @@ def mips_bandit(
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
                 delta=delta,
+                abs=abs,
                 num_best_atoms=num_best_atoms,
                 batch_size=batch_size
             )
