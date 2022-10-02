@@ -131,15 +131,8 @@ def omp(
             break
 
     indices = indices[:n_active]
-    # indices.sort()
+    indices.sort()
     return indices, total_budget
-
-    if return_path:
-        return gamma, indices[:n_active], coefs[:, :n_active], n_active
-    else:
-        return gamma, indices[:n_active], n_active
-
-
 
 if __name__ == "__main__":
     atoms, signals = get_data(
@@ -171,7 +164,7 @@ if __name__ == "__main__":
         min_residual=0.001,
         is_omp=True,
         bandit_alg="",
-        abs=False,
+        abs=True,
         seed=0,
     )
     print("these are the coefficient indices", candidates)
@@ -185,7 +178,7 @@ if __name__ == "__main__":
         min_residual=0.001,
         is_omp=True,
         bandit_alg=ACTION_ELIMINATION,
-        abs=False,
+        abs=True,
         seed=0,
     )
     print("these are the coefficient indices", candidates)
