@@ -116,9 +116,7 @@ def orthogonal_matching_pursuit(
     n_active = 0
     indices = np.arange(atoms.shape[1])  # keeping track of swapping
 
-    max_features = atoms.shape[1] if tol is not None else n_nonzero_coefs
-
-    L = np.empty((max_features, max_features), dtype=atoms.dtype)
+    L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
 
     while np.linalg.norm(residual) > min_residual:
         # solve the MIPS problem
@@ -181,7 +179,7 @@ def orthogonal_matching_pursuit(
         residual = signal - np.dot(atoms[:, :n_active], gamma)
         if tol is not None and nrm2(residual) ** 2 <= tol:
             break
-        elif n_active == max_features:
+        elif n_active == n_nonzero_coefs:
             break
 
     indices = indices[:n_active]
