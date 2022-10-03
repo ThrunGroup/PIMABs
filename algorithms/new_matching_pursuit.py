@@ -15,6 +15,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 
 from algorithms.mips_bandit import mips_bandit
 
+
 def matching_pursuit(
         atoms: np.ndarray,
         signal: np.ndarray,
@@ -23,7 +24,6 @@ def matching_pursuit(
         bandit_alg: str = "",
         seed: int = 0,
         abs: bool = False,
-        tol=None,
 ):
     """
     Runs the Matching Pursuit algorithm. Refer to implementation by https://github.com/stonemason11
@@ -33,6 +33,7 @@ def matching_pursuit(
     :param min_residual: the threshold for which to terminate
     :param bandit_alg: Name of the bandit algorithm to get MIPS. Default naive.
     :param seed: Seed
+    :param abs: Whether to take absolute value when computing maximal inner product search.
     :return: an array of indices similar to scikit-learn OMP's indices attribute AND budget
     """
     set_seed(seed)
@@ -81,7 +82,6 @@ def orthogonal_matching_pursuit(
         bandit_alg: str = "",
         seed: int = 0,
         abs: bool = False,
-        tol=None,
 ) -> Tuple[np.ndarray, int]:
     """
     Runs the Orthogonal Matching Pursuit algorithm.
@@ -94,6 +94,7 @@ def orthogonal_matching_pursuit(
     :param min_residual: the threshold for which to terminate
     :param bandit_alg: Name of the bandit algorithm to get MIPS. Default naive.
     :param seed: Seed
+    :param abs: Whether to take absolute value when computing maximal inner product search.
     :return: an array of indices similar to scikit-learn OMP's indices attribute AND budget
     """
     set_seed(seed)
@@ -134,7 +135,6 @@ def orthogonal_matching_pursuit(
             lam = candidate[0][0]
             unexplored = np.delete(unexplored, candidate, axis=0)
         else:
-            # import ipdb; ipdb.set_trace()
             if abs:
                 lam = np.argmax(np.abs(atoms.T @ residual))
             else:
