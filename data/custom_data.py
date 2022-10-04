@@ -55,7 +55,7 @@ def generate_custom_data(
     elif data_type == GREG_LEADER:
         signal = rng.normal(loc=2, size=(num_signals, len_signal))
         atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))
-        atoms_array[0] = rng.normal(loc=2, size=len_signal)  # Make the first atom the leader
+        atoms_array[0] = np.ones(len_signal)  # Make the first atom the leader
     elif data_type == GREG_NO_LEADER:
         signal = rng.normal(loc=2, size=(num_signals, len_signal))
         atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))

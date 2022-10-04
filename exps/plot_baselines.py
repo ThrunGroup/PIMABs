@@ -1,6 +1,7 @@
 import os
 import glob
 import pandas as pd
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -131,8 +132,8 @@ def create_scaling_plots(
         raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
-        plt.figure(figsize=(6, 4.5))
         title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+
         for f in csv_files:
             alg_name = extract_alg(f)
             data = read_csv(f)
@@ -261,6 +262,8 @@ def create_tradeoff_plots(
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
 
+        fig = plt.gcf()
+        fig.set_size_inches(6, 4.5)
         plt.show()
 
 
