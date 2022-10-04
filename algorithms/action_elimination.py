@@ -22,6 +22,7 @@ def action_elimination(
     var_proxy: np.ndarray,
     epsilon: float,
     delta: float,
+    abs: bool,
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
@@ -76,7 +77,10 @@ def action_elimination(
                         + (candidates_sampled @ signal_sampled)
                     ) / d
                     budgets += (d - (t - 1) * batch_size) * len(candidates)
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
             budgets += batch_size * len(candidates)
 
@@ -109,16 +113,27 @@ def action_elimination(
                     with_replacement=False,
                 )
             if 4 * ci < epsilon:
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
-            ucbs[candidates] = means[candidates] + ci
-            lcbs[candidates] = means[candidates] - ci
-            new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
+            if abs:
+                ucbs[candidates] = np.abs(means[candidates]) + ci
+                lcbs[candidates] = np.abs(means[candidates]) - ci
+                new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
+            else:
+                ucbs[candidates] = means[candidates] + ci
+                lcbs[candidates] = means[candidates] - ci
+                new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
 
             if (
                 len(new_cand_idcs) < num_best_atoms
             ):  # Have to return candidates with length num_best_atoms
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
             candidates = candidates[new_cand_idcs]
         candidates_array[signal_idx] = candidates
