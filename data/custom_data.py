@@ -7,6 +7,8 @@ from utils.constants import (
     NORMAL_CUSTOM,
     NORMAL_PAPER,
     UNIFORM_PAPER,
+    GREG_LEADER,
+    GREG_NO_LEADER,
 )
 
 
@@ -53,6 +55,13 @@ def generate_custom_data(
         for idx in range(num_atoms):
             atoms_array[idx] = rng.normal(loc=means[idx], size=len_signal)
         signal = rng.normal(loc=rng.normal(), size=(num_signals, len_signal))
+    elif datatype == GREG_LEADER:
+        signal = rng.normal(loc=2, size=(num_signals, len_signal))
+        atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))
+        atoms[0] = rng.normal(loc=2, size=len_signal)  # Make the first atom the leader
+    elif datatype == GREG_NO_LEADER:
+        signal = rng.normal(loc=2, size=(num_signals, len_signal))
+        atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))
     else:
         raise NotImplementedError(f"{data_type} is not implemented.")
     return atoms_array, signal
