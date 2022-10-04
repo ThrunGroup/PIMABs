@@ -11,6 +11,8 @@ from utils.constants import (
     NORMAL_PAPER,
     NETFLIX,
     MOVIE_LENS,
+    GREG_NO_LEADER,
+    GREG_LEADER,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -133,14 +135,41 @@ def run_scaling():
 
 
 if __name__ == "__main__":
+    # scaling_exp(
+    #     epsilon=SCALING_EPSILON,
+    #     delta=SCALING_DELTA,
+    #     num_atoms=SCALING_NUM_ATOMS,
+    #     size_minmax=SCALING_SIZE_MINMAX,
+    #     num_experiments=SCALING_NUM_EXPERIMENTS,
+    #     num_signals=SCALING_NUM_SIGNALS,
+    #     data_type=NORMAL_CUSTOM,
+    #     mips_alg=ACTION_ELIMINATION,
+    #     with_replacement=False,
+    #     is_normalize=False,
+    #     is_logspace=True,
+    # )
+    #
+    # scaling_exp(
+    #     epsilon=SCALING_EPSILON,
+    #     delta=SCALING_DELTA,
+    #     num_atoms=SCALING_NUM_ATOMS,
+    #     size_minmax=SCALING_SIZE_MINMAX,
+    #     num_experiments=SCALING_NUM_EXPERIMENTS,
+    #     num_signals=SCALING_NUM_SIGNALS,
+    #     data_type=ADVERSARIAL_CUSTOM,
+    #     mips_alg=ACTION_ELIMINATION,
+    #     with_replacement=False,
+    #     is_normalize=False,
+    #     is_logspace=True,
+    # )
     scaling_exp(
         epsilon=SCALING_EPSILON,
         delta=SCALING_DELTA,
-        num_atoms=SCALING_NUM_ATOMS,
+        num_atoms=100,
         size_minmax=SCALING_SIZE_MINMAX,
-        num_experiments=SCALING_NUM_EXPERIMENTS,
-        num_signals=SCALING_NUM_SIGNALS,
-        data_type=NORMAL_CUSTOM,
+        num_experiments=3,
+        num_signals=100,
+        data_type=GREG_LEADER,
         mips_alg=ACTION_ELIMINATION,
         with_replacement=False,
         is_normalize=False,
@@ -150,11 +179,11 @@ if __name__ == "__main__":
     scaling_exp(
         epsilon=SCALING_EPSILON,
         delta=SCALING_DELTA,
-        num_atoms=SCALING_NUM_ATOMS,
+        num_atoms=100,
         size_minmax=SCALING_SIZE_MINMAX,
-        num_experiments=SCALING_NUM_EXPERIMENTS,
-        num_signals=SCALING_NUM_SIGNALS,
-        data_type=ADVERSARIAL_CUSTOM,
+        num_experiments=3,
+        num_signals=100,
+        data_type=GREG_NO_LEADER,
         mips_alg=ACTION_ELIMINATION,
         with_replacement=False,
         is_normalize=False,

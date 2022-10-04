@@ -77,17 +77,18 @@ def scaling_exp(
     """
     global budget_array
 
-    # average over NUM_SEEDS results
+    # num_experiments determins the different sizes of d that we run
     avg_runtime = np.zeros(num_experiments)
     avg_budget = np.zeros(num_experiments)
     avg_budget_std = np.zeros(num_experiments)
     avg_accuracy = np.zeros(num_experiments)
     print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
 
+    # average over NUM_SEEDS results
     for seed in range(NUM_SEEDS):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
-        sizes_signal = get_sizes_arr(is_logspace, size_minmax)
+        sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
 
         budgets = []
         budgets_std = []

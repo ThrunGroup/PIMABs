@@ -14,6 +14,8 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    GREG_LEADER,
+    GREG_NO_LEADER,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -66,6 +68,10 @@ def translate_dataset_name(dataset_name: str):
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
+    elif dataset_name == GREG_LEADER:
+        return "Greg Leader"
+    elif dataset_name == GREG_NO_LEADER:
+        return "Greg No Leader"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -327,5 +333,13 @@ def generate_tradeoff_plots():
 
 
 if __name__ == "__main__":
-    generate_scaling_plots()
+    #generate_scaling_plots()
     #generate_tradeoff_plots()
+    create_scaling_plots(
+        is_fit=True,
+        include_error_bar=True,
+        data_types=[GREG_LEADER, GREG_NO_LEADER],
+        alg_names=[
+            ACTION_ELIMINATION,
+        ]
+    )
