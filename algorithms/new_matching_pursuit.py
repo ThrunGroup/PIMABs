@@ -177,13 +177,11 @@ def orthogonal_matching_pursuit(
         )
 
         residual = signal - np.dot(atoms[:, :n_active], gamma)
-        if tol is not None and nrm2(residual) ** 2 <= tol:
-            break
-        elif n_active == n_nonzero_coefs:
+
+        if n_active == n_nonzero_coefs:
             break
 
     indices = indices[:n_active]
-    # indices.sort()
     return indices, total_budget
 
 
