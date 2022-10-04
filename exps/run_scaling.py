@@ -11,8 +11,9 @@ from utils.constants import (
     NORMAL_PAPER,
     NETFLIX,
     MOVIE_LENS,
+    GREG_LEADER_HARD,
+    GREG_LEADER_SOFT,
     GREG_NO_LEADER,
-    GREG_LEADER,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -169,7 +170,21 @@ if __name__ == "__main__":
         size_minmax=SCALING_SIZE_MINMAX,
         num_experiments=3,
         num_signals=100,
-        data_type=GREG_LEADER,
+        data_type=GREG_LEADER_HARD,
+        mips_alg=ACTION_ELIMINATION,
+        with_replacement=False,
+        is_normalize=False,
+        is_logspace=True,
+    )
+
+    scaling_exp(
+        epsilon=SCALING_EPSILON,
+        delta=SCALING_DELTA,
+        num_atoms=100,
+        size_minmax=SCALING_SIZE_MINMAX,
+        num_experiments=3,
+        num_signals=100,
+        data_type=GREG_LEADER_SOFT,
         mips_alg=ACTION_ELIMINATION,
         with_replacement=False,
         is_normalize=False,

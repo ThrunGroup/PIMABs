@@ -15,7 +15,8 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
-    GREG_LEADER,
+    GREG_LEADER_HARD,
+    GREG_LEADER_SOFT,
     GREG_NO_LEADER,
 
     MEDIAN_ELIMINATION,
@@ -69,8 +70,10 @@ def translate_dataset_name(dataset_name: str):
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
-    elif dataset_name == GREG_LEADER:
-        return "Greg Leader"
+    elif dataset_name == GREG_LEADER_HARD:
+        return "Greg Leader (Hard)"
+    elif dataset_name == GREG_LEADER_SOFT:
+        return "Greg Leader (Soft)"
     elif dataset_name == GREG_NO_LEADER:
         return "Greg No Leader"
     else:
@@ -341,7 +344,7 @@ if __name__ == "__main__":
     create_scaling_plots(
         is_fit=True,
         include_error_bar=True,
-        data_types=[GREG_LEADER, GREG_NO_LEADER],
+        data_types=[GREG_LEADER_HARD, GREG_LEADER_SOFT, GREG_NO_LEADER],
         alg_names=[
             ACTION_ELIMINATION,
         ]

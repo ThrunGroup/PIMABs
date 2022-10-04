@@ -7,7 +7,8 @@ from utils.constants import (
     NORMAL_CUSTOM,
     NORMAL_PAPER,
     UNIFORM_PAPER,
-    GREG_LEADER,
+    GREG_LEADER_HARD,
+    GREG_LEADER_SOFT,
     GREG_NO_LEADER,
 )
 
@@ -52,10 +53,17 @@ def generate_custom_data(
         for idx in range(num_atoms):
             atoms_array[idx] = rng.normal(loc=means[idx], size=len_signal)
         signal = rng.normal(loc=rng.normal(), size=(num_signals, len_signal))
-    elif data_type == GREG_LEADER:
-        signal = rng.normal(loc=2, size=(num_signals, len_signal))
+    elif data_type == GREG_LEADER_HARD:
+        signal = 10*np.ones((num_signals, len_signal))
+        best_atom_idx = 5
+        atoms_array[best_atom_idx] = 10*np.ones(len_signal)
+        atoms_array[:best_atom_idx] = np.zeros((best_atom_idx, len_signal))
+        atoms_array[best_atom_idx+1:] = np.zeros((num_atoms-best_atom_idx-1, len_signal))
+    elif data_type == GREG_LEADER_SOFT:
+        best_atom_idx = 5
+        signal = rng.normal(loc=10, size=(num_signals, len_signal))
         atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))
-        atoms_array[0] = np.ones(len_signal)  # Make the first atom the leader
+        atoms_array[best_atom_idx] = rng.normal(loc=10, size=len_signal)
     elif data_type == GREG_NO_LEADER:
         signal = rng.normal(loc=2, size=(num_signals, len_signal))
         atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))

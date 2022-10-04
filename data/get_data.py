@@ -11,7 +11,8 @@ from utils.constants import (
     YAHOO,
     NETFLIX,
     MOVIE_LENS,
-    GREG_LEADER,
+    GREG_LEADER_HARD,
+    GREG_LEADER_SOFT,
     GREG_NO_LEADER,
 )
 from data.custom_data import generate_custom_data
@@ -26,7 +27,7 @@ def get_data(
     data_type: str = NORMAL_CUSTOM,
 ) -> Tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
-    if data_type in [ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, NORMAL_PAPER, UNIFORM_PAPER, GREG_LEADER, GREG_NO_LEADER]:
+    if data_type in [ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, NORMAL_PAPER, UNIFORM_PAPER, GREG_LEADER_HARD, GREG_LEADER_SOFT, GREG_NO_LEADER]:
         return generate_custom_data(
             num_atoms=num_atoms,
             len_signal=len_signal,
