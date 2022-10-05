@@ -3,8 +3,10 @@ from data.get_data import get_data
 from utils.utils import set_seed
 from utils.constants import (
     NORMAL_CUSTOM,
+    ADVERSARIAL_CUSTOM,
+    MOVIE_LENS,
+    NETFLIX,
     ACTION_ELIMINATION,
-    ADAPTIVE_ACTION_ELIMINATION,
 )
 
 import numpy as np
@@ -75,13 +77,13 @@ def matching_pursuit(
 
 
 def orthogonal_matching_pursuit(
-        atoms: np.ndarray,
-        signal: np.ndarray,
-        n_nonzero_coefs: int = 5,
-        min_residual: float = 0.001,
-        bandit_alg: str = "",
-        seed: int = 0,
-        abs: bool = False,
+    atoms: np.ndarray,
+    signal: np.ndarray,
+    n_nonzero_coefs: int = 5,
+    min_residual: float = 0.001,
+    bandit_alg: str = "",
+    seed: int = 0,
+    abs: bool = False,
 ) -> Tuple[np.ndarray, int]:
     """
     Runs the Orthogonal Matching Pursuit algorithm.
@@ -105,13 +107,14 @@ def orthogonal_matching_pursuit(
     atoms = atoms.copy("F")
 
     total_budget = 0  # BANDIT
-    unexplored = np.arange(atoms.T.shape[0])  # BANDIT
+    # unexplored = np.arange(atoms.T.shape[0])  # BANDIT
 
     min_float = np.finfo(atoms.dtype).eps
     nrm2, swap = linalg.get_blas_funcs(("nrm2", "swap"), (atoms,))
     (potrs,) = get_lapack_funcs(("potrs",), (atoms,))
 
     alpha = np.dot(atoms.T, signal)
+    gamma = np.empty(0)
     residual = signal
     n_active = 0
     indices = np.arange(atoms.shape[1])  # keeping track of swapping
@@ -122,7 +125,7 @@ def orthogonal_matching_pursuit(
         # solve the MIPS problem
         if len(bandit_alg) > 0:
             candidate, budget = mips_bandit(
-                atoms.T[unexplored],  # exclude previous decompositions
+                atoms.T,
                 residual.T,  # need to pass in 2d array
                 maxmin=(np.min(atoms), np.max(atoms)),
                 bandit_alg=bandit_alg,
@@ -131,7 +134,6 @@ def orthogonal_matching_pursuit(
                 delta=0.00001,
             )
             lam = candidate[0][0]
-            unexplored = np.delete(unexplored, candidate, axis=0)
         else:
             if abs:
                 lam = np.argmax(np.abs(atoms.T @ residual))
@@ -143,7 +145,7 @@ def orthogonal_matching_pursuit(
 
         if lam < n_active or alpha[lam] ** 2 < min_float:
             # atom already selected or inner product too small
-            print("atom already selected")
+            print("=> atom already selected")
             break
 
         if n_active > 0:
@@ -177,10 +179,10 @@ def orthogonal_matching_pursuit(
         )
 
         residual = signal - np.dot(atoms[:, :n_active], gamma)
-        if tol is not None and nrm2(residual) ** 2 <= tol:
-            break
-        elif n_active == n_nonzero_coefs:
-            break
+        if seed == 7:
+            print("RESIDUAL", residual)
+        if n_active == n_nonzero_coefs:
+             break
 
     indices = indices[:n_active]
     # indices.sort()
@@ -196,7 +198,7 @@ if __name__ == "__main__":
             num_atoms=200,
             len_signal=2000,
             seed=seed,
-            data_type=NORMAL_CUSTOM,
+            data_type=MOVIE_LENS,
             num_signals=1,
         )
 
@@ -207,7 +209,7 @@ if __name__ == "__main__":
         print("these are the coefficient indices (sorted by default)", model1.coef_.nonzero())
 
         # naive version
-        print("------ running naive OMP ------")
+        print("\n------ running naive OMP ------")
         candidates, budget = orthogonal_matching_pursuit(
             atoms=atoms.T,
             signal=signals[0],

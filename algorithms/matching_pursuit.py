@@ -8,6 +8,7 @@ from data.get_data import get_data
 from utils.utils import set_seed
 from utils.constants import (
     NORMAL_CUSTOM,
+    NETFLIX,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
 )
@@ -85,7 +86,7 @@ if __name__ == "__main__":
         num_atoms=100,
         len_signal=1000,
         seed=0,
-        data_type=NORMAL_CUSTOM,
+        data_type=NETFLIX,
         num_signals=1,
     )
     # scikit-learn
