@@ -179,13 +179,10 @@ def orthogonal_matching_pursuit(
         )
 
         residual = signal - np.dot(atoms[:, :n_active], gamma)
-        if seed == 7:
-            print("RESIDUAL", residual)
         if n_active == n_nonzero_coefs:
              break
 
     indices = indices[:n_active]
-    # indices.sort()
     return indices, total_budget
 
 
