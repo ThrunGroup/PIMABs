@@ -93,7 +93,7 @@ def action_elimination(
             end_index = t * batch_size
             sample_indices = shuffled_indices[start_index: end_index]
 
-            if use_cache and start_index <= cache_multiplier * np.log10(D):
+            if use_cache and end_index <= cache_multiplier * np.log10(D):
                 # TODO: maybe define this as a function in "utils" like subset_2d
                 # TODO: modify the second term of this if statement to access as many cached values as possible
 
