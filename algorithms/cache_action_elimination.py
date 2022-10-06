@@ -13,15 +13,6 @@ from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
-"""
-
-TODO:
-1. update budget computation
-2. solve "TypeError: some keyword arguments unexpected" error
-
-"""
-
-
 @nb.njit
 def action_elimination(
     atoms: np.ndarray,
