@@ -14,10 +14,8 @@ from math import sqrt
 from scipy import linalg
 from typing import Tuple
 from scipy.linalg.lapack import get_lapack_funcs
-from collections import defaultdict
 
 from algorithms.mips_bandit import mips_bandit
-
 
 def matching_pursuit(
         atoms: np.ndarray,
@@ -85,6 +83,7 @@ def orthogonal_matching_pursuit(
     bandit_alg: str = "",
     seed: int = 0,
     abs: bool = False,
+    batch_size: int = 30,
     use_cache: bool = True,
     cache_multiplier: int = 100,
 ) -> Tuple[np.ndarray, int]:
@@ -108,9 +107,9 @@ def orthogonal_matching_pursuit(
         signal = signal.reshape(-1, 1)
 
     atoms = atoms.copy("F")
+    num_atoms, num_dimensions = atoms.T.shape
 
     total_budget = 0  # BANDIT
-    # unexplored = np.arange(atoms.T.shape[0])  # BANDIT
 
     min_float = np.finfo(atoms.dtype).eps
     nrm2, swap = linalg.get_blas_funcs(("nrm2", "swap"), (atoms,))
@@ -119,19 +118,21 @@ def orthogonal_matching_pursuit(
     alpha = np.dot(atoms.T, signal)
     residual = signal
     n_active = 0
-    indices = np.arange(atoms.shape[1])  # keeping track of swapping
+    indices = np.arange(num_atoms)  # keeping track of swapping
 
     shuffled_indices = None
     cache = None
 
     if use_cache:
         # get permutation of indices
-        shuffled_indices = np.arange(atoms.T.shape[1])
+        shuffled_indices = np.arange(num_dimensions)
         np.random.shuffle(shuffled_indices)
 
         # initialise cache
-        # key: atom index, value: values of cached indices of the atom
-        cache = defaultdict(lambda: [])
+        # key: atom index, value: values of cached coordinates of the atom
+        max_cache_size = int((cache_multiplier * np.log10(num_atoms)) // batch_size * batch_size)
+        cache = np.empty((num_atoms, max_cache_size))
+        cache_tracker = np.zeros(num_atoms)  # track how many cached values each atom has
 
     L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
 
@@ -149,7 +150,8 @@ def orthogonal_matching_pursuit(
                 use_cache=use_cache,
                 shuffled_indices=shuffled_indices,
                 cache=cache,
-                cache_multiplier=cache_multiplier
+                max_cache_size=max_cache_size,
+                cache_tracker=cache_tracker
             )
             lam = candidate[0][0]
         else:
@@ -234,10 +236,10 @@ if __name__ == "__main__":
             abs=True,
             seed=0,
         )
-        print("these are the coefficient indices", candidates)
+        print("indices: ", candidates, " budget: ", budget)
 
         # bandit version
-        print("\n------ running bandit OMP ------")
+        print("\n------ running bandit OMP with cache ------")
         candidates, budget = orthogonal_matching_pursuit(
             atoms=atoms.T,
             signal=signals[0],
@@ -247,6 +249,6 @@ if __name__ == "__main__":
             abs=True,
             seed=0,
             use_cache=True,
-            cache_multiplier=100,
+            cache_multiplier=10000,
         )
-        print("these are the coefficient indices", candidates)
+        print("indices: ", candidates, " budget: ", budget[0])

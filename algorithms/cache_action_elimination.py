@@ -1,7 +1,5 @@
 import numpy as np
 import numba as nb
-import math
-from collections import defaultdict
 from typing import Tuple
 
 from utils.constants import (
@@ -35,11 +33,12 @@ def action_elimination(
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
-    seed=0,
+    seed: int=0,
     use_cache: bool = True,
     shuffled_indices: list = None,
-    cache: defaultdict = None,
-    cache_multiplier: int = 100,
+    cache: np.ndarray = None,
+    max_cache_size: int = 100,
+    cache_tracker: np.ndarray = None
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -87,25 +86,32 @@ def action_elimination(
                 else:
                     candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
-            budgets += batch_size * len(candidates)
 
-            start_index = (t - 1) * batch_size
-            end_index = t * batch_size
-            sample_indices = shuffled_indices[start_index: end_index]
+            batch_start_index = (t - 1) * batch_size
+            batch_end_index = t * batch_size
+            sample_indices = shuffled_indices[batch_start_index: batch_end_index]
 
-            if use_cache and end_index <= cache_multiplier * np.log10(D):
+            if use_cache and batch_end_index <= max_cache_size:
                 # TODO: maybe define this as a function in "utils" like subset_2d
                 # TODO: modify the second term of this if statement to access as many cached values as possible
 
                 # read cache
                 candidates_sampled = np.empty((len(candidates), batch_size))
+                # print("NEW CANDIDATE")
                 for (i, candidate) in enumerate(candidates):
-                    if len(cache[candidate]) < end_index:
+                    num_candidate_cache = cache_tracker[candidate]  # number of cached dimensions of the current candidate atom
+                    if num_candidate_cache < batch_end_index:
                         # write cache
-                        cache[candidate] += atoms[candidate][sample_indices],
-                    candidates_sampled[i] = cache[candidate][start_index:end_index]
+                        cache[candidate][num_candidate_cache:num_candidate_cache+batch_size] = atoms[candidate][sample_indices]
+                        cache_tracker[candidate] += batch_size
+                        budgets += batch_size
+                    else:
+                        budgets += 0.01 * batch_size
+                    candidates_sampled[i] = cache[candidate][batch_start_index:batch_end_index]
+
             else:
                 candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_indices)
+                budgets += batch_size * len(candidates)
 
             signal_sampled = signal[sample_indices]
             means[candidates] = (
