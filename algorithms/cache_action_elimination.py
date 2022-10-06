@@ -62,7 +62,6 @@ def action_elimination(
             t += 1
             # Find a true inner product value of candidates if we sample more than their dimension (length of atom/signal)
             if t * batch_size > d:
-                # TODO: MODIFY or LEAVE this if statement
                 sample_indices = shuffled_indices[(t - 1) * batch_size :]
                 signal_sampled = signal[sample_indices]
                 candidates_sampled = subset_2d(
