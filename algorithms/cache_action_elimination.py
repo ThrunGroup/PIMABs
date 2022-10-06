@@ -93,10 +93,8 @@ def action_elimination(
             end_index = t * batch_size
             sample_indices = shuffled_indices[start_index: end_index]
 
-            if use_cache and start_index <= cache_multiplier * np.log10(D):
-                # TODO: maybe define this as a function in "utils" like subset_2d
-                # TODO: modify the second term of this if statement to access as many cached values as possible
-
+            if use_cache and end_index <= cache_multiplier * np.log10(D):
+                # TODO: worst case get batch_size disadvantage
                 # read cache
                 candidates_sampled = np.empty((len(candidates), batch_size))
                 for (i, candidate) in enumerate(candidates):
@@ -113,7 +111,8 @@ def action_elimination(
                 + (candidates_sampled @ signal_sampled)
             ) / (
                 (t + 1) * batch_size
-            )  # Update the running means of arm returns # Does this np.dot do implicit broadcasting?
+            )  # Update the running means of arm returns
+               # Does this np.dot do implicit broadcasting?
 
             ci = get_ci(
                 delta=new_delta,
