@@ -102,8 +102,8 @@ def action_elimination(
                 for (i, candidate) in enumerate(candidates):
                     if len(cache[candidate]) < end_index:
                         # write cache
-                        cache[candidates] = atoms[candidate][sample_indices]
-                    candidates_sampled[i] = cache[candidates]
+                        cache[candidate] += atoms[candidate][sample_indices],
+                    candidates_sampled[i] = cache[candidate][start_index:end_index]
             else:
                 candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_indices)
 
