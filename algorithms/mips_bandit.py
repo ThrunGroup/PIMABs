@@ -1,5 +1,5 @@
 import numpy as np
-import math
+from collections import defaultdict
 from typing import Tuple
 
 from utils.constants import (
@@ -11,7 +11,8 @@ from utils.constants import (
     BATCH_SIZE,
 )
 from algorithms.median_elimination import median_elimination
-from algorithms.action_elimination import action_elimination
+# from algorithms.action_elimination import action_elimination
+from algorithms.cache_action_elimination import action_elimination
 from algorithms.adaptive_action_elimination import adaptive_action_elimination
 
 
@@ -29,6 +30,10 @@ def mips_bandit(
     verbose: bool = False,
     with_replacement: bool = False,
     batch_size: int = BATCH_SIZE,
+    use_cache: bool = True,
+    shuffled_indices: list = None,
+    cache: defaultdict = None,
+    cache_multiplier: int = 100,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
@@ -65,7 +70,7 @@ def mips_bandit(
                 delta=delta,
                 abs=abs,
                 num_best_atoms=num_best_atoms,
-                batch_size=batch_size
+                batch_size=batch_size,
             )
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")
@@ -91,7 +96,11 @@ def mips_bandit(
                 abs=abs,
                 num_best_atoms=num_best_atoms,
                 with_replacement=False,
-                batch_size=batch_size
+                batch_size=batch_size,
+                use_cache=use_cache,
+                shuffled_indices=shuffled_indices,
+                cache=cache,
+                cache_multiplier=cache_multiplier,
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(

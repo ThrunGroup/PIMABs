@@ -1,4 +1,6 @@
 data/raw_data
+data/netflix/*.txt
+data/mnist/*ubyte
 
 .idea/
 *.DS_Store*

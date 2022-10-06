@@ -14,6 +14,7 @@ from math import sqrt
 from scipy import linalg
 from typing import Tuple
 from scipy.linalg.lapack import get_lapack_funcs
+from collections import defaultdict
 
 from algorithms.mips_bandit import mips_bandit
 
@@ -84,6 +85,8 @@ def orthogonal_matching_pursuit(
     bandit_alg: str = "",
     seed: int = 0,
     abs: bool = False,
+    use_cache: bool = True,
+    cache_multiplier: int = 100,
 ) -> Tuple[np.ndarray, int]:
     """
     Runs the Orthogonal Matching Pursuit algorithm.
@@ -114,10 +117,21 @@ def orthogonal_matching_pursuit(
     (potrs,) = get_lapack_funcs(("potrs",), (atoms,))
 
     alpha = np.dot(atoms.T, signal)
-    gamma = np.empty(0)
     residual = signal
     n_active = 0
     indices = np.arange(atoms.shape[1])  # keeping track of swapping
+
+    shuffled_indices = None
+    cache = None
+
+    if use_cache:
+        # get permutation of indices
+        shuffled_indices = np.arange(atoms.T.shape[1])
+        np.random.shuffle(shuffled_indices)
+
+        # initialise cache
+        # key: atom index, value: values of cached indices of the atom
+        cache = defaultdict(lambda: [])
 
     L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
 
@@ -132,6 +146,10 @@ def orthogonal_matching_pursuit(
                 epsilon=0.0001,
                 abs=abs,
                 delta=0.00001,
+                use_cache=use_cache,
+                shuffled_indices=shuffled_indices,
+                cache=cache,
+                cache_multiplier=cache_multiplier
             )
             lam = candidate[0][0]
         else:
@@ -195,7 +213,7 @@ if __name__ == "__main__":
             num_atoms=200,
             len_signal=2000,
             seed=seed,
-            data_type=MOVIE_LENS,
+            data_type=NORMAL_CUSTOM,
             num_signals=1,
         )
 
@@ -228,5 +246,7 @@ if __name__ == "__main__":
             bandit_alg=ACTION_ELIMINATION,
             abs=True,
             seed=0,
+            use_cache=True,
+            cache_multiplier=100,
         )
         print("these are the coefficient indices", candidates)
