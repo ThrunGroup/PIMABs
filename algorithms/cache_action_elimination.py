@@ -92,7 +92,8 @@ def action_elimination(
                     num_candidate_cache = cache_tracker[candidate]  # number of cached dimensions of the current candidate atom
                     if num_candidate_cache < sample_end_index:
                         # write cache
-                        cache[candidate][num_candidate_cache:num_candidate_cache+batch_size] = atoms[candidate][sample_indices]
+                        cache[candidate][sample_start_index:sample_end_index] = atoms[candidate][
+                            sample_indices]
                         cache_tracker[candidate] += batch_size
                         budgets += batch_size
                     else:
