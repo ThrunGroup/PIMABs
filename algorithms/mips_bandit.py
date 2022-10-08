@@ -1,5 +1,4 @@
 import numpy as np
-from collections import defaultdict
 from typing import Tuple
 
 from utils.constants import (
@@ -32,8 +31,9 @@ def mips_bandit(
     batch_size: int = BATCH_SIZE,
     use_cache: bool = True,
     shuffled_indices: list = None,
-    cache: defaultdict = None,
-    cache_multiplier: int = 100,
+    cache: np.ndarray = None,
+    cache_tracker: np.ndarray = None,
+    max_cache_size: int = 100,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
@@ -71,6 +71,7 @@ def mips_bandit(
                 abs=abs,
                 num_best_atoms=num_best_atoms,
                 batch_size=batch_size,
+                seed=seed
             )
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")
@@ -95,12 +96,14 @@ def mips_bandit(
                 delta=delta,
                 abs=abs,
                 num_best_atoms=num_best_atoms,
-                with_replacement=False,
+                # with_replacement=False,
+                seed=seed,
                 batch_size=batch_size,
                 use_cache=use_cache,
                 shuffled_indices=shuffled_indices,
                 cache=cache,
-                cache_multiplier=cache_multiplier,
+                max_cache_size=max_cache_size,
+                cache_tracker=cache_tracker
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
@@ -108,6 +111,7 @@ def mips_bandit(
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
+                seed=seed,
                 delta=delta,
                 abs=abs,
                 num_best_atoms=num_best_atoms,
