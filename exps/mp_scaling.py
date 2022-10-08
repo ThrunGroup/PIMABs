@@ -6,7 +6,7 @@ import time
 import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 
-from algorithms.new_matching_pursuit import orthogonal_matching_pursuit
+from algorithms.matching_pursuit import orthogonal_matching_pursuit
 from utils.utils import get_sizes_arr
 from data.get_data import get_data
 from utils.constants import (

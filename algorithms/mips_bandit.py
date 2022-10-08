@@ -10,8 +10,7 @@ from utils.constants import (
     BATCH_SIZE,
 )
 from algorithms.median_elimination import median_elimination
-# from algorithms.action_elimination import action_elimination
-from algorithms.cache_action_elimination import action_elimination
+from algorithms.action_elimination import action_elimination
 from algorithms.adaptive_action_elimination import adaptive_action_elimination
 
 
