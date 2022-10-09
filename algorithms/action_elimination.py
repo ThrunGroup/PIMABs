@@ -9,7 +9,7 @@ from utils.constants import (
     ACTION_ELIMINATION,
     HOEFFDING,
 )
-from utils.utils import subset_2d, fit_and_plot, set_seed
+from utils.utils import subset_2d, subset_2d_cached, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
@@ -26,7 +26,7 @@ def action_elimination(
     batch_size: int = BATCH_SIZE,
     seed: int=0,
     use_cache: bool = True,
-    shuffled_indices: list = None,
+    permutation: list = None,
     cache: np.ndarray = None,
     max_cache_size: int = 100,
     cache_tracker: np.ndarray = None
@@ -54,62 +54,61 @@ def action_elimination(
         means = np.zeros(D)  # estimated means of arm returns
 
         # TODO: Add exact computation if total mnist too big
-        # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
+        # TODO: Maybe need to change this to a > 0 and ucbs > lcbs.max below
         # TODO: Don't let old candidates come back?
         # TODO: Change this to > 2, since if there is only one candidate left it will be the leader
         while len(candidates) > num_best_atoms:
             t += 1
-            # Find a true inner product value of candidates if we sample more than their dimension (length of atom/signal)
-            if t * batch_size > d:
-                sample_indices = shuffled_indices[(t - 1) * batch_size :]
+            start = (t - 1) * batch_size
+            end = t * batch_size
+
+            # Compute the true inner product of the candidates if we have more samples than dimension d.
+            # (i.e. no need to approximate from this point forward)
+            if end > d:
+                sample_indices = permutation[start:]
                 signal_sampled = signal[sample_indices]
-                candidates_sampled = subset_2d(
-                    atoms, rows=candidates, columns=sample_indices
-                )
+                candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_indices)
                 means[candidates] = (
-                    (t * batch_size * means[candidates])
+                    (start * means[candidates])
                     + (candidates_sampled @ signal_sampled)
                 ) / d
-                budgets += (d - (t - 1) * batch_size) * len(candidates)
+                budgets += (d - start) * len(candidates)
 
                 if abs:
                     candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
                 else:
                     candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
+                # At this point, we've computed all possible inner products.
+                # Exit the loop.
                 break
 
-            sample_start_index = (t - 1) * batch_size
-            sample_end_index = t * batch_size
-            sample_indices = shuffled_indices[sample_start_index: sample_end_index]
+            # At this point, we know that the reference points will never be in the cache since we're using a fixed
+            # permutation. In that case, we sample naively.
+            if start > max_cache_size:
+                use_cache = False
 
-            if use_cache and sample_end_index <= max_cache_size:
-                # TODO: maybe define this as a function in "utils" like subset_2d
-                # TODO: modify the second term of this if statement to access as many cached values as possible
-
-                # read cache
-                candidates_sampled = np.empty((len(candidates), batch_size))
-                for (i, candidate) in enumerate(candidates):
-                    num_candidate_cache = cache_tracker[candidate]  # number of cached dimensions of the current candidate atom
-                    if num_candidate_cache < sample_end_index:
-                        # write cache
-                        cache[candidate][sample_start_index:sample_end_index] = atoms[candidate][
-                            sample_indices]
-                        cache_tracker[candidate] += batch_size
-                        budgets += batch_size
-                    else:
-                        budgets += 0.01 * batch_size
-                    candidates_sampled[i] = cache[candidate][sample_start_index:sample_end_index]
-
+            sample_indices = permutation[start: end]
+            if use_cache:
+                candidates_sampled, cache, cache_tracker, budget = subset_2d_cached(
+                    source_array=atoms,
+                    rows=candidates,
+                    columns=sample_indices,
+                    start=start,
+                    cache=cache,
+                    cache_tracker=cache_tracker
+                )
+                budgets += budget
             else:
-                candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_indices)
+                candidates_sampled = subset_2d(source_array=atoms, rows=candidates, columns=sample_indices)
                 budgets += batch_size * len(candidates)
 
             signal_sampled = signal[sample_indices]
             means[candidates] = (
-                (t * batch_size * means[candidates])
+                (start * means[candidates])
                 + (candidates_sampled @ signal_sampled)
             ) / (
-                (t + 1) * batch_size
+                end
             )  # Update the running means of arm returns # Does this np.dot do implicit broadcasting?
 
             ci = get_ci(

@@ -269,7 +269,11 @@ def get_wo_variance(elems: np.ndarray, pop_size: int) -> np.ndarray:
 
 
 @nb.njit
-def subset_2d(source_array: np.ndarray, rows: np.ndarray, columns: np.ndarray):
+def subset_2d(
+    source_array: np.ndarray,
+    rows: np.ndarray,
+    columns: np.ndarray,
+):
     """
     Why to implement this: there's no faster NumPy function that can replace this.
     """
@@ -278,6 +282,35 @@ def subset_2d(source_array: np.ndarray, rows: np.ndarray, columns: np.ndarray):
         for j in range(len(columns)):
             subset_array[(i, j)] = source_array[(rows[i], columns[j])]
     return subset_array
+
+@nb.njit
+def subset_2d_cached(
+    source_array: np.ndarray,
+    rows: np.ndarray,
+    columns: np.ndarray,
+    start: int,
+    cache: np.ndarray,
+    cache_tracker: np.ndarray
+):
+    """
+    Implements subset_2d with cache support.
+    Returns the subset_array, updated cache, cache_tracker, and budget.
+    """
+    budget = 0
+    subset_array = np.empty((len(rows), len(columns)))
+    for i in range(len(rows)):
+
+        # Write to the cache if element doesn't exist. Otherwise, just read from cache.
+        for j in range(len(columns)):
+            if cache_tracker[rows[i]] < start + j:
+                cache_tracker[rows[i]] += 1
+                cache[(rows[i], columns[j])] = source_array[(rows[i], columns[j])]
+                budget += 1
+
+            subset_array[(i, j)] = cache[(rows[i], columns[j])]
+            budget += 0.01
+
+    return subset_array, cache, cache_tracker, budget
 
 
 def fit_and_plot(
