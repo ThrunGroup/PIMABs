@@ -1,4 +1,7 @@
 data/raw_data
+data/netflix/*.csv
+data/netflix/*.txt
+logs/*
 
 .idea/
 *.DS_Store*
