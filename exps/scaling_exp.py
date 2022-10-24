@@ -40,12 +40,9 @@ from algorithms.pca_mips import run_pca_mips
 def scaling_exp(
     epsilon: Optional[float] = SCALING_EPSILON,
     delta: Optional[float] = SCALING_DELTA,
-    maxmin: Tuple[float, float] = DEFAULT_MAXMIN,
     data_type: str = NORMAL_CUSTOM,
     mips_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
-    num_seeds: int = NUM_SEEDS,
-    data_generation_seed: int = 0,
     size_minmax: Tuple[int, int] = (10, 10**6),
     num_atoms: int = 10**3,
     num_signals: int = 1,
@@ -64,12 +61,9 @@ def scaling_exp(
 
     :param epsilon: A epsilon (an additive error allowed)
     :param delta: A delta (an upper bound of failure probability)
-    :param maxmin: Maximum and minimum of data
     :param data_type: A name of data generating function
     :param mips_alg: A name of algorithm
     :param num_experiments: Number of experiments
-    :param num_seeds: Number of seeds
-    :param data_generation_seed: Random seed for generating data
     :param size_minmax: Minimum and Maximum of signal vector size
     :param num_atoms: Number of atoms
     :param num_signals: Number of signals
@@ -90,21 +84,23 @@ def scaling_exp(
     avg_accuracy = np.zeros(num_experiments)
     print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
 
-    sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
-    atoms, signals = get_data(
-        num_atoms=num_atoms,
-        len_signal=sizes_signal[-1],
-        num_signals=num_signals,
-        seed=data_generation_seed,
-        data_type=data_type,
-    )
-    for seed in range(num_seeds):
+    for seed in range(NUM_SEEDS):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
+        sizes_signal = get_sizes_arr(is_logspace, size_minmax)
+
         budgets = []
         budgets_std = []
         accuracy_list = []
         runtimes = []
+        atoms, signals = get_data(
+            num_atoms=num_atoms,
+            len_signal=sizes_signal[-1],
+            num_signals=num_signals,
+            seed=seed,
+            data_type=data_type,
+        )
+        maxmin = DEFAULT_MAXMIN
 
         # run the experiment for each signal size
         for size in sizes_signal:
@@ -216,10 +212,10 @@ def scaling_exp(
         avg_budget_std += np.array(budgets_std)
         avg_accuracy += np.array(accuracy_list)
 
-    avg_runtime /= num_seeds
-    avg_budget /= num_seeds
-    avg_budget_std /= num_seeds
-    avg_accuracy /= num_seeds
+    avg_runtime /= NUM_SEEDS
+    avg_budget /= NUM_SEEDS
+    avg_budget_std /= NUM_SEEDS
+    avg_accuracy /= NUM_SEEDS
 
     # save to log files
     if is_log:

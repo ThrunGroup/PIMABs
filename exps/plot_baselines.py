@@ -104,8 +104,6 @@ def create_scaling_plots(
     include_error_bar: bool = False,
     is_fit: bool = False,
     is_logspace: bool = False,
-    is_plot_accuracy: bool = False,
-    dirname: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
@@ -115,15 +113,10 @@ def create_scaling_plots(
     :param include_error_bar: shows the standard deviation
     :param is_fit: whether to fit the plots or not
     :param is_logspace: whether to plot in logspace or not
-    :param is_plot_accuracy: whether to annotate accuracy in the graph
-    :param dirname: directory name of log files
     """
     # get all csv files
-    if dirname is None:
-        path = os.path.join(os.getcwd(), "logs")
-        path = os.path.join(path, "scaling")
-    else:
-        path = dirname
+    path = os.path.join(os.getcwd(), "logs")
+    path = os.path.join(path, "scaling")
     csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
@@ -193,10 +186,6 @@ def create_scaling_plots(
                 ylabel = "Sample Complexity"
                 plt.ylabel(ylabel)
                 plt.xlabel(xlabel)
-
-            if is_plot_accuracy:
-                avg_accuracy = np.mean(data["accuracy"])
-                plt.text(x[-1], y[0], f"Accuracy: {avg_accuracy}", ha='right', va='bottom')
 
         plt.show()
 

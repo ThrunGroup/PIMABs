@@ -2,7 +2,6 @@ import os
 from exps.run_scaling import run_scaling
 from exps.run_tradeoff import run_tradeoff
 from exps.plot_baselines import generate_scaling_plots, generate_tradeoff_plots
-from exps.large_scaling_exps import large_scaling_exps
 
 
 def main():
@@ -28,7 +27,6 @@ def main():
     generate_scaling_plots()
     print("=> Generating tradeoff plots")
     generate_tradeoff_plots()
-    large_scaling_exps()
 
 
 if __name__ == "__main__":
