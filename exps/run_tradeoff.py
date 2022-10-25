@@ -18,6 +18,8 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    ASYMMETRIC,
+    SYMMETRIC,
 
     # scaling specific constants
     TRADEOFF_NUM_EXPERIMENTS,
@@ -97,18 +99,10 @@ def run_tradeoff():
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=LSH_MIPS,
+            lsh_type=ASYMMETRIC,
         )
 
 
 if __name__ == "__main__":
-   # run_tradeoff()
-   speedup_precision_exps(
-       num_atoms=TRADEOFF_NUM_ATOMS,
-       num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-       len_signals=TRADEOFF_DIMENSION,
-       num_signals=TRADEOFF_NUM_SIGNALS,
-       data_type=ADVERSARIAL_CUSTOM,
-       mips_alg=MEDIAN_ELIMINATION,
-       with_replacement=False,
-   )
+   run_tradeoff()
 

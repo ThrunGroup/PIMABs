@@ -193,6 +193,7 @@ def create_scaling_plots(
 def create_tradeoff_plots(
     data_types: List[str] = [],
     alg_names: List[str] = [],
+    top_k: int = 1,
     include_error_bar: bool = False,
     max_speedup: int = None
 ):
@@ -222,7 +223,7 @@ def create_tradeoff_plots(
             data = read_csv(f)
 
             # only get relevant data
-            if f.find(datatype) < 0 or alg_name not in alg_names:
+            if f.find(datatype) < 0 or alg_name not in alg_names or f.find(str("topk") + str(top_k)) < 0:
                 continue
 
             budget_data = data["budgets"].tolist()
@@ -251,7 +252,7 @@ def create_tradeoff_plots(
 
             plt.title(title)
             xlabel = "Speedup"
-            ylabel = "Precision at 10"
+            ylabel = f"Precision at {top_k}"
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
 
@@ -293,7 +294,7 @@ def generate_scaling_plots():
     )
 
 
-def generate_tradeoff_plots():
+def generate_tradeoff_plots(top_k: int = 1):
     """
     Generate tradeoff plots for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
@@ -309,6 +310,7 @@ def generate_tradeoff_plots():
             PCA_MIPS,
             LSH_MIPS
         ],
+        top_k=top_k,
         include_error_bar=False
     )
     create_tradeoff_plots(
@@ -321,11 +323,13 @@ def generate_tradeoff_plots():
             PCA_MIPS,
             LSH_MIPS
         ],
+        top_k=top_k,
         max_speedup=MAX_SPEEDUP,
         include_error_bar=False
     )
 
 
 if __name__ == "__main__":
-    generate_scaling_plots()
-    #generate_tradeoff_plots()
+    #generate_scaling_plots()
+    #generate_tradeoff_plots(top_k=20)
+    generate_tradeoff_plots(top_k=5)

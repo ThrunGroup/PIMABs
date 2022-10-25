@@ -76,7 +76,8 @@ def get_accuracy_array(
     mips_candidates: np.ndarray,
 ) -> np.ndarray:
     """
-    Returns the average accuracies of the candidates across the signals
+    Returns the average accuracy of the candidates across the signals.
+    Note that this is equivalent to recall when the topk atoms is fixed.
 
     :param true_candidates: the candidates retrieved naively
     :param mip_candidates: the candidates returned by the mips algorithm
@@ -103,6 +104,7 @@ def speedup_precision_exps(
     is_log: bool = True,
     is_plot: bool = False,
     dirname: str = None,
+    lsh_type: str = ASYMMETRIC,
 ):
     """
     Run the precision-speed tradeoff of the bandit and baseline algorithms and store them in the appropriate
@@ -166,6 +168,8 @@ def speedup_precision_exps(
             seed=seed,
             data_type=data_type,
         )
+
+        # these are the oracle MIPS atoms
         naive_candidates_array = (
             np.matmul(-atoms, signals.transpose())
             .argsort(axis=0)[:num_best_atoms]
@@ -357,7 +361,9 @@ def speedup_precision_exps(
             for num_table in num_tables:
                 for num_hfunc in num_hfuncs:
                     log_info = (
-                        "hfunc"
+                        lsh_type
+                        +"_"
+                        +"hfunc"
                         + str(num_hfunc)
                         + "_num_table"
                         + str(num_table)
@@ -369,7 +375,7 @@ def speedup_precision_exps(
                         num_best_atoms=num_best_atoms,
                         num_hfunc=num_hfunc,
                         num_tables=num_table,
-                        type=ASYMMETRIC
+                        type=lsh_type
                     )
                     runtimes.append(time.time() - start_time)
                     budgets.append(np.mean(budget_array))
@@ -410,6 +416,9 @@ def speedup_precision_exps(
             + str(num_atoms)
             + "signal_size"
             + str(len_signals)
+            + "_"
+            + "topk"
+            + str(num_best_atoms)
             + "_"
             + log_info
             + ".csv",
