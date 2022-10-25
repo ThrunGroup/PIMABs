@@ -48,12 +48,12 @@ YAHOO = "YAHOO"
 HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
-NUM_SEEDS = 20
+NUM_SEEDS = 2
 DEFAULT_MAXMIN = (5, 0)
 NORMALIZED_MAXMIN = (1, -1)
 DEFAULT_GREEDY_BUDGET = 50
 SCALING_NUM_EXPERIMENTS = 10  # corresponds to the number of points on the plot
-SCALING_NUM_ATOMS = 1000
+SCALING_NUM_ATOMS = 100
 SCALING_NUM_SIGNALS = 3  # this is to get the confidence intervals
 SCALING_DELTA = 0.3
 SCALING_EPSILON = 0.0
@@ -64,7 +64,7 @@ SCALING_TOPK = 5
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
 SCALING_SIZE_MINMAX = (
-    100, 10 ** 4,
+    100, 10 ** 3,
 )
 SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
     100, 5000,
@@ -72,8 +72,8 @@ SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
 
 # Precision-Speed Tradeoff Experiments
 TRADEOFF_NUM_EXPERIMENTS = 12  # corresponds to the number of points on the plot
-TRADEOFF_NUM_ATOMS = 1000
-TRADEOFF_DIMENSION = 10000
+TRADEOFF_NUM_ATOMS = 100
+TRADEOFF_DIMENSION = 1000
 TRADEOFF_DIMENSION_MOVIE = 5000  # movie dataset is only 6000 dimensions
 TRADEOFF_NUM_SIGNALS = 3
 TRADEOFF_TOPK = 10
