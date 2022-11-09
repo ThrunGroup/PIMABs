@@ -43,7 +43,9 @@ def action_elimination(
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
-        new_delta = delta * batch_size / (d * D)
+
+        new_delta = delta
+
         budgets = 0  # Number of calculations
         candidates = np.arange(D)  # arms (atoms)
         lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns

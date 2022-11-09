@@ -276,31 +276,31 @@ def generate_scaling_plots():
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # basic scaling plots (synthetic and real datasets)
-    create_scaling_plots(
-        is_fit=False,
-        include_error_bar=True,
-        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
-        alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
-            ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS
-        ]
-    )
+    # create_scaling_plots(
+    #     is_fit=False,
+    #     include_error_bar=True,
+    #     data_types=[NETFLIX],#[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
+    #     alg_names=[
+    #         ADAPTIVE_ACTION_ELIMINATION,
+    #         ACTION_ELIMINATION,
+    #         MEDIAN_ELIMINATION,
+    #         GREEDY_MIPS,
+    #         PCA_MIPS,
+    #         LSH_MIPS
+    #     ]
+    # )
 
     # fit the bandit algorithms and greedy-mips for better comparison
     create_scaling_plots(
         is_fit=True,
         is_logspace=True,
         include_error_bar=True,
-        data_types=[NETFLIX, MOVIE_LENS],
+        data_types=[NETFLIX],#, MOVIE_LENS],
         alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
+            #ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS
+            #MEDIAN_ELIMINATION,
+            #GREEDY_MIPS,
         ]
     )
 
