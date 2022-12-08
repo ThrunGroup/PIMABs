@@ -19,6 +19,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    BUCKET_AE,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -133,20 +134,20 @@ def run_scaling():
 
 
 if __name__ == "__main__":
-    # scaling_exp(
-    #     epsilon=SCALING_EPSILON,
-    #     delta=SCALING_DELTA,
-    #     num_atoms=SCALING_NUM_ATOMS,
-    #     size_minmax=SCALING_SIZE_MINMAX,
-    #     num_experiments=SCALING_NUM_EXPERIMENTS,
-    #     num_signals=SCALING_NUM_SIGNALS,
-    #     data_type=NORMAL_CUSTOM,
-    #     mips_alg=ACTION_ELIMINATION,
-    #     with_replacement=False,
-    #     is_normalize=False,
-    #     is_logspace=True,
-    # )
-    #
+    scaling_exp(
+        epsilon=SCALING_EPSILON,
+        delta=SCALING_DELTA,
+        num_atoms=2000,
+        size_minmax=(100, 5000),
+        num_experiments=SCALING_NUM_EXPERIMENTS,
+        num_signals=SCALING_NUM_SIGNALS,
+        data_type=NORMAL_CUSTOM,
+        mips_alg=BUCKET_AE,
+        with_replacement=False,
+        is_normalize=False,
+        is_logspace=True,
+    )
+
     # scaling_exp(
     #     epsilon=SCALING_EPSILON,
     #     delta=SCALING_DELTA,
@@ -160,4 +161,3 @@ if __name__ == "__main__":
     #     is_normalize=False,
     #     is_logspace=True,
     # )
-    run_scaling()

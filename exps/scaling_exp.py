@@ -14,6 +14,7 @@ from utils.constants import (
     GREEDY_MIPS,
     PCA_MIPS,
     LSH_MIPS,
+    BUCKET_AE,
 
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
@@ -190,6 +191,28 @@ def scaling_exp(
                     num_tables=SCALING_NUM_TABLES
                 )
                 runtime = time.time() - start_time
+            elif mips_alg is BUCKET_AE:
+                log_info = (
+                        "epsilon"
+                        + str(epsilon)
+                        + "_delta"
+                        + str(delta)
+                )
+                start_time = time.time()
+                candidates_array, budget_array = BUCKET_AE(
+                    atoms=atoms_subset,
+                    signals=signals_subset,
+                    maxmin=maxmin,
+                    bandit_alg=mips_alg,
+                    epsilon=epsilon,
+                    delta=delta,
+                    num_best_atoms=num_best_atoms,
+                    seed=seed,
+                    is_experiment=False,
+                    with_replacement=with_replacement,
+                )
+                runtime = time.time() - start_time
+
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
