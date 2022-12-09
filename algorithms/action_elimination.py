@@ -115,6 +115,8 @@ def action_elimination(
                 break
             ucbs[candidates] = means[candidates] + ci
             lcbs[candidates] = means[candidates] - ci
+
+            # TODO(@motiwari): Make sure there are no NaNs here
             new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
 
             if (
