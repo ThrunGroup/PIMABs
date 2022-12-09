@@ -7,12 +7,14 @@ from utils.constants import (
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
+    BUCKET_AE,
     HOEFFDING,
     BATCH_SIZE,
 )
 from algorithms.median_elimination import median_elimination
 from algorithms.action_elimination import action_elimination
 from algorithms.adaptive_action_elimination import adaptive_action_elimination
+from algorithms.bucket_ae import bucket_ae
 
 
 def mips_bandit(
@@ -99,5 +101,17 @@ def mips_bandit(
                 num_best_atoms=num_best_atoms,
                 batch_size=batch_size
             )
+        elif bandit_alg is BUCKET_AE:
+            return bucket_ae(
+                atoms=atoms,
+                signals=signals,
+                var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                epsilon=epsilon,
+                delta=delta,
+                num_best_atoms=num_best_atoms,
+                with_replacement=False,
+                batch_size=batch_size
+            )
+
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")

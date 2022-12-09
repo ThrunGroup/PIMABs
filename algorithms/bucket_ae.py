@@ -15,7 +15,6 @@ from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
-@nb.njit
 def bucket_ae(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -27,7 +26,7 @@ def bucket_ae(
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
     seed=0,
-    num_buckets: int = 1,
+    num_buckets: int = 100,
     num_samples_bucketing: int = 100,
     z_score: float = 3,
     # Scipy package is normally used for calculating z-score, but it is not compatible with numba
@@ -39,25 +38,29 @@ def bucket_ae(
 
     This is to reduce unnecessary computations for other buckets.
     """
-    rng = np.random.default_rng(seed)
+    set_seed(seed)
     N = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms
     k = num_buckets
     m = int(N / (k - 1))
-    q = num_samples_bucketing
-    assert q <= d, (
-        "number of samples to estimate the norm of each atom should be less than or"
-        "equal to the dimension of atoms"
-    )
-
-    sample_idcs = rng.integers(low=0, high=d, size=num_samples_bucketing)
-    sampled_atoms = atoms[:, sample_idcs]
+    q = min(num_samples_bucketing, d)
     candidates = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
-    atoms_means = np.mean(atoms, axis=1)
-    atoms_ub = atoms_means + z_score * np.sqrt(
-        np.var(sampled_atoms, axis=1) / (q - 1) * (1 - q / N)
-    )  # see shorturl.at/tABCP for the formula
-    sort_idcs = np.argsort(atoms_ub)[:-1]
+
+    sample_idcs = np.random.randint(low=0, high=d, size=num_samples_bucketing, dtype=np.int64)
+    sampled_atoms_squared = atoms[:, sample_idcs] * atoms[:, sample_idcs]
+    sampled_signals_squared = signals[:, sample_idcs] * signals[:, sample_idcs]
+    # atoms_norms = np.mean(np.sqrt(sampled_atoms_squared), axis=1)
+    # signals_norms = np.mean(np.sqrt(sampled_signals_squared), axis=1)
+    # atoms_ub = atoms_norms + z_score * np.sqrt(
+    #     np.var(np.sqrt(sampled_atoms_squared), axis=1) / (q - 1) * (1 - q / N)
+    # )  # see shorturl.at/tABCP for the formula
+    # signals_ub = signals_norms + z_score * np.sqrt(
+    #     np.var(np.sqrt(sampled_signals_squared), axis=1) / (q - 1) * (1 - q / N))
+    # This is not theoretically valid. Have to find formula for finding the norm of random vectors from
+    # unknown distribution
+    atoms_ub = np.sqrt(np.sum(sampled_atoms_squared, axis = 1))
+    signals_ub = np.sqrt(np.sum(sampled_signals_squared, axis= 1))
+    sort_idcs = np.argsort(atoms_ub)[::-1]
     ub_buckets = np.empty(k)  # Upper bound of each bucket
     bucket_idcs = []
     for idx in range(k):
@@ -68,6 +71,7 @@ def bucket_ae(
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
+        temp_ub_buckets = ub_buckets * signals_ub[signal_idx] / d
         means = np.empty(0)
         lcbs = np.empty(0)
         candidates = np.empty(0)
@@ -85,21 +89,18 @@ def bucket_ae(
                 with_replacement,
                 seed,
             )
-            best_k_idcs = np.argsort(np.concatenate((means, temp_means)))[:-1][:num_best_atoms]
-            candidates = np.concatenate((candidates, temp_candidates))[best_k_idcs]
+            best_k_idcs = np.argsort(np.concatenate((means, temp_means)))[::-1][:num_best_atoms]
+            candidates = np.concatenate((candidates, bucket_idcs[idx][temp_candidates]))[best_k_idcs]
             lcbs = np.concatenate((lcbs, temp_lcbs))[best_k_idcs]
             budgets += temp_budgets
-            if np.max(lcbs) > ub_buckets[idx + 1]:
+            if idx == k - 1:
+                break
+            if np.max(lcbs) > temp_ub_buckets[idx + 1]:
                 break
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
 
     return candidates_array, budgets_array
-
-
-
-
-
 
 
 @nb.njit
@@ -128,7 +129,7 @@ def bucket_ae_helper(
     t = 0  # time step
     new_delta = delta * batch_size / (d * D)
     budgets = 0  # Number of calculations
-    candidates = np.arange(D)  # arms (atoms)
+    candidates = np.arange(D, dtype=np.int64)  # arms (atoms)
     lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
     ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
     means = np.zeros(D)  # estimated means of arm returns
@@ -160,6 +161,7 @@ def bucket_ae_helper(
                     + (candidates_sampled @ signal_sampled)
                 ) / d
                 budgets += (d - (t - 1) * batch_size) * len(candidates)
+            lcbs = ucbs = means
             candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
             break
         budgets += batch_size * len(candidates)
@@ -192,25 +194,22 @@ def bucket_ae_helper(
                 pop_size=d,
                 with_replacement=False,
             )
-        if 4 * ci < epsilon:
-            sort_idcs = np.argsort(-means[candidates])
-            candidates = candidates[sort_idcs][:num_best_atoms]
-            candidates_lcbs = lcbs[sort_idcs][:num_best_atoms]
-            candidates_means = means[sort_idcs][:num_best_atoms]
-            break
         ucbs[candidates] = means[candidates] + ci
         lcbs[candidates] = means[candidates] - ci
         new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
+
+        if 4 * ci < epsilon:
+            sort_idcs = np.argsort(-means[candidates])
+            candidates = candidates[sort_idcs][:num_best_atoms]
+            break
 
         if (
             len(new_cand_idcs) < num_best_atoms
         ):  # Have to return candidates with length num_best_atoms
             sort_idcs = np.argsort(-means[candidates])
             candidates = candidates[sort_idcs][:num_best_atoms]
-            candidates_lcbs = lcbs[sort_idcs][:num_best_atoms]
-            candidates_means = means[sort_idcs][:num_best_atoms]
             break
         candidates = candidates[new_cand_idcs]
-        candidates_lcbs = lcbs[new_cand_idcs]
-        candidates_means = means[new_cand_idcs]
+    candidates_lcbs = lcbs[candidates]
+    candidates_means = means[candidates]
     return candidates, candidates_means, candidates_lcbs, budgets

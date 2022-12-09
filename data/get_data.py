@@ -11,6 +11,7 @@ from utils.constants import (
     YAHOO,
     NETFLIX,
     MOVIE_LENS,
+    COR_NORMAL_CUSTOM,
 )
 from data.custom_data import generate_custom_data
 from utils.utils import subset_2d
@@ -24,7 +25,7 @@ def get_data(
     data_type: str = NORMAL_CUSTOM,
 ) -> Tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
-    if data_type in (ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, NORMAL_PAPER, UNIFORM_PAPER):
+    if data_type in (ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, NORMAL_PAPER, UNIFORM_PAPER, COR_NORMAL_CUSTOM):
         return generate_custom_data(
             num_atoms=num_atoms,
             len_signal=len_signal,

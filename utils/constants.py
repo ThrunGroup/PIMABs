@@ -1,5 +1,5 @@
 NUM_STDS = 1  # A multiplier on the number of standard deviations we use when creating confidence intervals
-BATCH_SIZE = 30
+BATCH_SIZE = 10
 COLORS = [
     "#1f77b4",
     "#ff7f0e",
@@ -33,6 +33,7 @@ ALG_TO_COLOR = {
     LSH_MIPS: "#1f77b4",
     SYMMETRIC: "#e377c2",
     ASYMMETRIC: "#7f7f7f",
+    BUCKET_AE: "#17becf"
 }
 
 # Datasets
@@ -44,7 +45,7 @@ SYNTHETIC = "SYNTHETIC"
 NETFLIX = "NETFLIX"
 MOVIE_LENS = "MOVIE_LENS"
 YAHOO = "YAHOO"
-
+COR_NORMAL_CUSTOM = "CORRELATED_NORMAL_CUSTOM"
 # Concentration Inequality bound
 HOEFFDING = "HOEFFDING"
 

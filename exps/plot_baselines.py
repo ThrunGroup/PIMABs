@@ -14,6 +14,7 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    COR_NORMAL_CUSTOM,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -21,7 +22,8 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-    MAX_SPEEDUP
+    MAX_SPEEDUP,
+    BUCKET_AE,
 )
 from utils.utils import fit_and_plot
 
@@ -45,6 +47,8 @@ def translate_alg_name(alg_name: str):
         return "LSH-MIPS"
     elif alg_name == PCA_MIPS:
         return "PCA-MIPS"
+    elif alg_name == BUCKET_AE:
+        return "Bucket_AE"
     else:
         raise Exception("Bad algorithm name")
 
@@ -66,6 +70,8 @@ def translate_dataset_name(dataset_name: str):
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
+    elif dataset_name == COR_NORMAL_CUSTOM:
+        return COR_NORMAL_CUSTOM
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -86,8 +92,10 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
+    elif BUCKET_AE in filename:
+        return BUCKET_AE
     else:
-        raise Exception("No algorithm was able to be extracted from " + filname)
+        raise Exception("No algorithm was able to be extracted from " + filename)
 
 
 def power10(array):
@@ -124,7 +132,6 @@ def create_scaling_plots(
         path = os.path.join(path, "scaling")
     else:
         path = dirname
-    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -132,6 +139,7 @@ def create_scaling_plots(
         raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
+        csv_files = glob.glob(os.path.join(path, f"*SCALING_{datatype}*"))
         plt.figure(figsize=(6, 4.5))
         title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
         for f in csv_files:
@@ -196,7 +204,7 @@ def create_scaling_plots(
 
             if is_plot_accuracy:
                 avg_accuracy = np.mean(data["accuracy"])
-                plt.text(x[-1], y[0], f"Accuracy: {avg_accuracy}", ha='right', va='bottom')
+                plt.text(x[-1], y[-1], f"Accuracy: {avg_accuracy}", ha='right', va='bottom')
 
         plt.show()
 
@@ -279,14 +287,15 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
+        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS, COR_NORMAL_CUSTOM],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS
+            LSH_MIPS,
+            BUCKET_AE,
         ]
     )
 

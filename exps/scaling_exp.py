@@ -36,6 +36,7 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
+from algorithms.bucket_ae import bucket_ae
 
 
 def scaling_exp(
@@ -124,7 +125,7 @@ def scaling_exp(
                 maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given.
 
             # bandit algorithms
-            if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION]:
+            if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION, BUCKET_AE]:
                 log_info = (
                     "epsilon"
                     + str(epsilon)
@@ -191,27 +192,6 @@ def scaling_exp(
                     num_tables=SCALING_NUM_TABLES
                 )
                 runtime = time.time() - start_time
-            elif mips_alg is BUCKET_AE:
-                log_info = (
-                        "epsilon"
-                        + str(epsilon)
-                        + "_delta"
-                        + str(delta)
-                )
-                start_time = time.time()
-                candidates_array, budget_array = BUCKET_AE(
-                    atoms=atoms_subset,
-                    signals=signals_subset,
-                    maxmin=maxmin,
-                    bandit_alg=mips_alg,
-                    epsilon=epsilon,
-                    delta=delta,
-                    num_best_atoms=num_best_atoms,
-                    seed=seed,
-                    is_experiment=False,
-                    with_replacement=with_replacement,
-                )
-                runtime = time.time() - start_time
 
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
@@ -254,7 +234,8 @@ def scaling_exp(
             "runtime": avg_runtime,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs/scaling" if dirname is None else dirname
+        log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), log_dir)
         filename = os.path.join(
             log_dir,
             mips_alg

@@ -2,6 +2,7 @@ import numpy as np
 import math
 from typing import Tuple
 from exps.scaling_exp import scaling_exp
+from exps.plot_baselines import generate_scaling_plots, create_scaling_plots
 from utils.constants import (
     BATCH_SIZE,
 
@@ -11,6 +12,7 @@ from utils.constants import (
     NORMAL_PAPER,
     NETFLIX,
     MOVIE_LENS,
+    COR_NORMAL_CUSTOM,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -134,30 +136,41 @@ def run_scaling():
 
 
 if __name__ == "__main__":
-    scaling_exp(
-        epsilon=SCALING_EPSILON,
-        delta=SCALING_DELTA,
-        num_atoms=2000,
-        size_minmax=(100, 5000),
-        num_experiments=SCALING_NUM_EXPERIMENTS,
-        num_signals=SCALING_NUM_SIGNALS,
-        data_type=NORMAL_CUSTOM,
-        mips_alg=BUCKET_AE,
-        with_replacement=False,
-        is_normalize=False,
+    datasets = [NETFLIX, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, COR_NORMAL_CUSTOM]
+    for dataset in [NORMAL_CUSTOM]:
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=SCALING_DELTA,
+            num_atoms=1300,
+            size_minmax=(100, 30000),
+            num_experiments=SCALING_NUM_EXPERIMENTS,
+            num_signals=SCALING_NUM_SIGNALS,
+            data_type=dataset,
+            mips_alg=BUCKET_AE,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=True,
+        )
+
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=SCALING_DELTA,
+            num_atoms=1300,
+            size_minmax=(10, 30000),
+            num_experiments=SCALING_NUM_EXPERIMENTS,
+            num_signals=SCALING_NUM_SIGNALS,
+            data_type=dataset,
+            mips_alg=ACTION_ELIMINATION,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=True,
+        )
+    create_scaling_plots(
+        data_types=datasets,
+        alg_names =[ACTION_ELIMINATION, BUCKET_AE],
+        include_error_bar=True,
         is_logspace=True,
+        is_plot_accuracy=True,
+        is_fit=False,
     )
 
-    # scaling_exp(
-    #     epsilon=SCALING_EPSILON,
-    #     delta=SCALING_DELTA,
-    #     num_atoms=SCALING_NUM_ATOMS,
-    #     size_minmax=SCALING_SIZE_MINMAX,
-    #     num_experiments=SCALING_NUM_EXPERIMENTS,
-    #     num_signals=SCALING_NUM_SIGNALS,
-    #     data_type=ADVERSARIAL_CUSTOM,
-    #     mips_alg=ACTION_ELIMINATION,
-    #     with_replacement=False,
-    #     is_normalize=False,
-    #     is_logspace=True,
-    # )
