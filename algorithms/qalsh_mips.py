@@ -56,17 +56,11 @@ class QALSH_MIPS:
             self.hash_tables[i] = [atoms_sort_idcs, hash_values[atoms_sort_idcs]]
             # Todo: Implement B+ tree for efficient search
         self.is_generate_hash_table = True
-        sample_complexity = self.m * self.atoms.shape[
-            1
-        ] + self.m * self.atoms.shape[  # Generate random vectors
-            0
-        ] * self.atoms.shape[
-            1
-        ] * +self.m * self.atoms.shape[  # Dot product between atoms and random vectors
-            0
-        ] * log(
-            self.atoms.shape[0]
-        )  # Sorting hash tables
+
+        # Cost in generating random vectors + having dot product between atoms and random vectors + sorting hash tables
+        sample_complexity = self.m * self.atoms.shape[1]
+        +self.m * self.atoms.shape[0] * self.atoms.shape[1]
+        +self.m * self.atoms.shape[0] * log(self.atoms.shape[0])
         return int(sample_complexity)
 
     def nn_search(
