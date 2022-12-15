@@ -1,0 +1,163 @@
+import numpy as np
+from math import log, sqrt, ceil
+from scipy import stats
+
+
+class QALSH_MIPS:
+    """
+    Python Implementation of Query-aware Asymmetric Locally Sensitive Hashing Algorithm for
+    MIPS(Maximum Inner Product Search) Problem, see https://github.com/HuangQiang/QALSH
+    """
+
+    def __init__(
+        self, atoms: np.ndarray, delta: float = 0.1, approx_const: float = 1.3,
+    ):
+        delta_condition = (delta > 0) & (delta < 1)
+        assert delta_condition, "Error probability should be less than 1"
+        assert (
+            approx_const > 1
+        ), "Approximation constant(c) in c-ANN search should be greater than 1"
+        self.atoms = atoms
+        self.random_vectors = None
+        width = sqrt(
+            (8 * approx_const ** 2 * log(approx_const)) / (approx_const ** 2 - 1)
+        )  # See Lemma 5
+        beta = (
+            100 / atoms.shape[0]
+        )  # Beta denotes collision threshold percentage, see 5.3 in the paper
+        # To see what p1 and p2 denotes and how they are calculated, see 3.2 in the paper
+        p1 = 1 - 2 * stats.norm.cdf(-width / 2)
+        p2 = 1 - 2 * stats.norm.cdf(-width / (2 * approx_const))
+        eta = sqrt(log(2 / beta) / log(1 / delta))
+        alpha = (eta * p1 + p2) / (1 + eta)  # See 5.3
+        num_hash_tables = int(
+            (sqrt(log(2 / beta)) + sqrt(log(1 / delta))) ** 2 / (2 * (p1 - p2) ** 2)
+        )
+
+        self.m = num_hash_tables
+        self.delta = delta  # Error probability: QALSH algorithm solves c-ANN search with 1/2 - delta probability
+        self.approx_const = approx_const  # The approximation constant c in c-ANN search
+        self.num_fp = beta * atoms.shape[0]  # Number of false positives allowed
+        self.collision_threshold = int(alpha * self.m)
+        self.width = width  # Width of hash bucket
+        self.is_generate_hash_table = False
+
+    def generate_hash_tables(self):
+        if self.is_generate_hash_table:
+            print("Hash table is already generated")
+            return
+        self.random_vectors = np.random.normal(size=(self.atoms.shape[1], self.m))
+        self.hash_tables = [None] * self.m
+        for i in range(self.m):
+            hash_values = self.atoms @ self.random_vectors[:, i]
+            atoms_sort_idcs = np.argsort(
+                hash_values
+            )  # Sorting indices of atoms in terms of their hash values
+            self.hash_tables[i] = [atoms_sort_idcs, hash_values[atoms_sort_idcs]]
+            # Todo: Implement B+ tree for efficient search
+        self.is_generate_hash_table = True
+        sample_complexity = self.m * self.atoms.shape[
+            1
+        ] + self.m * self.atoms.shape[  # Generate random vectors
+            0
+        ] * self.atoms.shape[
+            1
+        ] * +self.m * self.atoms.shape[  # Dot product between atoms and random vectors
+            0
+        ] * log(
+            self.atoms.shape[0]
+        )  # Sorting hash tables
+        return int(sample_complexity)
+
+    def nn_search(
+        self, query: np.ndarray,
+    ):
+        assert len(query.shape) == 1, "Query should be a 1d vector"
+        assert self.is_generate_hash_table, "Hash tables should be generated"
+        radius = 1
+        candidates = np.array([])  # Indices of nn(nearest neighbor) candidates
+        candidates_dist = np.array([])  # Distances between candidates and query
+        collision_counts = np.zeros(self.atoms.shape[0])
+        sample_complexity = 0
+        k = 0  # Constant for radius update
+        while len(candidates) <= self.num_fp:
+            nearest_atoms_dist = (
+                []
+            )  # Distance between the query and atoms that are nearest to the query in m hash
+            # tables.
+            for i in range(self.m):
+                query_hash_value = np.dot(self.random_vectors[:, i], query)
+                lower_bound = query_hash_value - 1 / 2 * self.width * radius
+                upper_bound = query_hash_value + 1 / 2 * self.width * radius
+                lower_idx = np.searchsorted(self.hash_tables[i][1], lower_bound)
+                upper_idx = np.searchsorted(self.hash_tables[i][1], upper_bound) - 1
+
+                # Append the distance between the query and the atom that is nearest to query in the hash table. This
+                # is to skip unnecessary rounds. See 4.2 for the detailed explanation.
+                nearest_atoms_dist.append(
+                    min(
+                        abs(self.hash_tables[i][1][lower_idx] - query_hash_value),
+                        abs(self.hash_tables[i][1][upper_idx] - query_hash_value),
+                    )
+                )
+                idcs_atoms_collided = self.hash_tables[i][0][lower_idx:upper_idx]
+                collision_counts[idcs_atoms_collided] += 1
+            sample_complexity += self.m * self.atoms.shape[1] + self.m * log(
+                self.atoms.shape[0]
+            )  # Cost in computing query hash value + locating the lower/upper bound in the hash table
+            new_candidates = np.where(collision_counts >= self.collision_threshold)[0]
+            candidates = np.concatenate((candidates, new_candidates))
+            candidates_dist = np.concatenate(
+                (
+                    candidates_dist,
+                    np.linalg.norm(self.atoms[new_candidates] - query, axis=1),
+                )
+            )
+            sample_complexity += (
+                len(candidates) * self.atoms.shape[1] + self.atoms.shape[0]
+            )  # Cost in getting new candidates + computing the distance of candidates
+            if (
+                len(candidates) != 0
+                and np.min(candidates_dist) <= self.approx_const * radius
+            ):
+                return (
+                    int(candidates[np.argmin(candidates_dist)]),
+                    int(sample_complexity),
+                )
+            else:
+                collision_counts = np.zeros(
+                    self.atoms.shape[0]
+                )  # Reset collision counts
+            # Radius update
+            k = max(
+                ceil(
+                    log(
+                        2 * np.median(nearest_atoms_dist) / self.width,
+                        self.approx_const,
+                    )
+                ),
+                k + 1,
+            )
+            radius = self.approx_const ** k
+        return int(candidates[np.argmin(candidates_dist)]), int(sample_complexity)
+
+
+def toy_experiment_qalsh(seed: int = 0):
+    np.random.seed(seed)
+    atoms = np.random.normal(size=(30000, 100))
+    query = np.random.normal(size=100)
+    naive_ans = np.argmin(np.linalg.norm(atoms - query, axis=1))
+
+    qalsh = QALSH_MIPS(atoms=atoms, delta=0.3, approx_const=2)
+    qalsh.generate_hash_tables()
+    nn_search = qalsh.nn_search(query)
+    sample_complexity_ratio = nn_search[1] / (atoms.shape[0] * atoms.shape[1])
+
+    print(
+        f"It is {naive_ans==nn_search[0]} that naive NN search accords with QALSH NN search. "
+        f"The sample complexity of QALSH is {sample_complexity_ratio}% of one of naive NN search"
+    )
+
+
+if __name__ == "__main__":
+    toy_experiment_qalsh(1)
