@@ -21,6 +21,8 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    HNSW_MIPS,
+    NAHNSW_MIPS,
     MAX_SPEEDUP
 )
 from utils.utils import fit_and_plot
@@ -45,6 +47,10 @@ def translate_alg_name(alg_name: str):
         return "LSH-MIPS"
     elif alg_name == PCA_MIPS:
         return "PCA-MIPS"
+    elif alg_name == HNSW_MIPS:
+        return "HNSW-MIPS"
+    elif alg_name == NAHNSW_MIPS:
+        return "NAHNSW-MIPS"
     else:
         raise Exception("Bad algorithm name")
 
@@ -86,8 +92,12 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
+    elif NAHNSW_MIPS in filename:
+        return NAHNSW_MIPS
+    elif HNSW_MIPS in filename:
+        return HNSW_MIPS
     else:
-        raise Exception("No algorithm was able to be extracted from " + filname)
+        raise Exception("No algorithm was able to be extracted from " + filename)
 
 
 def power10(array):
@@ -279,14 +289,17 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
+        data_types=[NORMAL_CUSTOM],  # , ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
         alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
+            # ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
+            # MEDIAN_ELIMINATION,
             GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS
+            # PCA_MIPS,
+            # LSH_MIPS,
+            HNSW_MIPS,
+            NAHNSW_MIPS
+
         ]
     )
 
@@ -295,12 +308,16 @@ def generate_scaling_plots():
         is_fit=True,
         is_logspace=True,
         include_error_bar=True,
-        data_types=[NETFLIX, MOVIE_LENS],
+        data_types=[NORMAL_CUSTOM],  # replace with NETFLIX, MOVIE_LENS
         alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
+            # ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS
+            # MEDIAN_ELIMINATION,
+            # GREEDY_MIPS,
+            # PCA_MIPS,
+            # LSH_MIPS,
+            HNSW_MIPS,
+            NAHNSW_MIPS
         ]
     )
 

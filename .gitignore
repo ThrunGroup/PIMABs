@@ -1,5 +1,5 @@
 data/raw_data
-
+logs/*
 .idea/
 *.DS_Store*
 .DS_Store

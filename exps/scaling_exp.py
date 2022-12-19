@@ -14,6 +14,8 @@ from utils.constants import (
     GREEDY_MIPS,
     PCA_MIPS,
     LSH_MIPS,
+    HNSW_MIPS,
+    NAHNSW_MIPS,
 
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
@@ -35,7 +37,7 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
-
+import hnswlib
 
 def scaling_exp(
     epsilon: Optional[float] = SCALING_EPSILON,
@@ -190,6 +192,26 @@ def scaling_exp(
                     num_tables=SCALING_NUM_TABLES
                 )
                 runtime = time.time() - start_time
+
+            elif mips_alg in [HNSW_MIPS, NAHNSW_MIPS]:
+                log_info = (
+                        mips_alg
+                )
+
+                start_time = time.time()
+                index = hnswlib.Index(space="ip", dim=size, useNormFactor_=mips_alg==NAHNSW_MIPS)
+
+                # Initializing index - the maximum number of elements should be known beforehand
+                index.init_index(max_elements=num_atoms, ef_construction=200, M=16)
+
+                # Element insertion (can be called several times):
+                ids = np.arange(num_atoms)
+                index.add_items(atoms_subset, ids)
+
+                labels, distances, budget = index.knn_query(signals_subset, k=num_best_atoms)
+                budget_array = np.array(budget)
+                candidates_array = np.sort(np.array(labels))
+                runtime = time.time() - start_time
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
@@ -197,7 +219,7 @@ def scaling_exp(
             runtimes.append(runtime)
             budgets.append(np.mean(budget_array))
             budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
-            naive_candidates_array = (
+            naive_candidates_array = np.sort(
                 np.matmul(-atoms_subset, signals_subset.transpose())
                 .argsort(axis=0)[:num_best_atoms]
                 .transpose()

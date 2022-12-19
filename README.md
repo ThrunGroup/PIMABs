@@ -28,5 +28,10 @@ The files are organized as follows:
 - The Netflix Prize dataset is available from [here](https://www.kaggle.com/datasets/netflix-inc/netflix-prize-data).
 - The Movie Lens 1m data is available from [here](https://grouplens.org/datasets/movielens/1m/).
 
+# Installing HNSW
+```bash
+$ pip install algorithms/hnswlib
+```
+
 # Reproducing the results
 - To reproduce all of the experimental logs and create the figures, run `chmod +x repro_script.sh && ./repro_script.sh`
