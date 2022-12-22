@@ -135,3 +135,41 @@ def run_scaling():
         )
 
 
+if __name__ == "__main__":
+    datasets = [NETFLIX, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, COR_NORMAL_CUSTOM]
+    for dataset in [NORMAL_CUSTOM]:
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=SCALING_DELTA,
+            num_atoms=1300,
+            size_minmax=(100, 30000),
+            num_experiments=SCALING_NUM_EXPERIMENTS,
+            num_signals=SCALING_NUM_SIGNALS,
+            data_type=dataset,
+            mips_alg=BUCKET_AE,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=True,
+        )
+
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=SCALING_DELTA,
+            num_atoms=1300,
+            size_minmax=(10, 30000),
+            num_experiments=SCALING_NUM_EXPERIMENTS,
+            num_signals=SCALING_NUM_SIGNALS,
+            data_type=dataset,
+            mips_alg=ACTION_ELIMINATION,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=True,
+        )
+    create_scaling_plots(
+        data_types=datasets,
+        alg_names =[ACTION_ELIMINATION, BUCKET_AE],
+        include_error_bar=True,
+        is_logspace=True,
+        is_plot_accuracy=True,
+        is_fit=False,
+    )
