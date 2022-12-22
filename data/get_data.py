@@ -12,6 +12,7 @@ from utils.constants import (
     NETFLIX,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
+    NETFLIX_TRANSPOSE,
 )
 from data.custom_data import generate_custom_data
 from utils.utils import subset_2d
@@ -38,6 +39,13 @@ def get_data(
             os.path.join(os.path.dirname(__file__), "netflix"), "Movie_ratings.npy"
         )
         data = np.load(filename)
+    elif data_type is NETFLIX_TRANSPOSE:
+        filename = os.path.join(
+            os.path.join(os.path.dirname(__file__), "netflix"), "Movie_ratings.npy"
+        )
+        data = np.load(filename)
+        data = data.transpose()
+
     elif data_type is MOVIE_LENS:
         filename = os.path.join(
             os.path.join(os.path.dirname(__file__), "movie_lens"),

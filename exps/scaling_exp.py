@@ -155,7 +155,7 @@ def scaling_exp(
                 log_info = (
                     "ind_var"
                     + str(independent_var)
-                    + "epsilon"
+                    + "_epsilon"
                     + str(epsilon)
                     + "_delta"
                     + str(delta)

@@ -13,6 +13,7 @@ from utils.constants import (
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NETFLIX,
+    NETFLIX_TRANSPOSE,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
 
@@ -24,6 +25,8 @@ from utils.constants import (
     PCA_MIPS,
     MAX_SPEEDUP,
     BUCKET_AE,
+    D,
+    N
 )
 from utils.utils import fit_and_plot
 
@@ -68,6 +71,8 @@ def translate_dataset_name(dataset_name: str):
         return NORMAL_CUSTOM
     elif dataset_name == NETFLIX:
         return "Netflix"
+    elif dataset_name == NETFLIX_TRANSPOSE:
+        return "Netflix_transposed"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
     elif dataset_name == COR_NORMAL_CUSTOM:
@@ -109,6 +114,7 @@ def power10_sqrt(array):
 def create_scaling_plots(
     data_types: List[str] = [],
     alg_names: List[str] = [],
+    ind_variables: List[str] = [D],
     include_error_bar: bool = False,
     is_fit: bool = False,
     is_logspace: bool = False,
@@ -120,6 +126,7 @@ def create_scaling_plots(
 
     :param data_types: the datasets that you want to plot. If empty, warning is triggered.
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
+    :param ind_variables: Independent variables (N or D)
     :param include_error_bar: shows the standard deviation
     :param is_fit: whether to fit the plots or not
     :param is_logspace: whether to plot in logspace or not
@@ -139,76 +146,77 @@ def create_scaling_plots(
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
-    for datatype in data_types:
-        csv_files = glob.glob(os.path.join(path, f"*SCALING_{datatype}*"))
-        plt.figure(figsize=(6, 4.5))
-        title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
-        for f in csv_files:
-            alg_name = extract_alg(f)
-            data = read_csv(f)
-            independent_var = "signal_sizes" if "signal_sizes" in data.keys() else "num_atoms"
+    for ind_variable in ind_variables:
+        for datatype in data_types:
+            csv_files = glob.glob(os.path.join(path, f"*SCALING_{datatype}*ind_var{ind_variable}*"))
+            plt.figure(figsize=(6, 4.5))
+            title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+            for f in csv_files:
+                alg_name = extract_alg(f)
+                data = read_csv(f)
+                independent_var = "signal_sizes" if "signal_sizes" in data.keys() else "num_atoms"
 
-            # only get relevant data
-            if f.find(datatype) < 0 or alg_name not in alg_names:
-                continue
+                # only get relevant data
+                if f.find(datatype) < 0 or alg_name not in alg_names:
+                    continue
 
-            x = data[independent_var].tolist()
-            y = data["budgets"].tolist()
-            error = data["budgets_std"].tolist()
-            x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
-            if is_fit:
-                title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
-                if is_logspace:
-                    functions = [np.array, power10_sqrt, power10]
-                    function_names = [
-                        "$y \propto log x$",
-                        "$y \propto x^{1/2}$",
-                        "$y \propto x$",
-                    ]
-                    x = np.log10(x)
+                x = data[independent_var].tolist()
+                y = data["budgets"].tolist()
+                error = data["budgets_std"].tolist()
+                x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+                if is_fit:
+                    title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
+                    if is_logspace:
+                        functions = [np.array, power10_sqrt, power10]
+                        function_names = [
+                            "$y \propto log x$",
+                            "$y \propto x^{1/2}$",
+                            "$y \propto x$",
+                        ]
+                        x = np.log10(x)
+                    else:
+                        functions = [np.array, np.sqrt, np.log]
+                        function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
+                    fit_and_plot(
+                        xs=x,
+                        ys=y,
+                        function_list=functions,
+                        function_name_list=function_names,
+                        ys_std=error,
+                        is_logspace=is_logspace,
+                    )
+                    plt.title(title)
+                    xlabel = "Signal Vector Size (d)" if independent_var == "signal_sizes" else "Number of atoms (N)"
+                    ylabel = "Sample Complexity"
+                    plt.ylabel(ylabel)
+                    plt.xlabel(xlabel)
+
                 else:
-                    functions = [np.array, np.sqrt, np.log]
-                    function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
-                fit_and_plot(
-                    xs=x,
-                    ys=y,
-                    function_list=functions,
-                    function_name_list=function_names,
-                    ys_std=error,
-                    is_logspace=is_logspace,
-                )
-                plt.title(title)
-                xlabel = "Signal Vector Size (d)" if independent_var == "signal_sizes" else "Number of atoms (N)"
-                ylabel = "Sample Complexity"
-                plt.ylabel(ylabel)
-                plt.xlabel(xlabel)
+                    plt.scatter(
+                        x, y,
+                        color=ALG_TO_COLOR[alg_name],
+                        label=f"{translate_alg_name(alg_name)}"
+                    )
+                    plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
-            else:
-                plt.scatter(
-                    x, y,
-                    color=ALG_TO_COLOR[alg_name],
-                    label=f"{translate_alg_name(alg_name)}"
-                )
-                plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
+                    # Sort the legend entries (labels and handles) by labels
+                    handles, labels = plt.gca().get_legend_handles_labels()
+                    labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+                    plt.legend(handles, labels, loc="upper left")
 
-                # Sort the legend entries (labels and handles) by labels
-                handles, labels = plt.gca().get_legend_handles_labels()
-                labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
-                plt.legend(handles, labels, loc="upper left")
+                    if include_error_bar:
+                        plt.errorbar(x, y, error, fmt=".", color="black")
+                    plt.title(title)
+                    xlabel = "Signal Vector Size (d)" if independent_var == "signal_sizes" else "Number of atoms (N)"
+                    ylabel = "Sample Complexity"
+                    plt.ylabel(ylabel)
+                    plt.xlabel(xlabel)
 
-                if include_error_bar:
-                    plt.errorbar(x, y, error, fmt=".", color="black")
-                plt.title(title)
-                xlabel = "Signal Vector Size (d)" if independent_var == "signal_sizes" else "Number of atoms (N)"
-                ylabel = "Sample Complexity"
-                plt.ylabel(ylabel)
-                plt.xlabel(xlabel)
+                if is_plot_accuracy:
+                    avg_accuracy = np.mean(data["accuracy"])
+                    plt.text(x[-1], y[-1], f"Accuracy: {avg_accuracy}", ha='right', va='bottom')
 
-            if is_plot_accuracy:
-                avg_accuracy = np.mean(data["accuracy"])
-                plt.text(x[-1], y[-1], f"Accuracy: {avg_accuracy}", ha='right', va='bottom')
-
-        plt.show()
+            plt.show()
 
 
 def create_tradeoff_plots(
