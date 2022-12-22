@@ -78,8 +78,9 @@ class H2ALSH_MIPS:
                 break
             if self.linear_scan_mask[i] == 1:
                 current_ip = self.atoms[self.partitions_idcs[i]] @ query
-                current_candidates = np.argsort(current_ip)[::-1][:top_k]
-                current_candidates_ip = current_ip[current_candidates]
+                current_candidates_idcs = np.argsort(current_ip)[::-1][:top_k]
+                current_candidates_ip = current_ip[current_candidates_idcs]
+                current_candidates = self.partitions_idcs[i][current_candidates_idcs]
                 sample_complexity += len(self.partitions_idcs[i]) * len(query)
             else:
                 alpha = self.M[i] / query_norm
@@ -88,12 +89,11 @@ class H2ALSH_MIPS:
                 current_candidates = self.partitions_idcs[i][current_candidates_idcs]
                 current_candidates_ip = self.atoms[current_candidates] @ query
                 sample_complexity += current_sample_complexity + len(current_candidates) * len(query)
-
             new_candidates_idcs = np.argsort(np.concatenate((candidates_ip, current_candidates_ip)))[::-1][:top_k]
             candidates = np.concatenate((candidates, current_candidates))[new_candidates_idcs]
             candidates_ip = np.concatenate((candidates_ip, current_candidates_ip))[new_candidates_idcs]
             mip_value = candidates_ip[-1]
-        return candidates, sample_complexity
+        return np.array(candidates, dtype=np.int64), sample_complexity
 
     def mip_search_qeuries(self, queries: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, int]:
         sample_complexity = 0
@@ -109,21 +109,21 @@ def toy_experiment_h2alsh(seed: int = 0):
     np.random.seed(seed)
     atoms = np.random.normal(size=(300000, 10))
     query = np.random.normal(size=10)
-    top_k = 1
-    naive_ans = np.argsort(atoms@query)[::-1][:top_k]
+    top_k = 5
+    dot_products_sorted = np.argsort(atoms@query)[::-1]
+    naive_ans = dot_products_sorted[:top_k]
 
-    h2alsh = H2ALSH_MIPS(atoms=atoms, c0=1.5, delta=0.02)
+    h2alsh = H2ALSH_MIPS(atoms=atoms, c0=2.0, delta=0.4)
     mips = h2alsh.mip_search(query, top_k=5)
-    sample_complexity_ratio = mips[1] / (atoms.shape[0] * atoms.shape[1])
-
+    speedup_ratio = (atoms.shape[0] * atoms.shape[1]) / mips[1]
     print(
-        f"It is {naive_ans == mips[0]} that naive MIP search accords with H2ALSH MIP search. "
-        f"The sample complexity of H2ALSH is {sample_complexity_ratio * 100}% of one of naive MIP search"
+        f"Accuracy: {len(np.intersect1d(mips[0], naive_ans))/ top_k * 100}%. "
+        f"The speedup ratio: {speedup_ratio } times quicker"
     )
 
 
 if __name__ == "__main__":
-    toy_experiment_h2alsh()
+    toy_experiment_h2alsh(1)
 
 
 

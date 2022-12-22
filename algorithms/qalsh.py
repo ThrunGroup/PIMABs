@@ -103,7 +103,7 @@ class QALSH:
             sample_complexity += self.m * self.atoms.shape[1] + self.m * log2(
                 self.atoms.shape[0]
             )  # Cost in computing query hash value + locating the lower/upper bound in the hash table
-            new_candidates = np.where(collision_counts >= self.collision_threshold)[0]
+            new_candidates = np.setdiff1d(np.where(collision_counts >= self.collision_threshold)[0], candidates)
             candidates = np.concatenate((candidates, new_candidates))
             candidates_dist = np.concatenate(
                 (
