@@ -20,13 +20,15 @@ from utils.constants import (
     PCA_MIPS,
     ASYMMETRIC,
     SYMMETRIC,
+    NEQ_MIPS,
 
-    # scaling specific constants
+    # tradeoff specific constants
     TRADEOFF_NUM_EXPERIMENTS,
     TRADEOFF_NUM_ATOMS,
     TRADEOFF_NUM_SIGNALS,
     TRADEOFF_PCA_NUM_EXPERIMENTS,
     TRADEOFF_LSH_NUM_EXPERIMENTS,
+    TRADEOFF_NEQ_NUM_EXPERIMENTS,
     TRADEOFF_DIMENSION,
     TRADEOFF_DIMENSION_MOVIE,
     NUM_ATOMS_REAL,
@@ -101,8 +103,23 @@ def run_tradeoff():
             mips_alg=LSH_MIPS,
             lsh_type=ASYMMETRIC,
         )
+        speedup_precision_exps(
+            num_atoms=num_atoms,
+            num_experiments=TRADEOFF_NEQ_NUM_EXPERIMENTS,
+            len_signals=len_signals,
+            num_signals=TRADEOFF_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=NEQ_MIPS,
+        )
 
 
 if __name__ == "__main__":
-   run_tradeoff()
-
+   #run_tradeoff()
+   speedup_precision_exps(
+       num_atoms=100,
+       num_experiments=TRADEOFF_NEQ_NUM_EXPERIMENTS,
+       len_signals=1000,
+       num_signals=TRADEOFF_NUM_SIGNALS,
+       data_type=NETFLIX,
+       mips_alg=NEQ_MIPS,
+   )

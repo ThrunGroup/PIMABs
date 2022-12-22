@@ -23,7 +23,8 @@ from utils.constants import (
     PCA_MIPS,
     NEQ_MIPS,
 
-    MAX_SPEEDUP
+    MAX_SPEEDUP,
+    TRADEOFF_TOPK
 )
 from utils.utils import fit_and_plot
 
@@ -326,7 +327,8 @@ def generate_tradeoff_plots(top_k: int = 1):
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS
+            LSH_MIPS,
+            NEQ_MIPS
         ],
         top_k=top_k,
         include_error_bar=False
@@ -339,7 +341,8 @@ def generate_tradeoff_plots(top_k: int = 1):
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS
+            LSH_MIPS,
+            NEQ_MIPS
         ],
         top_k=top_k,
         max_speedup=MAX_SPEEDUP,
@@ -348,7 +351,7 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    generate_scaling_plots()
+    #generate_scaling_plots()
     #generate_tradeoff_plots(top_k=20)
-    #generate_tradeoff_plots(top_k=5)
+    generate_tradeoff_plots(top_k=TRADEOFF_TOPK)
 

@@ -24,6 +24,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    NEQ_MIPS,
     SYMMETRIC,
     ASYMMETRIC,
 
@@ -62,6 +63,10 @@ from utils.constants import (
     DELTA_POWER_MINMAX,
     DELTA_BINS_AD,
     MAXMIN_AD,
+
+    PARTITION,
+    TRADEOFF_CODEBOOK_MINMAX,
+    TRADEOFF_CODEWORD_MINMAX
 )
 from data.get_data import get_data
 
@@ -69,6 +74,7 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips, generate_conditer
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
+from algorithms.quantization import PQ, ResidualPQ, NormPQ, execute
 
 
 def get_accuracy_array(
@@ -109,7 +115,8 @@ def speedup_precision_exps(
     """
     Run the precision-speed tradeoff of the bandit and baseline algorithms and store them in the appropriate
     log files. Note that what we're tuning "delta" for the bandit algorithms, "budget" for greedy-mips, "depth"
-    of the pca-tree for pca-mips, and "num_hfunc and num_tables" for lsh-mips.
+    of the pca-tree for pca-mips, "(num_hfunc, num_tables)" for lsh-mips, and "(num_codebook, num_codewords)" for
+    vector quantization.
 
     :param epsilon: A epsilon (an additive error allowed)
     :param data_type: A name of data generating function
@@ -382,6 +389,45 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
+        elif mips_alg is NEQ_MIPS:
+            diff = TRADEOFF_CODEBOOK_MINMAX[1] - TRADEOFF_CODEBOOK_MINMAX[0] + 1
+            num_codewords = np.linspace(
+                TRADEOFF_CODEWORD_MINMAX[0], TRADEOFF_CODEWORD_MINMAX[1], num_experiments // diff
+            ).astype(np.int64)
+            num_codebooks = np.linspace(
+                TRADEOFF_CODEBOOK_MINMAX[0], TRADEOFF_CODEBOOK_MINMAX[1], diff
+            ).astype(np.int64)
+            assert len(num_codewords) * len(num_codebooks) == num_experiments
+
+            for num_codebook in num_codebooks:
+                for num_codeword in num_codewords:
+                    log_info = (
+                            "_codebook"
+                            + str(num_codebook)
+                            + "_codeword"
+                            + str(num_codeword)
+                    )
+                    pqs = [PQ(M=PARTITION, Ks=num_codeword) for _ in range(num_codebook)]
+                    quantizer = ResidualPQ(pqs=pqs)
+                    quantizer = NormPQ(n_percentile=num_codeword, quantize=quantizer)
+
+                    start_time = time.time()
+                    accuracy_array, budget_array = execute(
+                        pq=quantizer,
+                        X=atoms,
+                        Q=signals.astype('float32'),
+                        G=naive_candidates_array,
+                        train_size=num_atoms
+                    )
+
+                    # includes the time finding recall (other baselines don't)
+                    runtime = time.time() - start_time
+                    runtimes.append(time.time() - start_time)
+                    budgets.append(np.mean(budget_array))
+                    accuracies.append(np.sum(accuracy_array))
+                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 
