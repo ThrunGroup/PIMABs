@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 
 from utils.constants import (
+    N,
+    D,
+
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -48,9 +51,11 @@ def scaling_exp(
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
     num_seeds: int = NUM_SEEDS,
     data_generation_seed: int = 0,
+    independent_var: str = D,
     size_minmax: Tuple[int, int] = (10, 10**6),
     num_atoms: int = 10**3,
     num_signals: int = 1,
+    signal_dim: int = 10 ** 2,
     num_best_atoms: int = SCALING_TOPK,
     with_replacement: bool = False,
     is_normalize: bool = False,
@@ -72,9 +77,11 @@ def scaling_exp(
     :param num_experiments: Number of experiments
     :param num_seeds: Number of seeds
     :param data_generation_seed: Random seed for generating data
-    :param size_minmax: Minimum and Maximum of signal vector size
+    :param independent_var: The variable that is not constant (Either N=number of atoms or D=Dimension of atom)
+    :param size_minmax: Minimum and Maximum of independent variable
     :param num_atoms: Number of atoms
     :param num_signals: Number of signals
+    :param signal_dim: Dimension of atom/signal
     :param num_best_atoms: Number of atoms we rank in the descending order of inner product
     :param with_replacement: Whether to sample with replacement
     :param is_normalize: Whether to normalize atoms and signal
@@ -83,7 +90,6 @@ def scaling_exp(
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
     :param dirname: Directory name to log the results
     """
-    global budget_array
 
     # average over NUM_SEEDS results
     avg_runtime = np.zeros(num_experiments)
@@ -91,15 +97,26 @@ def scaling_exp(
     avg_budget_std = np.zeros(num_experiments)
     avg_accuracy = np.zeros(num_experiments)
     print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
-
-    sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
-    atoms, signals = get_data(
-        num_atoms=num_atoms,
-        len_signal=sizes_signal[-1],
-        num_signals=num_signals,
-        seed=data_generation_seed,
-        data_type=data_type,
-    )
+    if independent_var == D:
+        sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+        atoms, signals = get_data(
+            num_atoms=num_atoms,
+            len_signal=sizes[-1],
+            num_signals=num_signals,
+            seed=data_generation_seed,
+            data_type=data_type,
+        )
+    elif independent_var == N:
+        sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+        atoms, signals = get_data(
+            num_atoms=sizes[-1],
+            len_signal=signal_dim,
+            num_signals=num_signals,
+            seed=data_generation_seed,
+            data_type=data_type,
+        )
+    else:
+        raise NotImplementedError(f"{independent_var} is not an implemented control variable")
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
@@ -108,13 +125,22 @@ def scaling_exp(
         accuracy_list = []
         runtimes = []
 
-        # run the experiment for each signal size
-        for size in sizes_signal:
-            subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
-            atoms_subset, signals_subset = (
-                atoms[:, subset_indices],
-                signals[:, subset_indices],
-            )
+        # run the experiment for the different values of independent variable
+
+        for size in sizes:
+            subset_indices = rng.choice(sizes[-1], size, replace=False)
+            if independent_var is D:
+                atoms_subset, signals_subset = (
+                    atoms[:, subset_indices],
+                    signals[:, subset_indices],
+                )
+            elif independent_var is N:
+                atoms_subset, signals_subset = (
+                    atoms[subset_indices, :],
+                    signals,
+                )
+            else:
+                raise NotImplementedError
 
             if is_normalize:
                 atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
@@ -127,7 +153,9 @@ def scaling_exp(
             # bandit algorithms
             if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION, BUCKET_AE]:
                 log_info = (
-                    "epsilon"
+                    "ind_var"
+                    + str(independent_var)
+                    + "epsilon"
                     + str(epsilon)
                     + "_delta"
                     + str(delta)
@@ -226,16 +254,29 @@ def scaling_exp(
 
     # save to log files
     if is_log:
-        log_dict = {
-            "signal_sizes": sizes_signal,
-            "budgets": avg_budget,
-            "budgets_std": avg_budget_std,
-            "accuracy": avg_accuracy,
-            "runtime": avg_runtime,
-        }
+        if independent_var is D:
+            log_dict = {
+                "signal_sizes": sizes,
+                "budgets": avg_budget,
+                "budgets_std": avg_budget_std,
+                "accuracy": avg_accuracy,
+                "runtime": avg_runtime,
+            }
+        elif independent_var is N:
+            log_dict = {
+                "num_atoms": sizes,
+                "budgets": avg_budget,
+                "budgets_std": avg_budget_std,
+                "accuracy": avg_accuracy,
+                "runtime": avg_runtime,
+            }
+        else:
+            raise NotImplementedError
+
         log_df = pd.DataFrame(log_dict)
+        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
-        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), log_dir)
+        log_dir = os.path.join(parent_dir, log_dir)
         filename = os.path.join(
             log_dir,
             mips_alg

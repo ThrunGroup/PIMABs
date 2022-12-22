@@ -128,7 +128,8 @@ def create_scaling_plots(
     """
     # get all csv files
     if dirname is None:
-        path = os.path.join(os.getcwd(), "logs")
+        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(parent_dir, "logs")
         path = os.path.join(path, "scaling")
     else:
         path = dirname
@@ -145,12 +146,13 @@ def create_scaling_plots(
         for f in csv_files:
             alg_name = extract_alg(f)
             data = read_csv(f)
+            independent_var = "signal_sizes" if "signal_sizes" in data.keys() else "num_atoms"
 
             # only get relevant data
             if f.find(datatype) < 0 or alg_name not in alg_names:
                 continue
 
-            x = data["signal_sizes"].tolist()
+            x = data[independent_var].tolist()
             y = data["budgets"].tolist()
             error = data["budgets_std"].tolist()
             x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
@@ -176,7 +178,7 @@ def create_scaling_plots(
                     is_logspace=is_logspace,
                 )
                 plt.title(title)
-                xlabel = "Signal Vector Size (d)"
+                xlabel = "Signal Vector Size (d)" if independent_var == "signal_sizes" else "Number of atoms (N)"
                 ylabel = "Sample Complexity"
                 plt.ylabel(ylabel)
                 plt.xlabel(xlabel)
@@ -197,7 +199,7 @@ def create_scaling_plots(
                 if include_error_bar:
                     plt.errorbar(x, y, error, fmt=".", color="black")
                 plt.title(title)
-                xlabel = "Signal Vector Size (d)"
+                xlabel = "Signal Vector Size (d)" if independent_var == "signal_sizes" else "Number of atoms (N)"
                 ylabel = "Sample Complexity"
                 plt.ylabel(ylabel)
                 plt.xlabel(xlabel)
@@ -225,7 +227,8 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    path = os.path.join(os.getcwd(), "logs")
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.join(parent_dir, "logs")
     path = os.path.join(path, "precision_speed")
     csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
 

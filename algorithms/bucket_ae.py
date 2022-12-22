@@ -26,27 +26,49 @@ def bucket_ae(
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
     seed=0,
-    num_buckets: int = 100,
-    num_samples_bucketing: int = 100,
+    num_samples_bucket: int = 30,
+    num_samples_norm: int = 1000,
     z_score: float = 3,
     # Scipy package is normally used for calculating z-score, but it is not compatible with numba
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Put atoms into k buckets with descending order of their norm. Then, solve MIPS-problem sequentially. If the lcb of
-    inner product between the best atom and query is greater than the upper bound of remaining buckets( = norm of atom
-    * norm of query vector), returns the best atom.
+    Put atoms into k buckets with descending order of their norm. Then, solve MIPS problem sequentially with bandit
+    techniques.  If the lcb of inner product between the best atom and query is greater than the upper bound of
+    remaining buckets( = norm of atom * norm of query vector), returns the best atom. This is to reduce unnecessary
+    computations to search maximum inner product atom in other buckets.
 
-    This is to reduce unnecessary computations for other buckets.
+    Note: Here, we don't compare the lcb and ucb of inner product values from each partition. Instead, we compare
+    estimated the inner product values. So it's not a mathematically valid algorithm.
+
+    MIPS problem:= For each signal in signals matrix, find an atom in atoms matrix that has maximum dot product with
+    the signal
+
+    :param atoms: A 2d array that store atoms in rows.
+    :param signals: A 2d array that store signals in rows
+    :param var_proxy: Sub-gaussian variance of the distribution of arms (regarding an element of atom * an element of
+    signal as a sub-gaussian RV)
+    :param epsilon: Sub-optimality constant (allowing an epsilon-suboptimal arm to be the best arm)
+    :param delta: Error probability of not getting successful MIPS
+    :param num_best_atoms: Number of atoms we want to search (top k atoms in terms of dot product with a signal)
+    :param verbose: Verbosity of function
+    :param batch_size: Batch size of bandit algorithm
+    :param with_replacement: Whether to sample with replacement when sampling arms
+    :param seed: A random seed number
+    :param num_samples_bucket: Number of samples in each bucket
+    :param num_samples_norm: Number of samples to estimate the norm of atoms
+    :param z_score: Z score to calculate the upper bound and lower bound of the norm of atoms
+    :return: An array of top k atoms and sample complexity
+
     """
+
     set_seed(seed)
     N = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms
-    k = num_buckets
-    m = int(N / (k - 1))
-    q = min(num_samples_bucketing, d)
-    candidates = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
+    k = min(int(N/num_samples_bucket), int(N/num_best_atoms))  # Todo: fix hard-coded
+    m = int(N / k)
+    q = min(num_samples_norm, d)  # Number of samples from each atom to estimate its norm
 
-    sample_idcs = np.random.randint(low=0, high=d, size=num_samples_bucketing, dtype=np.int64)
+    sample_idcs = np.random.randint(low=0, high=d, size=num_samples_norm, dtype=np.int64)
     sampled_atoms_squared = atoms[:, sample_idcs] * atoms[:, sample_idcs]
     sampled_signals_squared = signals[:, sample_idcs] * signals[:, sample_idcs]
     # atoms_norms = np.mean(np.sqrt(sampled_atoms_squared), axis=1)
@@ -56,18 +78,24 @@ def bucket_ae(
     # )  # see shorturl.at/tABCP for the formula
     # signals_ub = signals_norms + z_score * np.sqrt(
     #     np.var(np.sqrt(sampled_signals_squared), axis=1) / (q - 1) * (1 - q / N))
-    # This is not theoretically valid. Have to find formula for finding the norm of random vectors from
-    # unknown distribution
-    atoms_ub = np.sqrt(np.sum(sampled_atoms_squared, axis = 1))
-    signals_ub = np.sqrt(np.sum(sampled_signals_squared, axis= 1))
-    sort_idcs = np.argsort(atoms_ub)[::-1]
+    # Todo: The lines below are not theoretically valid. Have to find a formula for finding the norm of random
+    #  vectors from unknown distribution. See the above commented lines for the general idea.
+
+    # Partition the atoms
+    atoms_ub = np.sqrt(np.sum(sampled_atoms_squared, axis=1))
+    signals_ub = np.sqrt(np.sum(sampled_signals_squared, axis=1))
+    sort_idcs = np.argsort(atoms_ub)[::-1]  # Sorting indices of atoms in the descending order of their norms
     ub_buckets = np.empty(k)  # Upper bound of each bucket
     bucket_idcs = []
     for idx in range(k):
         ub_buckets[idx] = atoms_ub[sort_idcs[idx * m]]
-        bucket_idcs.append(sort_idcs[idx * m: min((idx + 1) * m, N)])
+        if idx == k - 1:
+            bucket_idcs.append(sort_idcs[idx * m:])
+        else:
+            bucket_idcs.append(sort_idcs[idx * m: min((idx + 1) * m, N)])
 
-    candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
+    candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)  # ith row contains
+    # top k(num_best_atoms) atoms of ith signal.
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
@@ -115,7 +143,7 @@ def bucket_ae_helper(
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
     seed=0,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, int]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
     arm with highest estimated reward in each round. See algorithm 1 in https://arxiv.org/pdf/2006.06856.pdf and
@@ -213,3 +241,4 @@ def bucket_ae_helper(
     candidates_lcbs = lcbs[candidates]
     candidates_means = means[candidates]
     return candidates, candidates_means, candidates_lcbs, budgets
+

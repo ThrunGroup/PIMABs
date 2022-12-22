@@ -12,6 +12,9 @@ COLORS = [
     "#bcbd22",
     "#17becf",
 ]
+# Control/Independent Variables
+N = "NUMBER_OF_ATOMS"
+D = "DIMENSION_OF_ATOM"
 
 # MAB Algorithms
 MEDIAN_ELIMINATION = "MEDIAN_ELIMINATION"
