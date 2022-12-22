@@ -112,7 +112,7 @@ class QALSH:
                 )
             )
             sample_complexity += (
-                len(candidates) * self.atoms.shape[1] + self.atoms.shape[0]
+                len(new_candidates) * self.atoms.shape[1] + self.atoms.shape[0]
             )  # Cost in getting new candidates + computing the distance of candidates
             if (len(candidates) != 0) and (
                 np.sum(candidates_dist <= self.approx_const * radius) >= top_k
@@ -141,19 +141,19 @@ class QALSH:
 
 def toy_experiment_qalsh(seed: int = 0):
     np.random.seed(seed)
-    atoms = np.random.normal(size=(30000, 10))
+    atoms = np.random.normal(size=(300000, 10))
     query = np.random.normal(size=10)
     top_k = 5
     naive_ans = np.argsort(np.linalg.norm(atoms - query, axis=1))[:top_k]
 
-    qalsh = QALSH(atoms=atoms, delta=0.3, approx_const=1.5)
+    qalsh = QALSH(atoms=atoms, delta=0.1, approx_const=2.0)
     qalsh.generate_hash_tables()
     nn_search = qalsh.nn_search(query, top_k)
     sample_complexity_ratio = nn_search[1] / (atoms.shape[0] * atoms.shape[1])
 
     print(
         f"It is {naive_ans==nn_search[0]} that naive NN search accords with QALSH NN search. "
-        f"The sample complexity of QALSH is {sample_complexity_ratio}% of one of naive NN search"
+        f"The sample complexity of QALSH is {sample_complexity_ratio * 100}% of one of naive NN search"
     )
 
 
