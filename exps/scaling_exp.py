@@ -14,12 +14,17 @@ from utils.constants import (
     GREEDY_MIPS,
     PCA_MIPS,
     LSH_MIPS,
+    NEQ_MIPS,
 
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
     DEFAULT_MAXMIN,
     NORMALIZED_MAXMIN,
     DEFAULT_GREEDY_BUDGET,
+
+    PARTITION,
+    NUM_CODEBOOKS,
+    NUM_CODEWORDS,
 
     SCALING_DELTA,
     SCALING_DEPTH,
@@ -35,6 +40,7 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
+from algorithms.quantization import PQ, ResidualPQ, NormPQ, execute
 
 
 def scaling_exp(
@@ -113,7 +119,6 @@ def scaling_exp(
                 atoms[:, subset_indices],
                 signals[:, subset_indices],
             )
-
             if is_normalize:
                 atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
                 signal_norm = np.linalg.norm(signals_subset, axis=1, keepdims=True)
@@ -121,6 +126,13 @@ def scaling_exp(
                 signals_subset /= signal_norm
                 epsilon /= atoms_norm.max() * signal_norm
                 maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given.
+
+            # get the ground truth arrays
+            naive_candidates_array = (
+                np.matmul(-atoms_subset, signals_subset.transpose())
+                    .argsort(axis=0)[:num_best_atoms]
+                    .transpose()
+            )
 
             # bandit algorithms
             if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION]:
@@ -190,6 +202,29 @@ def scaling_exp(
                     num_tables=SCALING_NUM_TABLES
                 )
                 runtime = time.time() - start_time
+
+            elif mips_alg is NEQ_MIPS:
+                log_info = (
+                        "_codebooks"
+                        + str(NUM_CODEBOOKS)
+                        + "_codewords"
+                        + str(NUM_CODEWORDS)
+                )
+                pqs = [PQ(M=PARTITION, Ks=NUM_CODEWORDS) for _ in range(NUM_CODEBOOKS - 1)]
+                quantizer = ResidualPQ(pqs=pqs)
+                quantizer = NormPQ(n_percentile=NUM_CODEWORDS, quantize=quantizer)
+                start_time = time.time()
+
+                accuracies, budget_array = execute(
+                    pq=quantizer,
+                    X=atoms_subset,
+                    Q=signals_subset.astype('float32'),
+                    G=naive_candidates_array,
+                    train_size=num_atoms
+                )
+                # includes the time finding recall (other baselines don't)
+                runtime = time.time() - start_time
+                accuracy = np.sum(accuracies)
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
@@ -197,17 +232,14 @@ def scaling_exp(
             runtimes.append(runtime)
             budgets.append(np.mean(budget_array))
             budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
-            naive_candidates_array = (
-                np.matmul(-atoms_subset, signals_subset.transpose())
-                .argsort(axis=0)[:num_best_atoms]
-                .transpose()
-            )
 
-            accuracy = 0
-            for idx in range(num_signals):
-                accuracy += len(
-                    np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
-                )
+            if mips_alg is not NEQ_MIPS:
+                accuracy = 0
+                for idx in range(num_signals):
+                    accuracy += len(
+                        np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
+                    )
+
             accuracy /= num_signals * num_best_atoms
             accuracy_list.append(accuracy)
 

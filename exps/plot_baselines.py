@@ -21,6 +21,8 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    NEQ_MIPS,
+
     MAX_SPEEDUP
 )
 from utils.utils import fit_and_plot
@@ -45,6 +47,8 @@ def translate_alg_name(alg_name: str):
         return "LSH-MIPS"
     elif alg_name == PCA_MIPS:
         return "PCA-MIPS"
+    elif alg_name == NEQ_MIPS:
+        return "NEQ_MIPS"
     else:
         raise Exception("Bad algorithm name")
 
@@ -86,6 +90,8 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
+    elif NEQ_MIPS in filename:
+        return NEQ_MIPS
     else:
         raise Exception("No algorithm was able to be extracted from " + filname)
 
@@ -286,7 +292,8 @@ def generate_scaling_plots():
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS
+            LSH_MIPS,
+            NEQ_MIPS,
         ]
     )
 
@@ -341,6 +348,7 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    #generate_scaling_plots()
+    generate_scaling_plots()
     #generate_tradeoff_plots(top_k=20)
-    generate_tradeoff_plots(top_k=5)
+    #generate_tradeoff_plots(top_k=5)
+

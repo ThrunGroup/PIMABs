@@ -12,7 +12,8 @@ from utils.quantization_sorters import normalize, BatchSorter
 
 from data.get_data import get_data
 from utils.constants import (
-    NETFLIX
+    NETFLIX,
+    NORM_BUFFER
 )
 
 
@@ -24,7 +25,7 @@ class NormPQ(object):
         - {encode/decode}_norm: encodes/decodes the norms with the norm codebooks
         - compress: return the results of Algorithm 1 from paper.
     """
-    def __init__(self, n_percentile, quantize, true_norm=False, verbose=True):
+    def __init__(self, n_percentile, quantize, true_norm=False, verbose=False):
         # n_percentile -> number of codewords for norm training (default same as Ks)
         self.M = 2
         self.n_percentile, self.true_norm, self.verbose = n_percentile, true_norm, verbose
@@ -48,7 +49,8 @@ class NormPQ(object):
 
         # get the approximation for the relative norm (i.e. l_x in paper)
         compressed_vecs = self.quantize.compress(normalized_vecs)
-        norms = norms / np.linalg.norm(compressed_vecs, axis=1)
+        temp = np.linalg.norm(compressed_vecs, axis=1)
+        norms = norms / np.where(temp < NORM_BUFFER, NORM_BUFFER, temp)
         self.percentiles, _ = kmeans2(norms[:], self.n_percentile, iter=iter, minit='points')
         return self
 
@@ -74,7 +76,7 @@ class ResidualPQ(object):
     call each PQ object's identically named functions. This means encode/decode have an additional dimension
     for each PQ in the input list.
     """
-    def __init__(self, pqs=None, verbose=True):
+    def __init__(self, pqs=None, verbose=False):
 
         assert len(pqs) > 0
         self.verbose = verbose
@@ -155,7 +157,7 @@ class PQ(object):
         - decode: modifies original dataset in-place to its corresponding centroid (i.e. codebook-based approximation)
         - compress: encode -> decode
     """
-    def __init__(self, M, Ks, verbose=True):
+    def __init__(self, M, Ks, verbose=False):
         assert 0 < Ks <= 2 ** 32
         self.M, self.Ks, self.verbose = M, Ks, verbose
         self.code_dtype = np.uint8 if Ks <= 2 ** 8 else (np.uint16 if Ks <= 2 ** 16 else np.uint32)
@@ -240,26 +242,15 @@ def execute(pq, X, Q, G, train_size=1300):
         - Q: signals
         - G: groundtruth
     """
-    np.random.seed(123)
-    print("# "+pq.class_message())
-
     # preprocessing (i.e. creating the codebooks)
+    np.random.seed(123)
     pq.fit(X[:train_size].astype(dtype=np.float32), iter=20)
-
-    print('# compress items')
     compressed = chunk_compress(pq, X)
-    print("# sorting items")
 
     # [2^0, 2^1, ..., 2^logn] <- standard protocol for evaluating VQ techniques
-    Ts = [2 ** i for i in range(2+int(math.log2(len(X))))]
-    recalls, budget = BatchSorter(compressed, Q, G, Ts, batch_size=200).recall()
-
-    print("# searching!")
-    print("expected items, avg recall, avg precision, avg items")
-    for i, (t, recall) in enumerate(zip(Ts, recalls)):
-        print("{}, {}, {},  {}".format(
-            2**i, recall, recall * len(G[0]) / t, t))
-    return budget
+    Ts = np.array([2 ** i for i in range(2+int(math.log2(len(X))))])
+    precisions, budgets = BatchSorter(compressed, Q, G, Ts, batch_size=200).precision()
+    return precisions, budgets
 
 
 if __name__ == '__main__':
