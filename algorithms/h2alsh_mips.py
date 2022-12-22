@@ -1,7 +1,7 @@
 import numpy as np
 from math import sqrt, log
 from qalsh import QALSH
-
+from typing import Tuple
 
 class H2ALSH_MIPS:
     """
@@ -66,7 +66,7 @@ class H2ALSH_MIPS:
         self.M = partitions_norms
         self.partitions_idcs = partitions_idcs
 
-    def mip_search(self, query, top_k:int = 1):
+    def mip_search(self, query, top_k: int = 1):
         query_norm = np.linalg.norm(query)
         candidates = []
         candidates_ip = []  # Inner product between candidates and the query
@@ -87,13 +87,22 @@ class H2ALSH_MIPS:
                 current_candidates_idcs, current_sample_complexity = self.qalsh_dict[i].nn_search(transformed_query, top_k)
                 current_candidates = self.partitions_idcs[i][current_candidates_idcs]
                 current_candidates_ip = self.atoms[current_candidates] @ query
-                sample_complexity += current_sample_complexity + top_k * len(query)
+                sample_complexity += current_sample_complexity
 
             new_candidates_idcs = np.argsort(np.concatenate((candidates_ip, current_candidates_ip)))[::-1][:top_k]
             candidates = np.concatenate((candidates, current_candidates))[new_candidates_idcs]
             candidates_ip = np.concatenate((candidates_ip, current_candidates_ip))[new_candidates_idcs]
             mip_value = candidates_ip[-1]
         return candidates, sample_complexity
+
+    def nn_search_qeuries(self, queries: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, int]:
+        sample_complexity = 0
+        candidates_array = []
+        for query in queries:
+            curr_candidates, curr_complexity = self.nn_search(query, top_k)
+            candidates_array.append(curr_candidates)
+            sample_complexity += curr_complexity
+        return np.array(candidates_array), sample_complexity
 
 
 def toy_experiment_h2alsh(seed: int = 0):

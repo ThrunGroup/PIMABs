@@ -1,6 +1,7 @@
 import numpy as np
 from math import log, sqrt, ceil, log2
 from scipy import stats
+from typing import Tuple
 
 
 class QALSH:
@@ -25,6 +26,7 @@ class QALSH:
         beta = (
             100 / atoms.shape[0]
         )  # Beta denotes collision threshold percentage, see 5.3 in the paper
+
         # To see what p1 and p2 denotes and how they are calculated, see 3.2 in the paper
         p1 = 1 - 2 * stats.norm.cdf(-width / 2)
         p2 = 1 - 2 * stats.norm.cdf(-width / (2 * approx_const))
@@ -63,13 +65,13 @@ class QALSH:
         +self.m * self.atoms.shape[0] * log(self.atoms.shape[0])
         return int(sample_complexity)
 
-    def nn_search(
-        self, query: np.ndarray, top_k: int = 1
-    ):
+    def nn_search(self, query: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, int]:
         assert len(query.shape) == 1, "Query should be a 1d vector"
         assert self.is_generate_hash_table, "Hash tables should be generated"
         radius = 1
-        candidates = np.array([], dtype=np.int64)  # Indices of nn(nearest neighbor) candidates
+        candidates = np.array(
+            [], dtype=np.int64
+        )  # Indices of nn(nearest neighbor) candidates
         candidates_dist = np.array([])  # Distances between candidates and query
         collision_counts = np.zeros(self.atoms.shape[0])
         sample_complexity = 0
@@ -85,7 +87,7 @@ class QALSH:
                 upper_bound = query_hash_value + 1 / 2 * self.width * radius
                 lower_idx = np.searchsorted(self.hash_tables[i][1], lower_bound)
                 upper_idx = np.searchsorted(self.hash_tables[i][1], upper_bound) - 1
-                lower_idx = min(lower_idx, self.atoms.shape[0]-1)
+                lower_idx = min(lower_idx, self.atoms.shape[0] - 1)
                 upper_idx = max(upper_idx, 0)
 
                 # Append the distance between the query and the atom that is nearest to query in the hash table. This
@@ -112,7 +114,9 @@ class QALSH:
             sample_complexity += (
                 len(candidates) * self.atoms.shape[1] + self.atoms.shape[0]
             )  # Cost in getting new candidates + computing the distance of candidates
-            if (len(candidates) != 0) and (np.sum(candidates_dist <= self.approx_const * radius) >= top_k):
+            if (len(candidates) != 0) and (
+                np.sum(candidates_dist <= self.approx_const * radius) >= top_k
+            ):
                 return (
                     candidates[np.argsort(candidates_dist)[:top_k]],
                     int(sample_complexity),
@@ -137,8 +141,8 @@ class QALSH:
 
 def toy_experiment_qalsh(seed: int = 0):
     np.random.seed(seed)
-    atoms = np.random.normal(size=(30000, 100))
-    query = np.random.normal(size=100)
+    atoms = np.random.normal(size=(30000, 10))
+    query = np.random.normal(size=10)
     top_k = 5
     naive_ans = np.argsort(np.linalg.norm(atoms - query, axis=1))[:top_k]
 
