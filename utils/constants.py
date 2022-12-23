@@ -34,8 +34,8 @@ ALG_TO_COLOR = {
     LSH_MIPS: "#1f77b4",
     SYMMETRIC: "#e377c2",
     ASYMMETRIC: "#7f7f7f",
-    HNSW_MIPS: "#7f7f7f",
-    NAHNSW_MIPS: "#9467bd",
+    HNSW_MIPS: "#F4D03F",
+    NAHNSW_MIPS: "#F409FF",
 }
 
 # Datasets

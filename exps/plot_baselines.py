@@ -289,17 +289,16 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[NORMAL_CUSTOM],  # , ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
+        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM],  # , NETFLIX, MOVIE_LENS
         alg_names=[
-            # ADAPTIVE_ACTION_ELIMINATION,
-            ACTION_ELIMINATION,
-            # MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            # PCA_MIPS,
-            # LSH_MIPS,
             HNSW_MIPS,
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS,
+            PCA_MIPS,
+            LSH_MIPS,
             NAHNSW_MIPS
-
         ]
     )
 
@@ -310,14 +309,14 @@ def generate_scaling_plots():
         include_error_bar=True,
         data_types=[NORMAL_CUSTOM],  # replace with NETFLIX, MOVIE_LENS
         alg_names=[
-            # ADAPTIVE_ACTION_ELIMINATION,
+            ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
-            # MEDIAN_ELIMINATION,
-            # GREEDY_MIPS,
-            # PCA_MIPS,
-            # LSH_MIPS,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS,
+            PCA_MIPS,
+            LSH_MIPS,
             HNSW_MIPS,
-            NAHNSW_MIPS
+            # NAHNSW_MIPS
         ]
     )
 
@@ -329,18 +328,21 @@ def generate_tradeoff_plots(top_k: int = 1):
     """
     # precision-accuracy tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
-        data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
+        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM],  # , NETFLIX, MOVIE_LENS
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS
+            LSH_MIPS,
+            HNSW_MIPS,
+            NAHNSW_MIPS
         ],
         top_k=top_k,
         include_error_bar=False
     )
+
     create_tradeoff_plots(
         data_types=[ADVERSARIAL_CUSTOM],
         alg_names=[
