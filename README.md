@@ -30,3 +30,9 @@ The files are organized as follows:
 
 # Reproducing the results
 - To reproduce all of the experimental logs and create the figures, run `chmod +x repro_script.sh && ./repro_script.sh`
+
+# Credits
+
+The implementation of Norm Adjusted Proximity Graph for Fast Inner Product Retrieval uses code from the hnswlib repository (https://github.com/nmslib/hnswlib) under the Apache 
+2.0 license. Thank you to the authors for their contributions. It is licensed under the Apache 2.0 license. A copy 
+of the license can be found at http://www.apache.org/licenses/LICENSE-2.0.
