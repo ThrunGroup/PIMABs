@@ -114,12 +114,5 @@ def run_tradeoff():
 
 
 if __name__ == "__main__":
-   #run_tradeoff()
-   speedup_precision_exps(
-       num_atoms=100,
-       num_experiments=TRADEOFF_NEQ_NUM_EXPERIMENTS,
-       len_signals=1000,
-       num_signals=TRADEOFF_NUM_SIGNALS,
-       data_type=NETFLIX,
-       mips_alg=NEQ_MIPS,
-   )
+   run_tradeoff()
+

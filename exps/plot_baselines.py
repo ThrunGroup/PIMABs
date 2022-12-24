@@ -351,7 +351,6 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    #generate_scaling_plots()
-    #generate_tradeoff_plots(top_k=20)
+    generate_scaling_plots()
     generate_tradeoff_plots(top_k=TRADEOFF_TOPK)
 
