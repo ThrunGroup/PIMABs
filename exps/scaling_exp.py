@@ -253,7 +253,8 @@ def scaling_exp(
             "runtime": avg_runtime,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs/scaling" if dirname is None else dirname
+        log_dir = os.path.join(os.getcwd(), "logs/scaling") if dirname is None else dirname
+
         filename = os.path.join(
             log_dir,
             mips_alg

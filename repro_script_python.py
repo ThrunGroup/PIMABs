@@ -15,14 +15,14 @@ def main():
         print("=> Scaling log files already exist")
     else:
         print("=> Creating Scaling log files")
-        run_scaling()
+    run_scaling()
 
     # precision-speed tradeoff experiments
     if os.path.exists(tradeoff_path):
         print("=> Precision-Speed tradeoff log files already exist")
     else:
         print("=> Creating Precision-Speed log files")
-        run_tradeoff()
+    run_tradeoff()
 
     print("=> Generating scaling plots")
     generate_scaling_plots()

@@ -229,6 +229,7 @@ def create_tradeoff_plots(
     # get all csv files
     path = os.path.join(os.getcwd(), "logs")
     path = os.path.join(path, "precision_speed")
+
     csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
 
     if len(data_types) == 0:
@@ -307,7 +308,7 @@ def generate_scaling_plots():
         is_fit=True,
         is_logspace=True,
         include_error_bar=True,
-        data_types=[NORMAL_CUSTOM],  # replace with NETFLIX, MOVIE_LENS
+        data_types=[NETFLIX, MOVIE_LENS],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
@@ -362,6 +363,6 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    #generate_scaling_plots()
+    # generate_scaling_plots()
     #generate_tradeoff_plots(top_k=20)
-    generate_tradeoff_plots(top_k=5)
+    generate_tradeoff_plots()
