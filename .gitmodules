@@ -1,0 +1,3 @@
+[submodule "algorithms/hnswlib"]
+	path = algorithms/hnswlib
+	url = https://github.com/lukeleeai/nahnsw.git
