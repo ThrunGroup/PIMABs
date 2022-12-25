@@ -10,7 +10,6 @@ class H2ALSH_MIPS:
     """
     def __init__(self, atoms: np.ndarray, delta: float = 0.1, c0: float = 2.0, c: float = 0.9,  N0: int = 500):
         """
-
         :param atoms: Atoms/Objects that we consider in MIPS problem
         :param delta: Error probability (QALSH solves c-ANN problem with 1/2 - delta probability)
         :param c0: denotes c0 in c0-ANN problem. See 2.1 in the paper for the definition of c0-ANN.
@@ -26,7 +25,7 @@ class H2ALSH_MIPS:
         self.N0 = N0
 
         # Partitioning atoms
-        b = sqrt(1 - (1-c)/(c0 ** 2 - c))  # Partition ratio, see 3.3 in the paper for the formula
+        b = sqrt(1 - (1-c)/(c0 ** 4 - c))  # Partition ratio, see 3.3 in the paper for the formula
         atoms_norm = np.linalg.norm(atoms, axis=1)
         sort_idcs = np.argsort(atoms_norm)[::-1]  # Sort in the ascending order
         j = 0
@@ -95,14 +94,14 @@ class H2ALSH_MIPS:
             mip_value = candidates_ip[-1]
         return np.array(candidates, dtype=np.int64), sample_complexity
 
-    def mip_search_qeuries(self, queries: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, int]:
-        sample_complexity = 0
+    def mip_search_queries(self, queries: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
+        sample_complexities = []
         candidates_array = []
         for query in queries:
             curr_candidates, curr_complexity = self.mip_search(query, top_k)
             candidates_array.append(curr_candidates)
-            sample_complexity += curr_complexity
-        return np.array(candidates_array), sample_complexity
+            sample_complexities.append(curr_complexity)
+        return np.array(candidates_array), np.array(sample_complexities)
 
 
 def toy_experiment_h2alsh(seed: int = 0):
