@@ -42,43 +42,13 @@ def run_tradeoff():
     the two real-world datasets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:  # NETFLIX, MOVIE_LENS
+    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
         if data_type in [NETFLIX, MOVIE_LENS]:
             num_atoms = NUM_ATOMS_REAL
             len_signals = NUM_ATOMS_SIGNAL
         else:
             num_atoms = TRADEOFF_NUM_ATOMS
             len_signals = TRADEOFF_DIMENSION
-
-        speedup_precision_exps(
-            num_atoms=num_atoms,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=GREEDY_MIPS,
-            with_replacement=False,
-        )
-
-        speedup_precision_exps(
-            num_atoms=num_atoms,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=HNSW_MIPS,
-            with_replacement=False,
-        )
-
-        speedup_precision_exps(
-            num_atoms=num_atoms,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=NAHNSW_MIPS,
-            with_replacement=False,
-        )
 
         speedup_precision_exps(
             num_atoms=num_atoms,
@@ -107,6 +77,36 @@ def run_tradeoff():
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=MEDIAN_ELIMINATION,
+            with_replacement=False,
+        )
+
+        speedup_precision_exps(
+            num_atoms=num_atoms,
+            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+            len_signals=len_signals,
+            num_signals=TRADEOFF_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=GREEDY_MIPS,
+            with_replacement=False,
+        )
+
+        speedup_precision_exps(
+            num_atoms=num_atoms,
+            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+            len_signals=len_signals,
+            num_signals=TRADEOFF_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=HNSW_MIPS,
+            with_replacement=False,
+        )
+
+        speedup_precision_exps(
+            num_atoms=num_atoms,
+            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+            len_signals=len_signals,
+            num_signals=TRADEOFF_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=NAHNSW_MIPS,
             with_replacement=False,
         )
 

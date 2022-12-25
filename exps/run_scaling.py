@@ -41,7 +41,7 @@ def run_scaling():
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:  # NETFLIX, MOVIE_LENS
+    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
         if data_type is MOVIE_LENS:
             size_minmax = SCAlING_SIZE_MINMAX_MOVIE
         else:
@@ -61,21 +61,7 @@ def run_scaling():
             size_minmax=SCALING_SIZE_MINMAX,
             num_experiments=SCALING_NUM_EXPERIMENTS,
             num_signals=SCALING_NUM_SIGNALS,
-            data_type=NORMAL_CUSTOM,
-            mips_alg=NAHNSW_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-
-        scaling_exp(
-            epsilon=SCALING_EPSILON,
-            delta=SCALING_DELTA,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=SCALING_SIZE_MINMAX,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=NORMAL_CUSTOM,
+            data_type=data_type,
             mips_alg=ACTION_ELIMINATION,
             with_replacement=False,
             is_normalize=False,
@@ -103,7 +89,7 @@ def run_scaling():
             size_minmax=size_minmax,
             num_experiments=SCALING_NUM_EXPERIMENTS,
             num_signals=SCALING_NUM_SIGNALS,
-            data_type=NORMAL_CUSTOM,
+            data_type=data_type,
             mips_alg=GREEDY_MIPS,
             with_replacement=False,
             is_normalize=False,
@@ -117,8 +103,22 @@ def run_scaling():
             size_minmax=SCALING_SIZE_MINMAX,
             num_experiments=SCALING_NUM_EXPERIMENTS,
             num_signals=SCALING_NUM_SIGNALS,
-            data_type=NORMAL_CUSTOM,
+            data_type=data_type,
             mips_alg=HNSW_MIPS,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=True,
+        )
+
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=SCALING_DELTA,
+            num_atoms=SCALING_NUM_ATOMS,
+            size_minmax=SCALING_SIZE_MINMAX,
+            num_experiments=SCALING_NUM_EXPERIMENTS,
+            num_signals=SCALING_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=NAHNSW_MIPS,
             with_replacement=False,
             is_normalize=False,
             is_logspace=True,

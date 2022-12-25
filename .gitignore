@@ -1,8 +1,4 @@
 data/raw_data
-logs/*
-exps/logs
-data/netflix/*.txt
-data/netflix/*.npy
 .idea
 *.DS_Store*
 .DS_Store
