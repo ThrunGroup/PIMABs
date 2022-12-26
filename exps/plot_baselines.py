@@ -289,29 +289,27 @@ def generate_scaling_plots():
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
+            # GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
         ]
     )
 
-    # # fit the bandit algorithms and greedy-mips for better comparison
-    # create_scaling_plots(
-    #     is_fit=True,
-    #     is_logspace=True,
-    #     include_error_bar=True,
-    #     data_types=[ADVERSARIAL_CUSTOM],  # replace with NETFLIX, MOVIE_LENS
-    #     alg_names=[
-    #         ADAPTIVE_ACTION_ELIMINATION,
-    #         ACTION_ELIMINATION,
-    #         MEDIAN_ELIMINATION,
-    #         GREEDY_MIPS,
-    #         PCA_MIPS,
-    #         LSH_MIPS,
-    #         HNSW_MIPS,
-    #         # NAHNSW_MIPS
-    #     ]
-    # )
+    # fit the bandit algorithms and greedy-mips for better comparison
+    create_scaling_plots(
+        is_fit=True,
+        is_logspace=True,
+        include_error_bar=True,
+        data_types=[CRYPTO_PAIRS],  # replace with NETFLIX, MOVIE_LENS
+        alg_names=[
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            # GREEDY_MIPS,
+            # PCA_MIPS,
+            LSH_MIPS,
+        ]
+    )
 
 
 def generate_tradeoff_plots(top_k: int = 1):
