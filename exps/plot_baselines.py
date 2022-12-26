@@ -289,7 +289,7 @@ def generate_scaling_plots():
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
-            # GREEDY_MIPS,
+            GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
         ]
@@ -300,13 +300,13 @@ def generate_scaling_plots():
         is_fit=True,
         is_logspace=True,
         include_error_bar=True,
-        data_types=[CRYPTO_PAIRS],  # replace with NETFLIX, MOVIE_LENS
+        data_types=[CRYPTO_PAIRS],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
-            # GREEDY_MIPS,
-            # PCA_MIPS,
+            GREEDY_MIPS,
+            PCA_MIPS,
             LSH_MIPS,
         ]
     )
