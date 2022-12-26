@@ -13,6 +13,8 @@ import numpy as np
 from math import sqrt
 from scipy import linalg
 from typing import Tuple
+from collections import defaultdict
+from numba import jit
 from scipy.linalg.lapack import get_lapack_funcs
 
 from algorithms.mips_bandit import mips_bandit
@@ -84,7 +86,10 @@ def orthogonal_matching_pursuit(
     seed: int = 0,
     abs: bool = False,
     batch_size: int = 30,
+
+    # caching params
     use_cache: bool = True,
+    use_naive: bool = False,
     cache_multiplier: int = 100,
 ) -> Tuple[np.ndarray, int]:
     """
@@ -101,8 +106,10 @@ def orthogonal_matching_pursuit(
     :param abs: Whether to take absolute value when computing maximal inner product search.
     :return: an array of indices similar to scikit-learn OMP's indices attribute AND budget
     """
-    set_seed(seed)
+    if use_naive:
+        assert use_cache == True, "cannot use naive-cache if use_cache isn't specified"
 
+    set_seed(seed)
     if signal.ndim == 1:
         signal = signal.reshape(-1, 1)
 
@@ -120,13 +127,17 @@ def orthogonal_matching_pursuit(
     n_active = 0
     indices = np.arange(num_atoms)  # keeping track of swapping
 
-    shuffled_indices = None
+    # need to set these default values since we pass in the arguments
     cache = None
+    cache_tracker = None
+    cache_map = None
+    shuffled_indices = np.arange(num_dimensions)
+    np.random.shuffle(shuffled_indices)
 
     if use_cache:
-        # get permutation of indices
-        shuffled_indices = np.arange(num_dimensions)
-        np.random.shuffle(shuffled_indices)
+        print("using caching")
+        if use_naive:
+            print("naively")
 
         # initialise cache
         # key: atom index, value: values of cached coordinates of the atom
@@ -134,12 +145,26 @@ def orthogonal_matching_pursuit(
         cache = np.empty((num_atoms, max_cache_size))
         cache_tracker = np.zeros(num_atoms)  # track how many cached values each atom has
 
+        # Todo: is there a one-liner for this?
+        # Todo: cache_map doesn't work with numba....
+        cache_map = []
+        for i in range(num_atoms):
+            cache_map.append(defaultdict(int))
+        cache_map = np.array(cache_map)
+
     L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
 
     while np.linalg.norm(residual) > min_residual:
         # solve the MIPS problem
         if len(bandit_alg) > 0:
-            candidate, budget = mips_bandit(
+
+            # naive-caching uses different permutation for each MP iteration.
+            if use_naive:
+                shuffled_indices = np.arange(num_dimensions)
+                np.random.shuffle(shuffled_indices)
+
+            # Todo: only supports caching with Action Elimination for now
+            candidate, budget, cache, cache_tracker, cache_map = mips_bandit(
                 atoms.T,
                 residual.T,  # need to pass in 2d array
                 maxmin=(np.min(atoms), np.max(atoms)),
@@ -150,10 +175,15 @@ def orthogonal_matching_pursuit(
                 use_cache=use_cache,
                 shuffled_indices=shuffled_indices,
                 cache=cache,
-                max_cache_size=max_cache_size,
-                cache_tracker=cache_tracker
+                cache_tracker=cache_tracker,
+                cache_map=cache_map,
             )
             lam = candidate[0][0]
+
+            # update params
+            cache = cache
+            cache_tracker = cache_tracker
+            cache_map = cache_map
         else:
             if abs:
                 lam = np.argmax(np.abs(atoms.T @ residual))

@@ -32,7 +32,7 @@ def mips_bandit(
     shuffled_indices: list = None,
     cache: np.ndarray = None,
     cache_tracker: np.ndarray = None,
-    max_cache_size: int = 100,
+    cache_map: np.ndarray = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
@@ -99,10 +99,10 @@ def mips_bandit(
                 seed=seed,
                 batch_size=batch_size,
                 use_cache=use_cache,
-                shuffled_indices=shuffled_indices,
+                permutation=shuffled_indices,
                 cache=cache,
-                max_cache_size=max_cache_size,
-                cache_tracker=cache_tracker
+                cache_tracker=cache_tracker,
+                cache_map=cache_map
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(

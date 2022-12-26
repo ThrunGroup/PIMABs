@@ -99,6 +99,8 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
+    dir_name: str = "scaling",
+    caching_type: str = "",
     data_types: List[str] = [],
     alg_names: List[str] = [],
     include_error_bar: bool = False,
@@ -108,6 +110,8 @@ def create_scaling_plots(
     """
     Plot the scaling experiments from the data stored in the logs file.
 
+    :param dir_name: either "scaling" or "mp_scaling"
+    :param caching_type: either "", "(naive cache)", "(PI cache)"
     :param data_types: the datasets that you want to plot. If empty, warning is triggered.
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
     :param include_error_bar: shows the standard deviation
@@ -116,7 +120,7 @@ def create_scaling_plots(
     """
     # get all csv files
     path = os.path.join(os.getcwd(), "logs")
-    path = os.path.join(path, "scaling")
+    path = os.path.join(path, dir_name)
     csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
@@ -140,7 +144,7 @@ def create_scaling_plots(
             error = data["budgets_std"].tolist()
             x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
             if is_fit:
-                title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
+                title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)} {caching_type}"
                 if is_logspace:
                     functions = [np.array, power10_sqrt, power10]
                     function_names = [

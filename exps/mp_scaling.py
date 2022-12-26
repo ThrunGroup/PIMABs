@@ -119,6 +119,7 @@ def scaling_exp(
                     signal=signal,
                     bandit_alg="",
                     abs=True,
+                    use_cache=False,
                 )
 
                 start_time = time.time()
@@ -127,6 +128,7 @@ def scaling_exp(
                     signal=signal,
                     bandit_alg=mips_alg,
                     abs=True,
+                    use_cache=False,
                 )
                 runtime = time.time() - start_time
 

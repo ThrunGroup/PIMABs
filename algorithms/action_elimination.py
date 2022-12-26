@@ -24,23 +24,32 @@ def action_elimination(
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
-    seed: int=0,
+    seed: int = 0,
+
+    # caching params
     use_cache: bool = True,
-    permutation: list = None,
+    permutation: np.ndarray = None,
     cache: np.ndarray = None,
-    max_cache_size: int = 100,
-    cache_tracker: np.ndarray = None
+    cache_tracker: np.ndarray = None,
+    cache_map: np.ndarray = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
     arm with the highest estimated reward in each round. See algorithm 1 in https://arxiv.org/pdf/2006.06856.pdf and
-    AE algorithm in https://homes.cs.washington.edu/~jamieson/resources/bestArmSurvey.pdf#page=2
+    AE algorithm in https://homes.cs.washington.edu/~jamieson/resources/bestArmSurvey.pdf#page=2. You can set the flag
+    to use_cache for more efficiency. The params for caching are as follows:
+
+    :params permutation: the sequence of indices used for PI caching (default None i.e. naive caching)
+    :params cache: the cache of size (N, max_cache_size)
+    :params cache_tracker: array of size N that tracks each atom and how much is cached (< max_cache_size).
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
     set_seed(seed)
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
+
+    # run AE for all signals
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
         D = atoms.shape[0]  # Number of atoms
@@ -48,10 +57,16 @@ def action_elimination(
         t = 0  # time step
         new_delta = delta * batch_size / (d * D)
         budgets = 0  # Number of calculations
+
+        # reset all params
         candidates = np.arange(D)  # arms (atoms)
         lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
         ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
         means = np.zeros(D)  # estimated means of arm returns
+
+        curr_cache = cache
+        curr_cache_tracker = cache_tracker
+        curr_cache_map = cache_map
 
         # TODO: Add exact computation if total mnist too big
         # TODO: Maybe need to change this to a > 0 and ucbs > lcbs.max below
@@ -83,26 +98,25 @@ def action_elimination(
                 # Exit the loop.
                 break
 
-            # At this point, we know that the reference points will never be in the cache since we're using a fixed
-            # permutation. In that case, we sample naively.
-            if start > max_cache_size:
-                use_cache = False
-
             sample_indices = permutation[start: end]
-            if use_cache:
-                candidates_sampled, cache, cache_tracker, budget = subset_2d_cached(
-                    source_array=atoms,
-                    rows=candidates,
-                    columns=sample_indices,
-                    start=start,
-                    cache=cache,
-                    cache_tracker=cache_tracker
-                )
-                budgets += budget
-            else:
-                candidates_sampled = subset_2d(source_array=atoms, rows=candidates, columns=sample_indices)
-                budgets += batch_size * len(candidates)
+            candidates_sampled, budget, _cache, _cache_tracker, _cache_map = subset_2d_cached(
+                source_array=atoms,
+                rows=candidates,
+                columns=sample_indices,
 
+                # params needed for caching support
+                use_cache=use_cache,
+                start=start,
+                cache=curr_cache,
+                cache_tracker=curr_cache_tracker,
+                cache_map=curr_cache_map
+            )
+
+            # update params
+            budgets += budget
+            curr_cache = _cache
+            curr_cache_tracker = _cache_tracker
+            curr_cache_map = _cache_map
             signal_sampled = signal[sample_indices]
             means[candidates] = (
                 (start * means[candidates])
@@ -146,4 +160,5 @@ def action_elimination(
             candidates = candidates[new_cand_idcs]
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
-    return candidates_array, budgets_array
+    return candidates_array, budgets_array, cache, cache_tracker, cache_map
+

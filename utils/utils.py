@@ -7,10 +7,12 @@ import matplotlib.pyplot as plt
 from typing import Tuple, List, Any
 from sklearn.linear_model import LinearRegression
 from pandas import read_csv
+from collections import defaultdict
 from utils.constants import (
     COLORS,
     SCALING_SIZE_MINMAX,
-    SCALING_NUM_EXPERIMENTS
+    SCALING_NUM_EXPERIMENTS,
+    CACHING_BUDGET
 )
 
 
@@ -283,34 +285,45 @@ def subset_2d(
             subset_array[(i, j)] = source_array[(rows[i], columns[j])]
     return subset_array
 
+
 @nb.njit
 def subset_2d_cached(
     source_array: np.ndarray,
     rows: np.ndarray,
     columns: np.ndarray,
+    use_cache,
     start: int,
     cache: np.ndarray,
-    cache_tracker: np.ndarray
+    cache_tracker: np.ndarray,
+    cache_map: np.ndarray,
 ):
     """
-    Implements subset_2d with cache support.
+    Implements subset_2d with cache support. Assumes budget to read/write cache is the same.
     Returns the subset_array, updated cache, cache_tracker, and budget.
     """
     budget = 0
     subset_array = np.empty((len(rows), len(columns)))
     for i in range(len(rows)):
-
-        # Write to the cache if element doesn't exist. Otherwise, just read from cache.
         for j in range(len(columns)):
-            if cache_tracker[rows[i]] < start + j:
-                cache_tracker[rows[i]] += 1
-                cache[(rows[i], columns[j])] = source_array[(rows[i], columns[j])]
+
+            # Check if sample already exists in cache. Note that cache_map adds 1 to every index.
+            # This is because defaultdict initializes values to zero.
+            if use_cache and cache_map[columns[j]] > 0:
+                subset_array[(i, j)] = cache[(rows[i], cache_map[columns[j]] - 1)]
+                budget += CACHING_BUDGET
+
+            else:
+                # write to cache if space exists
+                source = source_array[(rows[i], columns[j])]
+                if use_cache and cache_tracker[rows[i]] < cache.shape[1]:
+                    cache[(rows[i], cache_tracker[rows[i]])] = source
+                    cache_tracker[rows[i]] += 1
+                    cache_map[columns[j]] = cache_tracker[rows[i]]
+                    budget += CACHING_BUDGET
+
+                subset_array[(i, j)] = source
                 budget += 1
-
-            subset_array[(i, j)] = cache[(rows[i], columns[j])]
-            budget += 0.01
-
-    return subset_array, cache, cache_tracker, budget
+    return subset_array, budget, cache, cache_tracker, cache_map
 
 
 def fit_and_plot(
