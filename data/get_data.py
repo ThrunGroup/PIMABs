@@ -11,6 +11,7 @@ from utils.constants import (
     YAHOO,
     NETFLIX,
     MOVIE_LENS,
+    CRYPTO_PAIRS
 )
 from data.custom_data import generate_custom_data
 from utils.utils import subset_2d
@@ -43,6 +44,12 @@ def get_data(
             "movie_lens_1m_ratings.npy",
         )
         data = np.load(filename)
+    elif data_type is CRYPTO_PAIRS:
+        filename = os.path.join(
+            os.path.join(os.path.dirname(__file__), "crypto_pairs"),
+            "crypto_pairs_1m_dimensions.npy",
+        )
+        data = np.load(filename)
     else:
         raise NotImplementedError(f"{data_type} is not implemented")
 
@@ -50,7 +57,7 @@ def get_data(
         num_atoms + num_signals < data.shape[0]
     ), "Number of atoms + number of signals given are greater than the number of rows of data"
     assert (
-        len_signal < data.shape[1]
+        len_signal <= data.shape[1]
     ), "Length of signal given is greater than the number of columns of data"
 
     signal_idcs = rng.choice(np.arange(num_atoms, data.shape[0] - 1), num_signals)

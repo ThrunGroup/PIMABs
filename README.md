@@ -27,6 +27,9 @@ The files are organized as follows:
 
 - The Netflix Prize dataset is available from [here](https://www.kaggle.com/datasets/netflix-inc/netflix-prize-data).
 - The Movie Lens 1m data is available from [here](https://grouplens.org/datasets/movielens/1m/).
+- The Crypto Pairs (1M dimensions) dataset is available from [here](https://www.kaggle.com/datasets/tencars/392-crypto-currency-pairs-at-minute-resolution).
+  1. Download the "archive" zip file and extract it inside `data/crypto_pairs`
+  2. Run `data/crypto_pairs/preprocess_crypto_pairs.py`
 
 # Reproducing the results
 - To reproduce all of the experimental logs and create the figures, run `chmod +x repro_script.sh && ./repro_script.sh`

@@ -10,6 +10,7 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    CRYPTO_PAIRS,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -19,9 +20,6 @@ from utils.constants import (
     LSH_MIPS,
     PCA_MIPS,
     ASYMMETRIC,
-    SYMMETRIC,
-    HNSW_MIPS,
-    NAHNSW_MIPS,
 
     # scaling specific constants
     TRADEOFF_NUM_EXPERIMENTS,
@@ -32,20 +30,23 @@ from utils.constants import (
     TRADEOFF_DIMENSION,
     TRADEOFF_DIMENSION_MOVIE,
     NUM_ATOMS_REAL,
-    NUM_ATOMS_SIGNAL
+    NUM_ATOMS_SIGNAL,
+    CRYPTO_PAIRS_SIGNAL_LENGTH,
 )
 
 
 def run_tradeoff():
     """
     Run speedup_precision tradeoff experiment for the two synthetic datasets (normal custom, adversarial custom) and
-    the two real-world datasets (netflix and movie lens). This function is called by repro_script_python.py.
+    the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:  # NETFLIX, MOVIE_LENS
-        if data_type in [NETFLIX, MOVIE_LENS]:
+    for data_type in [CRYPTO_PAIRS, ADVERSARIAL_CUSTOM]:  #, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
+        if data_type in [CRYPTO_PAIRS, NETFLIX, MOVIE_LENS]:
             num_atoms = NUM_ATOMS_REAL
             len_signals = NUM_ATOMS_SIGNAL
+            if data_type is CRYPTO_PAIRS:
+                len_signals = CRYPTO_PAIRS_SIGNAL_LENGTH
         else:
             num_atoms = TRADEOFF_NUM_ATOMS
             len_signals = TRADEOFF_DIMENSION
@@ -56,40 +57,9 @@ def run_tradeoff():
             len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
-            mips_alg=GREEDY_MIPS,
-            with_replacement=False,
-        )
-
-        speedup_precision_exps(
-            num_atoms=num_atoms,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=HNSW_MIPS,
-            with_replacement=False,
-        )
-
-        speedup_precision_exps(
-            num_atoms=num_atoms,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=NAHNSW_MIPS,
-            with_replacement=False,
-        )
-
-        speedup_precision_exps(
-            num_atoms=num_atoms,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
             mips_alg=ADAPTIVE_ACTION_ELIMINATION,
             with_replacement=False,
         )
-
         speedup_precision_exps(
             num_atoms=num_atoms,
             num_experiments=TRADEOFF_NUM_EXPERIMENTS,
@@ -99,7 +69,6 @@ def run_tradeoff():
             mips_alg=ACTION_ELIMINATION,
             with_replacement=False,
         )
-
         speedup_precision_exps(
             num_atoms=num_atoms,
             num_experiments=TRADEOFF_NUM_EXPERIMENTS,
@@ -109,7 +78,15 @@ def run_tradeoff():
             mips_alg=MEDIAN_ELIMINATION,
             with_replacement=False,
         )
-
+        speedup_precision_exps(
+            num_atoms=num_atoms,
+            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+            len_signals=len_signals,
+            num_signals=TRADEOFF_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=GREEDY_MIPS,
+            with_replacement=False,
+        )
         speedup_precision_exps(
             num_atoms=num_atoms,
             num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
@@ -118,7 +95,6 @@ def run_tradeoff():
             data_type=data_type,
             mips_alg=PCA_MIPS,
         )
-
         speedup_precision_exps(
             num_atoms=num_atoms,
             num_experiments=TRADEOFF_LSH_NUM_EXPERIMENTS,
@@ -131,4 +107,4 @@ def run_tradeoff():
 
 
 if __name__ == "__main__":
-    run_tradeoff()
+   run_tradeoff()

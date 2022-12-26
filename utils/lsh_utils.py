@@ -69,8 +69,8 @@ def g_normalization(query):
     Normalize the query vector so that ||q||_2 = 1
     """
     if int(np.sum(query == 0)):
-        len = len(query)
-        return [q / len for q in query]
+        len_ = len(query)
+        return [q / len_ for q in query]
 
     norm = math.sqrt(np.dot(query, query))
     return [q / norm for q in query]

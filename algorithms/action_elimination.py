@@ -38,6 +38,7 @@ def action_elimination(
     set_seed(seed)
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
+
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
         D = atoms.shape[0]  # Number of atoms

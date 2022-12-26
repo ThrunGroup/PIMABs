@@ -443,7 +443,8 @@ def speedup_precision_exps(
             "runtime": avg_runtime,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs/precision_speed" if dirname is None else dirname
+        current_file_directory = os.path.dirname(__file__)
+        log_dir = os.path.join(current_file_directory, "logs/precision_speed") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg

@@ -14,6 +14,7 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    CRYPTO_PAIRS,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -21,8 +22,6 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-    HNSW_MIPS,
-    NAHNSW_MIPS,
     MAX_SPEEDUP
 )
 from utils.utils import fit_and_plot
@@ -47,10 +46,6 @@ def translate_alg_name(alg_name: str):
         return "LSH-MIPS"
     elif alg_name == PCA_MIPS:
         return "PCA-MIPS"
-    elif alg_name == HNSW_MIPS:
-        return "HNSW-MIPS"
-    elif alg_name == NAHNSW_MIPS:
-        return "NAHNSW-MIPS"
     else:
         raise Exception("Bad algorithm name")
 
@@ -72,6 +67,8 @@ def translate_dataset_name(dataset_name: str):
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
+    elif dataset_name == CRYPTO_PAIRS:
+        return "Crypto Pairs"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -92,10 +89,6 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
-    elif NAHNSW_MIPS in filename:
-        return NAHNSW_MIPS
-    elif HNSW_MIPS in filename:
-        return HNSW_MIPS
     else:
         raise Exception("No algorithm was able to be extracted from " + filename)
 
@@ -227,8 +220,10 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    path = os.path.join(os.getcwd(), "logs")
+    current_file_directory = os.path.dirname(__file__)
+    path = os.path.join(current_file_directory, "logs")
     path = os.path.join(path, "precision_speed")
+
     csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
 
     if len(data_types) == 0:
@@ -289,36 +284,34 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM],  # , NETFLIX, MOVIE_LENS
+        data_types=[CRYPTO_PAIRS],  # NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
         alg_names=[
-            HNSW_MIPS,
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
-            NAHNSW_MIPS
         ]
     )
 
-    # fit the bandit algorithms and greedy-mips for better comparison
-    create_scaling_plots(
-        is_fit=True,
-        is_logspace=True,
-        include_error_bar=True,
-        data_types=[NORMAL_CUSTOM],  # replace with NETFLIX, MOVIE_LENS
-        alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
-            ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS,
-            HNSW_MIPS,
-            # NAHNSW_MIPS
-        ]
-    )
+    # # fit the bandit algorithms and greedy-mips for better comparison
+    # create_scaling_plots(
+    #     is_fit=True,
+    #     is_logspace=True,
+    #     include_error_bar=True,
+    #     data_types=[ADVERSARIAL_CUSTOM],  # replace with NETFLIX, MOVIE_LENS
+    #     alg_names=[
+    #         ADAPTIVE_ACTION_ELIMINATION,
+    #         ACTION_ELIMINATION,
+    #         MEDIAN_ELIMINATION,
+    #         GREEDY_MIPS,
+    #         PCA_MIPS,
+    #         LSH_MIPS,
+    #         HNSW_MIPS,
+    #         # NAHNSW_MIPS
+    #     ]
+    # )
 
 
 def generate_tradeoff_plots(top_k: int = 1):
@@ -328,7 +321,7 @@ def generate_tradeoff_plots(top_k: int = 1):
     """
     # precision-accuracy tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
-        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM],  # , NETFLIX, MOVIE_LENS
+        data_types=[CRYPTO_PAIRS],  # NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
@@ -336,30 +329,28 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
-            HNSW_MIPS,
-            NAHNSW_MIPS
         ],
         top_k=top_k,
         include_error_bar=False
     )
 
-    create_tradeoff_plots(
-        data_types=[ADVERSARIAL_CUSTOM],
-        alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
-            ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS
-        ],
-        top_k=top_k,
-        max_speedup=MAX_SPEEDUP,
-        include_error_bar=False
-    )
+    # create_tradeoff_plots(
+    #     data_types=[ADVERSARIAL_CUSTOM],
+    #     alg_names=[
+    #         ADAPTIVE_ACTION_ELIMINATION,
+    #         ACTION_ELIMINATION,
+    #         MEDIAN_ELIMINATION,
+    #         GREEDY_MIPS,
+    #         PCA_MIPS,
+    #         LSH_MIPS
+    #     ],
+    #     top_k=top_k,
+    #     max_speedup=MAX_SPEEDUP,
+    #     include_error_bar=False
+    # )
 
 
 if __name__ == "__main__":
-    #generate_scaling_plots()
+    # generate_scaling_plots()
     #generate_tradeoff_plots(top_k=20)
     generate_tradeoff_plots(top_k=5)

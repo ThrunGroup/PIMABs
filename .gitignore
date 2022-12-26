@@ -1,9 +1,6 @@
 data/raw_data
-logs/*
-exps/logs
-data/netflix/*.txt
-data/netflix/*.npy
-.idea
+
+.idea/
 *.DS_Store*
 .DS_Store
 
@@ -139,3 +136,4 @@ dmypy.json
 
 # real datasets
 *.npy
+data/crypto_pairs/archive

@@ -47,6 +47,7 @@ SYNTHETIC = "SYNTHETIC"
 NETFLIX = "NETFLIX"
 MOVIE_LENS = "MOVIE_LENS"
 YAHOO = "YAHOO"
+CRYPTO_PAIRS = "CRYPTO_PAIRS"
 
 # Concentration Inequality bound
 HOEFFDING = "HOEFFDING"
@@ -54,10 +55,12 @@ HOEFFDING = "HOEFFDING"
 # Scaling Experiments
 NUM_SEEDS = 5
 DEFAULT_MAXMIN = (5, 0)
+CRYPTO_PAIRS_MAXMIN = (10 ** 5, 0)
 NORMALIZED_MAXMIN = (1, -1)
 DEFAULT_GREEDY_BUDGET = 50
 SCALING_NUM_EXPERIMENTS = 10  # corresponds to the number of points on the plot
 SCALING_NUM_ATOMS = 1000
+SCALING_NUM_ATOMS_CRYPTO_PAIRS = 100
 SCALING_NUM_SIGNALS = 3  # this is to get the confidence intervals
 SCALING_DELTA = 0.3
 SCALING_EPSILON = 0.0
@@ -70,8 +73,12 @@ SCALING_NUM_TABLES = 5
 SCALING_SIZE_MINMAX = (
     100, 10 ** 4,
 )
-SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
+SCAlING_SIZE_MINMAX_MOVIE = (  # movie dataset is only 6000 dimensions
     100, 5000,
+)
+SCAlING_SIZE_CRYPTO_PAIRS = (  # crypto pairs dataset has 1M dimensions
+    # 10 ** 4, 10 ** 6
+    100, 10 ** 3,
 )
 
 # Precision-Speed Tradeoff Experiments
@@ -85,6 +92,7 @@ TRADEOFF_TOPK = 10
 # Normal Custom dataset params
 TRADEOFF_DEFAULT_EPSILON = 0.0
 TRADEOFF_MAXMIN = (4.0, -4.0)
+TRADE_OFF_CRYPTO_PAIRS_MAXMIN = (10 ** 5, 0)
 NORMAL_VAR = 1
 DELTA_BINS = 4
 DELTA_MINMAX = (0.0, 0.99)
@@ -118,6 +126,7 @@ GREEDY_QUERY_SIZE = [2, 5, 7]
 # Real Data params
 NUM_ATOMS_REAL = 100
 NUM_ATOMS_SIGNAL = 1000
+CRYPTO_PAIRS_SIGNAL_LENGTH = 10 ** 3
 MAX_SPEEDUP = 20
 TRADEOFF_DELTA_MINMAX_REAL = (0, 0.5)
 TRADEOFF_MAXMIN_REAL = (0.3, -0.3)
@@ -125,7 +134,6 @@ TRADEOFF_VAR_REAL = 2
 TRADEOFF_DEPTH_MINMAX_REAL = (0, 10)
 TRADEOFF_BATCH_SIZE_REAL = 5
 DELTA_POWER_MINMAX = (0.05, 20)
-
 
 # Large Scale params
 LARGE_SIZE_MINMAX = (10, 5 * 10 ** 6)

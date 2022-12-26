@@ -14,8 +14,6 @@ from utils.constants import (
     GREEDY_MIPS,
     PCA_MIPS,
     LSH_MIPS,
-    HNSW_MIPS,
-    NAHNSW_MIPS,
 
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
@@ -37,27 +35,27 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
-import hnswlib
+
 
 def scaling_exp(
-    epsilon: Optional[float] = SCALING_EPSILON,
-    delta: Optional[float] = SCALING_DELTA,
-    maxmin: Tuple[float, float] = DEFAULT_MAXMIN,
-    data_type: str = NORMAL_CUSTOM,
-    mips_alg: str = MEDIAN_ELIMINATION,
-    num_experiments: int = SCALING_NUM_EXPERIMENTS,
-    num_seeds: int = NUM_SEEDS,
-    data_generation_seed: int = 0,
-    size_minmax: Tuple[int, int] = (10, 10**6),
-    num_atoms: int = 10**3,
-    num_signals: int = 1,
-    num_best_atoms: int = SCALING_TOPK,
-    with_replacement: bool = False,
-    is_normalize: bool = False,
-    is_log: bool = True,
-    is_plot: bool = True,
-    is_logspace: bool = False,
-    dirname: str = None,
+        epsilon: Optional[float] = SCALING_EPSILON,
+        delta: Optional[float] = SCALING_DELTA,
+        maxmin: Tuple[float, float] = DEFAULT_MAXMIN,
+        data_type: str = NORMAL_CUSTOM,
+        mips_alg: str = MEDIAN_ELIMINATION,
+        num_experiments: int = SCALING_NUM_EXPERIMENTS,
+        num_seeds: int = NUM_SEEDS,
+        data_generation_seed: int = 0,
+        size_minmax: Tuple[int, int] = (10, 10 ** 6),
+        num_atoms: int = 10 ** 3,
+        num_signals: int = 1,
+        num_best_atoms: int = SCALING_TOPK,
+        with_replacement: bool = False,
+        is_normalize: bool = False,
+        is_log: bool = True,
+        is_plot: bool = True,
+        is_logspace: bool = False,
+        dirname: str = None,
 ) -> None:
     """
     Run the time complexity of the bandit and baseline algorithms as the signal size scales and store them in
@@ -127,10 +125,10 @@ def scaling_exp(
             # bandit algorithms
             if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION]:
                 log_info = (
-                    "epsilon"
-                    + str(epsilon)
-                    + "_delta"
-                    + str(delta)
+                        "epsilon"
+                        + str(epsilon)
+                        + "_delta"
+                        + str(delta)
                 )
                 start_time = time.time()
                 candidates_array, budget_array = mips_bandit(
@@ -150,8 +148,8 @@ def scaling_exp(
             # baseline algorithms
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
-                    "budget"
-                    + str(DEFAULT_GREEDY_BUDGET)
+                        "budget"
+                        + str(DEFAULT_GREEDY_BUDGET)
                 )
                 start_time = time.time()
                 candidates_array, _, _, budget_array = greedy_mips(
@@ -164,8 +162,8 @@ def scaling_exp(
 
             elif mips_alg is PCA_MIPS:
                 log_info = (
-                    "depth"
-                    + str(delta)
+                        "depth"
+                        + str(delta)
                 )
                 start_time = time.time()
                 candidates_array, budget_array = run_pca_mips(
@@ -178,10 +176,10 @@ def scaling_exp(
 
             elif mips_alg is LSH_MIPS:
                 log_info = (
-                    "hfunc_"
-                    + str(SCALING_NUM_HFUNC)
-                    + "_tables"
-                    + str(SCALING_NUM_TABLES)
+                        "hfunc_"
+                        + str(SCALING_NUM_HFUNC)
+                        + "_tables"
+                        + str(SCALING_NUM_TABLES)
                 )
                 start_time = time.time()
                 candidates_array, budget_array = run_lsh_mips(
@@ -193,25 +191,6 @@ def scaling_exp(
                 )
                 runtime = time.time() - start_time
 
-            elif mips_alg in [HNSW_MIPS, NAHNSW_MIPS]:
-                log_info = (
-                        mips_alg
-                )
-
-                start_time = time.time()
-                index = hnswlib.Index(space="ip", dim=size, useNormFactor_=mips_alg==NAHNSW_MIPS)
-
-                # Initializing index - the maximum number of elements should be known beforehand
-                index.init_index(max_elements=num_atoms, ef_construction=200, M=16)
-
-                # Element insertion (can be called several times):
-                ids = np.arange(num_atoms)
-                index.add_items(atoms_subset, ids)
-
-                labels, distances, budget = index.knn_query(signals_subset, k=num_best_atoms)
-                budget_array = np.array(budget)
-                candidates_array = np.sort(np.array(labels))
-                runtime = time.time() - start_time
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
@@ -221,8 +200,8 @@ def scaling_exp(
             budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
             naive_candidates_array = np.sort(
                 np.matmul(-atoms_subset, signals_subset.transpose())
-                .argsort(axis=0)[:num_best_atoms]
-                .transpose()
+                    .argsort(axis=0)[:num_best_atoms]
+                    .transpose()
             )
 
             accuracy = 0
@@ -253,18 +232,21 @@ def scaling_exp(
             "runtime": avg_runtime,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs/scaling" if dirname is None else dirname
+        current_file_directory = os.path.dirname(__file__)
+        log_dir = os.path.join(current_file_directory, "logs", "scaling") if dirname is None else dirname
+
         filename = os.path.join(
             log_dir,
             mips_alg
             + "_"
-            "SCALING_"
+              "SCALING_"
             + data_type
             + "_"
             + "atoms"
             + str(num_atoms)
             + "_"
             + log_info
+            + "without_volume"
             + ".csv",
         )
         os.makedirs(log_dir, exist_ok=True)
