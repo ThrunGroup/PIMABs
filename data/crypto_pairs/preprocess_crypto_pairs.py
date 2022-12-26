@@ -14,7 +14,7 @@ def main(with_volume: bool):
     columns = ["open", "close", "high", "low"]
     if with_volume:
         columns += "volume",  # volume columns has unexceptionally large values
-    num_max_dimensions = 1000
+    num_max_dimensions = 10 ** 6
     num_max_timestamps = num_max_dimensions // len(columns)
 
     # Only store the files larger than 20MB
@@ -36,7 +36,6 @@ def main(with_volume: bool):
         dataset[i] = df[columns][:num_max_timestamps].values.flatten()
 
     np.save(os.path.join(os.getcwd(), "crypto_pairs_1m_dimensions.npy"), dataset)
-    print(dataset.max())
 
 
 if __name__ == "__main__":
