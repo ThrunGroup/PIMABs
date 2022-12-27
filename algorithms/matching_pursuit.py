@@ -227,8 +227,8 @@ if __name__ == "__main__":
         print("\nSeed : ", seed)
 
         atoms, signals = get_data(
-            num_atoms=200,
-            len_signal=2000,
+            num_atoms=1000,
+            len_signal=10000,
             seed=seed,
             data_type=NORMAL_CUSTOM,
             num_signals=1,
@@ -264,6 +264,7 @@ if __name__ == "__main__":
             abs=True,
             seed=0,
             use_cache=True,
+            use_naive=True,
             cache_multiplier=500,
         )
         print("indices: ", candidates, " budget: ", budget[0])

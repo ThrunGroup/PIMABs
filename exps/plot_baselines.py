@@ -103,7 +103,7 @@ def create_scaling_plots(
     caching_type: str = "",
     data_types: List[str] = [],
     alg_names: List[str] = [],
-    include_error_bar: bool = False,
+    include_error_bar: bool = True,
     is_fit: bool = False,
     is_logspace: bool = False,
 ):
@@ -262,6 +262,62 @@ def create_tradeoff_plots(
         plt.show()
 
 
+def compare_caching_budgets(
+    dir_name="mp_scaling",
+    caching_type="",
+    data_types=[NETFLIX],
+    alg_names=[ACTION_ELIMINATION],
+    include_error_bar=True,
+):
+    # get all csv files
+    path = os.path.join(os.getcwd(), "logs")
+    path = os.path.join(path, dir_name)
+    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
+
+    if len(data_types) == 0:
+        raise Exception("At least one dataset must be specified")
+    if len(alg_names) == 0:
+        raise Exception("At least one algorithm must be specified")
+
+    for datatype in data_types:
+        plt.figure(figsize=(6, 4.5))
+        title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+        for f in csv_files:
+            alg_name = extract_alg(f)
+            data = read_csv(f)
+
+            # only get relevant data
+            if f.find(datatype) < 0 or f.find(caching_type) < 0 or alg_name not in alg_names:
+                continue
+
+            x = data["signal_sizes"].tolist()
+            y = data["budgets"].tolist()
+            error = data["budgets_std"].tolist()
+            x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+            plt.scatter(
+                x, y,
+                color=ALG_TO_COLOR[alg_name],
+                label=f"{translate_alg_name(alg_name)}"
+            )
+            plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
+
+            # Sort the legend entries (labels and handles) by labels
+            handles, labels = plt.gca().get_legend_handles_labels()
+            labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+            plt.legend(handles, labels, loc="upper left")
+
+            if include_error_bar:
+                plt.errorbar(x, y, error, fmt=".", color="black")
+            plt.title(title)
+            xlabel = "Signal Vector Size (d)"
+            ylabel = "Sample Complexity"
+            plt.ylabel(ylabel)
+            plt.xlabel(xlabel)
+
+        plt.show()
+
+
+
 def generate_scaling_plots():
     """
     Generate scaling plots for the two synthetic datasets (normal custom, adversarial custom) and
@@ -331,5 +387,6 @@ def generate_tradeoff_plots():
 
 
 if __name__ == "__main__":
-    generate_scaling_plots()
+    #generate_scaling_plots()
     #generate_tradeoff_plots()
+    compare_caching_budgets()
