@@ -1,6 +1,7 @@
 import numpy as np
 import numba as nb
 from typing import Tuple
+from numba.core import types
 
 from utils.constants import (
     BATCH_SIZE,
@@ -13,7 +14,7 @@ from utils.utils import subset_2d, subset_2d_cached, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
-@nb.njit
+#@nb.njit
 def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -31,7 +32,7 @@ def action_elimination(
     permutation: np.ndarray = None,
     cache: np.ndarray = None,
     cache_tracker: np.ndarray = None,
-    cache_map: np.ndarray = None,
+    cache_map: list = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -49,7 +50,7 @@ def action_elimination(
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
 
-    # run AE for all signals
+    # run AE for all signals (this is the to find the confidence intervals over multiple experiments)
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
         D = atoms.shape[0]  # Number of atoms

@@ -1,3 +1,6 @@
+import numpy as np
+import numba as nb
+
 from sklearn.linear_model import OrthogonalMatchingPursuit  # for debugging purposes
 from data.get_data import get_data
 from utils.utils import set_seed
@@ -9,12 +12,10 @@ from utils.constants import (
     ACTION_ELIMINATION,
 )
 
-import numpy as np
 from math import sqrt
 from scipy import linalg
 from typing import Tuple
 from collections import defaultdict
-from numba import jit
 from scipy.linalg.lapack import get_lapack_funcs
 
 from algorithms.mips_bandit import mips_bandit
@@ -127,33 +128,17 @@ def orthogonal_matching_pursuit(
     n_active = 0
     indices = np.arange(num_atoms)  # keeping track of swapping
 
-    # need to set these default values since we pass in the arguments
-    cache = None
-    cache_tracker = None
-    cache_map = None
+    # need to set these default values even if we don't use cache due to numba type errors
     shuffled_indices = np.arange(num_dimensions)
     np.random.shuffle(shuffled_indices)
-
-    if use_cache:
-        print("using caching")
-        if use_naive:
-            print("naively")
-
-        # initialise cache
-        # key: atom index, value: values of cached coordinates of the atom
-        max_cache_size = int((cache_multiplier * np.log10(num_atoms)) // batch_size * batch_size)
-        cache = np.empty((num_atoms, max_cache_size))
-        cache_tracker = np.zeros(num_atoms)  # track how many cached values each atom has
-
-        # Todo: is there a one-liner for this?
-        # Todo: cache_map doesn't work with numba....
-        cache_map = []
-        for i in range(num_atoms):
-            cache_map.append(defaultdict(int))
-        cache_map = np.array(cache_map)
+    max_cache_size = int((cache_multiplier * np.log10(num_atoms)) // batch_size * batch_size)
+    cache = np.empty((num_atoms, max_cache_size))
+    cache_tracker = np.zeros(num_atoms, dtype=np.int64)  # track how many cached values each atom has
+    cache_map = nb.typed.List()
+    for i in range(num_atoms):
+        cache_map.append(nb.typed.Dict.empty(key_type=nb.int64, value_type=nb.int64))
 
     L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
-
     while np.linalg.norm(residual) > min_residual:
         # solve the MIPS problem
         if len(bandit_alg) > 0:

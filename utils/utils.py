@@ -295,7 +295,7 @@ def subset_2d_cached(
     start: int,
     cache: np.ndarray,
     cache_tracker: np.ndarray,
-    cache_map: np.ndarray,
+    cache_map: list,
 ):
     """
     Implements subset_2d with cache support. Assumes budget to read/write cache is the same.
@@ -305,20 +305,21 @@ def subset_2d_cached(
     subset_array = np.empty((len(rows), len(columns)))
     for i in range(len(rows)):
         for j in range(len(columns)):
+            atom = rows[i]
+            sample = columns[j]
 
-            # Check if sample already exists in cache. Note that cache_map adds 1 to every index.
-            # This is because defaultdict initializes values to zero.
-            if use_cache and cache_map[columns[j]] > 0:
-                subset_array[(i, j)] = cache[(rows[i], cache_map[columns[j]] - 1)]
+            # Check if sample already exists in cache.
+            if use_cache and cache_map[atom].get(sample, -1) >= 0:
+                subset_array[(i, j)] = cache[(atom, cache_map[atom][sample])]
                 budget += CACHING_BUDGET
 
             else:
                 # write to cache if space exists
-                source = source_array[(rows[i], columns[j])]
-                if use_cache and cache_tracker[rows[i]] < cache.shape[1]:
-                    cache[(rows[i], cache_tracker[rows[i]])] = source
-                    cache_tracker[rows[i]] += 1
-                    cache_map[columns[j]] = cache_tracker[rows[i]]
+                source = source_array[(atom, sample)]
+                if use_cache and (cache_tracker[atom] < cache.shape[1]):
+                    cache[(atom, cache_tracker[atom])] = source
+                    cache_map[atom][sample] = cache_tracker[atom]
+                    cache_tracker[atom] += 1
                     budget += CACHING_BUDGET
 
                 subset_array[(i, j)] = source

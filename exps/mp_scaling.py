@@ -43,6 +43,9 @@ def scaling_exp(
     is_plot: bool = True,
     is_logspace: bool = True,
     dirname: str = None,
+
+    use_cache: bool = False,
+    use_naive: bool = False,
 ) -> None:
     """
     Run the time complexity of the mp algorithm as the signal size scales and store them in
@@ -64,6 +67,8 @@ def scaling_exp(
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
     :param dirname: Directory name to log the results
     """
+    if use_naive:
+        assert use_cache == True, "cannot use naive-cache if use_cache isn't specified"
     global budget_array
 
     # average over NUM_SEEDS results
@@ -128,7 +133,8 @@ def scaling_exp(
                     signal=signal,
                     bandit_alg=mips_alg,
                     abs=True,
-                    use_cache=False,
+                    use_cache=use_cache,
+                    use_naive=use_naive,
                 )
                 runtime = time.time() - start_time
 
@@ -138,6 +144,12 @@ def scaling_exp(
                 accuracies.append(
                     len(np.intersect1d(naive_candidates, candidates)) / len(candidates)
                 )
+                log_info = ""
+                if use_cache:
+                    if use_naive:
+                        log_info += "naive_cache_"
+                    else:
+                        log_info += "PI_cache_"
 
             # get avg (and std for budget) for the num_signals signals
             avg_runtime.append(np.array(np.mean(np.array(runtimes))))
@@ -184,6 +196,7 @@ def scaling_exp(
             + "_"
             + "delta"
             + str(delta)
+            + log_info
             + ".csv",
         )
         os.makedirs(log_dir, exist_ok=True)
@@ -192,4 +205,14 @@ def scaling_exp(
 
 
 if __name__ == "__main__":
-    scaling_exp(data_type=NETFLIX)
+    scaling_exp(
+        data_type=NETFLIX,
+        use_cache=True,
+        use_naive=True,
+    )
+
+    scaling_exp(
+        data_type=NETFLIX,
+        use_cache=True,
+        use_naive=False,
+    )

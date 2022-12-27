@@ -10,7 +10,16 @@ if __name__ == "__main__":
         is_logspace=True,
         include_error_bar=True,
         dir_name="mp_scaling",
-        caching_type="(PI cache)",
+        caching_type="naive_cache",
+        data_types=[NETFLIX],
+        alg_names=[ACTION_ELIMINATION]
+    )
+    create_scaling_plots(
+        is_fit=True,
+        is_logspace=True,
+        include_error_bar=True,
+        dir_name="mp_scaling",
+        caching_type="PI_cache",
         data_types=[NETFLIX],
         alg_names=[ACTION_ELIMINATION]
     )

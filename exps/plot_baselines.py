@@ -111,7 +111,7 @@ def create_scaling_plots(
     Plot the scaling experiments from the data stored in the logs file.
 
     :param dir_name: either "scaling" or "mp_scaling"
-    :param caching_type: either "", "(naive cache)", "(PI cache)"
+    :param caching_type: either "", "(naive_cache)", "(PI_cache)"
     :param data_types: the datasets that you want to plot. If empty, warning is triggered.
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
     :param include_error_bar: shows the standard deviation
@@ -136,7 +136,7 @@ def create_scaling_plots(
             data = read_csv(f)
 
             # only get relevant data
-            if f.find(datatype) < 0 or alg_name not in alg_names:
+            if f.find(datatype) < 0 or f.find(caching_type) < 0 or alg_name not in alg_names:
                 continue
 
             x = data["signal_sizes"].tolist()

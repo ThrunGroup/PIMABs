@@ -32,7 +32,7 @@ def mips_bandit(
     shuffled_indices: list = None,
     cache: np.ndarray = None,
     cache_tracker: np.ndarray = None,
-    cache_map: np.ndarray = None,
+    cache_map: list = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
