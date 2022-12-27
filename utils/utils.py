@@ -292,7 +292,6 @@ def subset_2d_cached(
     rows: np.ndarray,
     columns: np.ndarray,
     use_cache,
-    start: int,
     cache: np.ndarray,
     cache_tracker: np.ndarray,
     cache_map: list,

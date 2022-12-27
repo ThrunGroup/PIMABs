@@ -250,6 +250,7 @@ if __name__ == "__main__":
             bandit_alg="",
             abs=True,
             seed=0,
+            use_cache=False,
         )
         print("indices: ", candidates, " budget: ", budget)
 

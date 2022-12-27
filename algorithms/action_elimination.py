@@ -107,7 +107,6 @@ def action_elimination(
 
                 # params needed for caching support
                 use_cache=use_cache,
-                start=start,
                 cache=curr_cache,
                 cache_tracker=curr_cache_tracker,
                 cache_map=curr_cache_map
