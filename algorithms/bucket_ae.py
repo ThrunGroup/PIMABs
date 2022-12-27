@@ -38,7 +38,7 @@ def bucket_ae(
     computations to search maximum inner product atom in other buckets.
 
     Note: Here, we don't compare the lcb and ucb of inner product values from each partition. Instead, we compare
-    estimated the inner product values. So it's not a mathematically valid algorithm.
+    the estimated inner product values. So it's not a mathematically valid algorithm.
 
     MIPS problem:= For each signal in signals matrix, find an atom in atoms matrix that has maximum dot product with
     the signal
@@ -89,10 +89,7 @@ def bucket_ae(
     bucket_idcs = []
     for idx in range(k):
         ub_buckets[idx] = atoms_ub[sort_idcs[idx * m]]
-        if idx == k - 1:
-            bucket_idcs.append(sort_idcs[idx * m:])
-        else:
-            bucket_idcs.append(sort_idcs[idx * m: min((idx + 1) * m, N)])
+        bucket_idcs.append(sort_idcs[idx * m: min((idx + 1) * m, N)])
 
     candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)  # ith row contains
     # top k(num_best_atoms) atoms of ith signal.
@@ -105,7 +102,7 @@ def bucket_ae(
         candidates = np.empty(0)
         budgets = 0
         for idx in range(k):
-            temp_candidates, temp_means, temp_lcbs, temp_budgets = bucket_ae_helper(
+            bucket_candidates, bucket_means, bucket_lcbs, bucket_budgets = bucket_ae_helper(
                 atoms[bucket_idcs[idx]],
                 signal,
                 var_proxy,
@@ -117,10 +114,12 @@ def bucket_ae(
                 with_replacement,
                 seed,
             )
-            best_k_idcs = np.argsort(np.concatenate((means, temp_means)))[::-1][:num_best_atoms]
-            candidates = np.concatenate((candidates, bucket_idcs[idx][temp_candidates]))[best_k_idcs]
-            lcbs = np.concatenate((lcbs, temp_lcbs))[best_k_idcs]
-            budgets += temp_budgets
+            concatenated_means = np.concatenate((means, bucket_means))
+            best_k_idcs = np.argsort(concatenated_means)[::-1][:num_best_atoms]
+            means = concatenated_means
+            candidates = np.concatenate((candidates, bucket_idcs[idx][bucket_candidates]))[best_k_idcs]
+            lcbs = np.concatenate((lcbs, bucket_lcbs))[best_k_idcs]
+            budgets += bucket_budgets
             if idx == k - 1:
                 break
             if np.max(lcbs) > temp_ub_buckets[idx + 1]:
