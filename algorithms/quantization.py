@@ -175,9 +175,9 @@ class PQ(object):
         assert self.Ks < N, "the number of training vector should be more than Ks"
         self.Dim = D
 
-        reminder = D % self.M
+        remainder = D % self.M
         quotient = int(D / self.M)
-        dims_width = [quotient + 1 if i < reminder else quotient for i in range(self.M)]
+        dims_width = [quotient + 1 if i < remainder else quotient for i in range(self.M)]
         self.Ds = np.cumsum(dims_width)     # prefix sum
         self.Ds = np.insert(self.Ds, 0, 0)  # insert zero at beginning
 
