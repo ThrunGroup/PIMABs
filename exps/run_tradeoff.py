@@ -28,7 +28,6 @@ from utils.constants import (
     TRADEOFF_PCA_NUM_EXPERIMENTS,
     TRADEOFF_LSH_NUM_EXPERIMENTS,
     TRADEOFF_DIMENSION,
-    TRADEOFF_DIMENSION_MOVIE,
     NUM_ATOMS_REAL,
     NUM_ATOMS_SIGNAL,
     CRYPTO_PAIRS_SIGNAL_LENGTH,
@@ -41,7 +40,7 @@ def run_tradeoff():
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [CRYPTO_PAIRS, ADVERSARIAL_CUSTOM]:  #, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
+    for data_type in [CRYPTO_PAIRS]:  # ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
         if data_type in [CRYPTO_PAIRS, NETFLIX, MOVIE_LENS]:
             num_atoms = NUM_ATOMS_REAL
             len_signals = NUM_ATOMS_SIGNAL

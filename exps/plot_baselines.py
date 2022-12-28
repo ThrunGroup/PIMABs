@@ -291,7 +291,7 @@ def generate_scaling_plots():
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS,
+            LSH_MIPS
         ]
     )
 
@@ -307,7 +307,7 @@ def generate_scaling_plots():
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS,
+            LSH_MIPS
         ]
     )
 
@@ -332,20 +332,20 @@ def generate_tradeoff_plots(top_k: int = 1):
         include_error_bar=False
     )
 
-    # create_tradeoff_plots(
-    #     data_types=[ADVERSARIAL_CUSTOM],
-    #     alg_names=[
-    #         ADAPTIVE_ACTION_ELIMINATION,
-    #         ACTION_ELIMINATION,
-    #         MEDIAN_ELIMINATION,
-    #         GREEDY_MIPS,
-    #         PCA_MIPS,
-    #         LSH_MIPS
-    #     ],
-    #     top_k=top_k,
-    #     max_speedup=MAX_SPEEDUP,
-    #     include_error_bar=False
-    # )
+    create_tradeoff_plots(
+        data_types=[CRYPTO_PAIRS],
+        alg_names=[
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS,
+            PCA_MIPS,
+            LSH_MIPS
+        ],
+        top_k=top_k,
+        max_speedup=MAX_SPEEDUP,
+        include_error_bar=False
+    )
 
 
 if __name__ == "__main__":

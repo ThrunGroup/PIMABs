@@ -26,8 +26,6 @@ from utils.constants import (
     PCA_MIPS,
     SYMMETRIC,
     ASYMMETRIC,
-    HNSW_MIPS,
-    NAHNSW_MIPS,
 
     # constants
     NUM_SEEDS,

@@ -22,8 +22,6 @@ PCA_MIPS = "PCA_MIPS"
 LSH_MIPS = "LSH_MIPS"
 SYMMETRIC = "SYMMETRIC"
 ASYMMETRIC = "ASYMMETRIC"
-HNSW_MIPS = "HNSW_MIPS"
-NAHNSW_MIPS = "NAHNSW_MIPS"
 
 ALG_TO_COLOR = {
     MEDIAN_ELIMINATION: "#8c564b",
@@ -34,8 +32,6 @@ ALG_TO_COLOR = {
     LSH_MIPS: "#1f77b4",
     SYMMETRIC: "#e377c2",
     ASYMMETRIC: "#7f7f7f",
-    HNSW_MIPS: "#F4D03F",
-    NAHNSW_MIPS: "#F409FF",
 }
 
 # Datasets
@@ -53,7 +49,7 @@ CRYPTO_PAIRS = "CRYPTO_PAIRS"
 HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
-NUM_SEEDS = 5
+NUM_SEEDS = 20
 DEFAULT_MAXMIN = (5, 0)
 CRYPTO_PAIRS_MAXMIN = (10 ** 5, 0)
 NORMALIZED_MAXMIN = (1, -1)
@@ -76,9 +72,8 @@ SCALING_SIZE_MINMAX = (
 SCAlING_SIZE_MINMAX_MOVIE = (  # movie dataset is only 6000 dimensions
     100, 5000,
 )
-SCAlING_SIZE_CRYPTO_PAIRS = (  # crypto pairs dataset has 1M dimensions
-    # 10 ** 4, 10 ** 6
-    100, 10 ** 3,
+SCAlING_SIZE_MINMAX_CRYPTO_PAIRS = (  # crypto pairs dataset has 1M dimensions
+    100, 10 ** 6,
 )
 
 # Precision-Speed Tradeoff Experiments
@@ -92,7 +87,6 @@ TRADEOFF_TOPK = 10
 # Normal Custom dataset params
 TRADEOFF_DEFAULT_EPSILON = 0.0
 TRADEOFF_MAXMIN = (4.0, -4.0)
-TRADE_OFF_CRYPTO_PAIRS_MAXMIN = (10 ** 5, 0)
 NORMAL_VAR = 1
 DELTA_BINS = 4
 DELTA_MINMAX = (0.0, 0.99)
@@ -126,7 +120,7 @@ GREEDY_QUERY_SIZE = [2, 5, 7]
 # Real Data params
 NUM_ATOMS_REAL = 100
 NUM_ATOMS_SIGNAL = 1000
-CRYPTO_PAIRS_SIGNAL_LENGTH = 10 ** 3
+CRYPTO_PAIRS_SIGNAL_LENGTH = 10 ** 6
 MAX_SPEEDUP = 20
 TRADEOFF_DELTA_MINMAX_REAL = (0, 0.5)
 TRADEOFF_MAXMIN_REAL = (0.3, -0.3)

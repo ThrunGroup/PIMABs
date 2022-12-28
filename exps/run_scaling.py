@@ -32,7 +32,7 @@ from utils.constants import (
     SCALING_DELTA,
     SCALING_SIZE_MINMAX,
     SCAlING_SIZE_MINMAX_MOVIE,
-    SCAlING_SIZE_CRYPTO_PAIRS,
+    SCAlING_SIZE_MINMAX_CRYPTO_PAIRS,
     SCALING_DELTA_REAL,
     SCALING_EPSILON_REAL,
 )
@@ -55,7 +55,7 @@ def run_scaling():
         if data_type is MOVIE_LENS:
             size_minmax = SCAlING_SIZE_MINMAX_MOVIE
         elif data_type is CRYPTO_PAIRS:
-            size_minmax = SCAlING_SIZE_CRYPTO_PAIRS
+            size_minmax = SCAlING_SIZE_MINMAX_CRYPTO_PAIRS
         else:
             size_minmax = SCALING_SIZE_MINMAX
 
