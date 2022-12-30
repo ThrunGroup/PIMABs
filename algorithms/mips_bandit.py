@@ -28,7 +28,7 @@ def mips_bandit(
     verbose: bool = False,
     with_replacement: bool = False,
     batch_size: int = BATCH_SIZE,
-    use_cache: bool = True,
+    use_cache: bool = False,
     shuffled_indices: list = None,
     cache: np.ndarray = None,
     cache_tracker: np.ndarray = None,

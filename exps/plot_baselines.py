@@ -387,6 +387,12 @@ def generate_tradeoff_plots():
 
 
 if __name__ == "__main__":
+    create_scaling_plots(
+        data_types=[NETFLIX],
+        alg_names=[ACTION_ELIMINATION],
+        is_logspace=True,
+        is_fit=True
+    )
     #generate_scaling_plots()
     #generate_tradeoff_plots()
-    compare_caching_budgets()
+    #compare_caching_budgets()

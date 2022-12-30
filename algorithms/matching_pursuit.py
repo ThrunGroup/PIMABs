@@ -20,6 +20,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 
 from algorithms.mips_bandit import mips_bandit
 
+
 def matching_pursuit(
         atoms: np.ndarray,
         signal: np.ndarray,
@@ -78,6 +79,7 @@ def matching_pursuit(
     return candidates, total_budget
 
 
+# Todo: currently only supports single signal...
 def orthogonal_matching_pursuit(
     atoms: np.ndarray,
     signal: np.ndarray,
@@ -91,7 +93,7 @@ def orthogonal_matching_pursuit(
     # caching params
     use_cache: bool = True,
     use_naive: bool = False,
-    cache_multiplier: int = 100,
+    cache_multiplier: int = 1,
 ) -> Tuple[np.ndarray, int]:
     """
     Runs the Orthogonal Matching Pursuit algorithm.
@@ -129,9 +131,9 @@ def orthogonal_matching_pursuit(
     indices = np.arange(num_atoms)  # keeping track of swapping
 
     # need to set these default values even if we don't use cache due to numba type errors
+    max_cache_size = int((cache_multiplier * num_dimensions))
     shuffled_indices = np.arange(num_dimensions)
     np.random.shuffle(shuffled_indices)
-    max_cache_size = int((cache_multiplier * np.log10(num_atoms)) // batch_size * batch_size)
     cache = np.empty((num_atoms, max_cache_size))
     cache_tracker = np.zeros(num_atoms, dtype=np.int64)  # track how many cached values each atom has
     cache_map = nb.typed.List()
@@ -139,24 +141,27 @@ def orthogonal_matching_pursuit(
         cache_map.append(nb.typed.Dict.empty(key_type=nb.int64, value_type=nb.int64))
 
     L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
+    iter = 1
     while np.linalg.norm(residual) > min_residual:
         # solve the MIPS problem
         if len(bandit_alg) > 0:
+            # Todo: only supports caching with Action Elimination for now
+            #print(f"\nMP iteration {iter}")
+            iter += 1
 
-            # naive-caching uses different permutation for each MP iteration.
+            # naive-caching uses different permutations for each MP iteration.
+            # this makes it less likely that we'll get cache hits compared to PI caching.
             if use_naive:
-                shuffled_indices = np.arange(num_dimensions)
                 np.random.shuffle(shuffled_indices)
 
-            # Todo: only supports caching with Action Elimination for now
             candidate, budget, cache, cache_tracker, cache_map = mips_bandit(
                 atoms.T,
                 residual.T,  # need to pass in 2d array
                 maxmin=(np.min(atoms), np.max(atoms)),
                 bandit_alg=bandit_alg,
-                epsilon=0.0001,
+                epsilon=0.0,
                 abs=abs,
-                delta=0.00001,
+                delta=0.3,
                 use_cache=use_cache,
                 shuffled_indices=shuffled_indices,
                 cache=cache,
@@ -164,6 +169,9 @@ def orthogonal_matching_pursuit(
                 cache_map=cache_map,
             )
             lam = candidate[0][0]
+            #print(f"permutation: \n {shuffled_indices}")
+            #print(f"cache tracker: \n {np.sum(cache_tracker)}")
+            #print(f"cache_map first atom: \n {cache_map[0]}")
 
             # update params
             cache = cache
@@ -223,12 +231,13 @@ def orthogonal_matching_pursuit(
 
 if __name__ == "__main__":
 
-    for seed in range(10):
+    for seed in range(1):
         print("\nSeed : ", seed)
-
+        num_atoms = 100
+        len_signal = 10000
         atoms, signals = get_data(
-            num_atoms=1000,
-            len_signal=10000,
+            num_atoms=num_atoms,
+            len_signal=len_signal,
             seed=seed,
             data_type=NORMAL_CUSTOM,
             num_signals=1,
@@ -236,6 +245,7 @@ if __name__ == "__main__":
 
         # scikit-learn
         model1 = OrthogonalMatchingPursuit(normalize=False, n_nonzero_coefs=5, fit_intercept=False, precompute=False)
+        print(f"-> Atoms dataset size: {atoms.shape}")
         print("------- running scikit-learn OMP ---------")
         model1.fit(atoms.T, signals[0])
         print("these are the coefficient indices (sorted by default)", model1.coef_.nonzero())
@@ -266,6 +276,6 @@ if __name__ == "__main__":
             seed=0,
             use_cache=True,
             use_naive=True,
-            cache_multiplier=500,
+            cache_multiplier=1,
         )
         print("indices: ", candidates, " budget: ", budget[0])

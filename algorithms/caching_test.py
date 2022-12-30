@@ -1,6 +1,7 @@
 import numpy as np
 import numba as nb
 
+
 def subset_2d_cached(source_array, rows, columns, cache, cache_tracker, cache_map):
     """
     Implements subset_2d with cache support. Assumes budget to read/write cache is the same.
@@ -35,10 +36,10 @@ def subset_2d_cached(source_array, rows, columns, cache, cache_tracker, cache_ma
 
 
 def print_datastructures(subset_array, cache, cache_tracker, cache_map):
-    print(f"this is subset_array: \n{subset_array}\n")
-    print(f"this is cache: \n{cache}\n")
-    print(f"this is tracker: \n{cache_tracker}\n")
-    print(f"this is cache_map (cols -> cache_idx): \n{cache_map}\n")
+    print(f"subset_array: \n{subset_array}\n")
+    print(f"cache: \n{cache}\n")
+    print(f"tracker: \n{cache_tracker}\n")
+    print(f"cache_map (cols -> cache_idx): \n{cache_map}\n")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 from plot_baselines import create_scaling_plots
 from utils.constants import (
+    NORMAL_CUSTOM,
     NETFLIX,
     ACTION_ELIMINATION,
 )
@@ -10,8 +11,8 @@ if __name__ == "__main__":
         is_logspace=True,
         include_error_bar=True,
         dir_name="mp_scaling",
-        caching_type="naive_cache",
-        data_types=[NETFLIX],
+        caching_type="",
+        data_types=[NORMAL_CUSTOM],
         alg_names=[ACTION_ELIMINATION]
     )
     create_scaling_plots(

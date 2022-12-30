@@ -97,7 +97,7 @@ def scaling_exp(
         avg_budget_std = []
         avg_accuracies = []
 
-        # run the experiment for each signal size
+        # currently MP only supports single signals at a time
         for size in sizes_signal:
             subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
             atoms_subset, signals_subset = (
@@ -207,12 +207,12 @@ def scaling_exp(
 if __name__ == "__main__":
     scaling_exp(
         data_type=NETFLIX,
-        use_cache=True,
-        use_naive=True,
-    )
-
-    scaling_exp(
-        data_type=NETFLIX,
-        use_cache=True,
+        use_cache=False,
         use_naive=False,
     )
+
+    # scaling_exp(
+    #     data_type=NETFLIX,
+    #     use_cache=True,
+    #     use_naive=False,
+    # )

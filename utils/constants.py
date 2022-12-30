@@ -48,7 +48,7 @@ YAHOO = "YAHOO"
 HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
-NUM_SEEDS = 3
+NUM_SEEDS = 2
 DEFAULT_MAXMIN = (5, 0)
 NORMALIZED_MAXMIN = (1, -1)
 DEFAULT_GREEDY_BUDGET = 50
@@ -124,4 +124,5 @@ DELTA_POWER_MINMAX = (0.05, 20)
 
 # Caching params
 CACHING_BUDGET = 0.01
+TEMP_SIZE = 1 # this is to make caching compatible with numba
 

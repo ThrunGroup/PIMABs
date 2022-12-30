@@ -291,39 +291,42 @@ def subset_2d_cached(
     source_array: np.ndarray,
     rows: np.ndarray,
     columns: np.ndarray,
-    use_cache,
+    use_cache: bool,
     cache: np.ndarray,
     cache_tracker: np.ndarray,
-    cache_map: list,
+    cache_map: nb.typed.List,
 ):
     """
     Implements subset_2d with cache support. Assumes budget to read/write cache is the same.
     Returns the subset_array, updated cache, cache_tracker, and budget.
     """
     budget = 0
+    hits = 0
     subset_array = np.empty((len(rows), len(columns)))
+    #import ipdb; ipdb.set_trace()
     for i in range(len(rows)):
         for j in range(len(columns)):
-            atom = rows[i]
-            sample = columns[j]
+            atom_idx = rows[i]
+            sample_idx = columns[j]
 
             # Check if sample already exists in cache.
-            if use_cache and cache_map[atom].get(sample, -1) >= 0:
-                subset_array[(i, j)] = cache[(atom, cache_map[atom][sample])]
+            if use_cache and cache_map[atom_idx].get(sample_idx, -1) >= 0:
+                subset_array[(i, j)] = cache[(atom_idx, cache_map[atom_idx][sample_idx])]
                 budget += CACHING_BUDGET
+                hits += 1
 
             else:
                 # write to cache if space exists
-                source = source_array[(atom, sample)]
-                if use_cache and (cache_tracker[atom] < cache.shape[1]):
-                    cache[(atom, cache_tracker[atom])] = source
-                    cache_map[atom][sample] = cache_tracker[atom]
-                    cache_tracker[atom] += 1
+                source = source_array[(atom_idx, sample_idx)]
+                if use_cache and (cache_tracker[atom_idx] < cache.shape[1]):
+                    cache[(atom_idx, cache_tracker[atom_idx])] = source
+                    cache_map[atom_idx][sample_idx] = cache_tracker[atom_idx]
+                    cache_tracker[atom_idx] += 1
                     budget += CACHING_BUDGET
 
                 subset_array[(i, j)] = source
                 budget += 1
-    return subset_array, budget, cache, cache_tracker, cache_map
+    return subset_array, budget, cache, cache_tracker, cache_map, hits
 
 
 def fit_and_plot(

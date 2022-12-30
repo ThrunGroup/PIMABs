@@ -1,7 +1,8 @@
 import numpy as np
 import numba as nb
 from typing import Tuple
-from numba.core import types
+from numba import typed
+
 
 from utils.constants import (
     BATCH_SIZE,
@@ -9,12 +10,14 @@ from utils.constants import (
     NORMAL_CUSTOM,
     ACTION_ELIMINATION,
     HOEFFDING,
+    SCALING_NUM_ATOMS,
+    TEMP_SIZE,
 )
 from utils.utils import subset_2d, subset_2d_cached, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
-#@nb.njit
+@nb.njit
 def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -28,11 +31,11 @@ def action_elimination(
     seed: int = 0,
 
     # caching params
-    use_cache: bool = True,
-    permutation: np.ndarray = None,
-    cache: np.ndarray = None,
-    cache_tracker: np.ndarray = None,
-    cache_map: list = None,
+    use_cache: bool = False,
+    permutation: np.ndarray = [],
+    cache: np.ndarray = [],
+    cache_tracker: np.ndarray = [],
+    cache_map: nb.typed.List = ({}),
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -64,10 +67,15 @@ def action_elimination(
         lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
         ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
         means = np.zeros(D)  # estimated means of arm returns
+        hits = 0
 
-        curr_cache = cache
-        curr_cache_tracker = cache_tracker
-        curr_cache_map = cache_map
+        # Need to initialize cache params otherwise numba throws error...
+        if not use_cache:
+            permutation = np.arange(d)
+            np.random.shuffle(permutation)
+            cache = np.empty((D, d))
+            cache_tracker = np.zeros(D, dtype=np.int64)
+            cache_map = typed.List([typed.Dict.empty(key_type=nb.int64, value_type=nb.int64) for i in range(D)])
 
         # TODO: Add exact computation if total mnist too big
         # TODO: Maybe need to change this to a > 0 and ucbs > lcbs.max below
@@ -83,9 +91,10 @@ def action_elimination(
             if end > d:
                 sample_indices = permutation[start:]
                 signal_sampled = signal[sample_indices]
+                # Todo: should this also be subset_2d_cached? This would only help naive caching
                 candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_indices)
                 means[candidates] = (
-                    (start * means[candidates])
+                    (end * means[candidates])
                     + (candidates_sampled @ signal_sampled)
                 ) / d
                 budgets += (d - start) * len(candidates)
@@ -100,31 +109,31 @@ def action_elimination(
                 break
 
             sample_indices = permutation[start: end]
-            candidates_sampled, budget, _cache, _cache_tracker, _cache_map = subset_2d_cached(
-                source_array=atoms,
+            candidates_sampled, budget, _cache, _cache_tracker, _cache_map, _hits = subset_2d_cached(
+                source_array=atoms,  # this changes per OMP iteration
                 rows=candidates,
                 columns=sample_indices,
 
                 # params needed for caching support
                 use_cache=use_cache,
-                cache=curr_cache,
-                cache_tracker=curr_cache_tracker,
-                cache_map=curr_cache_map
+                cache=cache,
+                cache_tracker=cache_tracker,
+                cache_map=cache_map
             )
-
             # update params
             budgets += budget
-            curr_cache = _cache
-            curr_cache_tracker = _cache_tracker
-            curr_cache_map = _cache_map
+            cache = _cache
+            cache_tracker = _cache_tracker
+            cache_map = _cache_map
+            hits += _hits
+
             signal_sampled = signal[sample_indices]
             means[candidates] = (
-                (start * means[candidates])
+                (end * means[candidates])
                 + (candidates_sampled @ signal_sampled)
             ) / (
-                end
+                (t + 1) * batch_size
             )  # Update the running means of arm returns # Does this np.dot do implicit broadcasting?
-
             ci = get_ci(
                 delta=new_delta,
                 var_proxy=var_proxy,
@@ -160,5 +169,6 @@ def action_elimination(
             candidates = candidates[new_cand_idcs]
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
+    #print(f"hits = {hits}")
     return candidates_array, budgets_array, cache, cache_tracker, cache_map
 
