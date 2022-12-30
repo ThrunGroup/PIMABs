@@ -15,6 +15,7 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    CRYPTO_PAIRS,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -59,6 +60,7 @@ from utils.constants import (
     TRADEOFF_VAR_REAL,
     TRADEOFF_DEPTH_MINMAX_REAL,
     TRADEOFF_BATCH_SIZE_REAL,
+    TRADEOFF_MAXMIN_CRYPTO_PAIRS,
     DELTA_POWER_MINMAX,
     DELTA_BINS_AD,
     MAXMIN_AD,
@@ -69,7 +71,6 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips, generate_conditer
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
-import hnswlib
 
 
 def get_accuracy_array(
@@ -141,6 +142,15 @@ def speedup_precision_exps(
         tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
         greedy_budget = num_atoms - 1
 
+    elif data_type is CRYPTO_PAIRS:
+        tradeoff_delta_minmax = TRADEOFF_DELTA_MINMAX_REAL
+        tradeoff_delta_bins = DELTA_BINS_REAL
+        tradeoff_maxmin = TRADEOFF_MAXMIN_CRYPTO_PAIRS
+        tradeoff_var = 10 ** 2
+        tradeoff_depth_minmax = TRADEOFF_DEPTH_MINMAX_REAL
+        tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
+        greedy_budget = num_atoms - 1
+
     elif data_type is ADVERSARIAL_CUSTOM:
         tradeoff_delta_minmax = TRADEOFF_DELTA_MINMAX_REAL
         tradeoff_delta_bins = DELTA_BINS_AD
@@ -183,7 +193,7 @@ def speedup_precision_exps(
         accuracies_std = []
 
         if mips_alg is ADAPTIVE_ACTION_ELIMINATION or \
-                (mips_alg is ACTION_ELIMINATION and data_type in [NETFLIX, MOVIE_LENS]):
+                (mips_alg is ACTION_ELIMINATION and data_type in [NETFLIX, MOVIE_LENS, CRYPTO_PAIRS]):
             # tune bounds and deltas. "epsilon" remains the same default value
             constants = np.linspace(0, tradeoff_var, num_experiments // tradeoff_delta_bins)
             deltas = np.linspace(tradeoff_delta_minmax[0], tradeoff_delta_minmax[1], tradeoff_delta_bins)
@@ -218,6 +228,7 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+                    print(delta, new_maxmin, np.sum(accuracy_array))
 
         elif mips_alg is ACTION_ELIMINATION:
             epsilons = np.linspace(EPSILON_MINMAX_ACTION[0], EPSILON_MINMAX_ACTION[1],
@@ -385,40 +396,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
-        elif mips_alg in [HNSW_MIPS, NAHNSW_MIPS]:
-            Ms = np.geomspace(4, 64, num_experiments).astype(np.int64)
-            ef_constructions = np.geomspace(4, num_atoms//2, num_experiments).astype(np.int64)
-            efs = np.geomspace(2, num_atoms//2, num_experiments).astype(np.int64)
-
-            for (M, ef_construction, ef) in zip(Ms, ef_constructions, efs):
-                log_info = (
-                        "ef_construction"
-                        + str(ef_construction)
-                )
-
-                start_time = time.time()
-                index = hnswlib.Index(space="ip", dim=len_signals, useNormFactor_=mips_alg == NAHNSW_MIPS)
-
-                # Initializing index - the maximum number of elements should be known beforehand
-                index.init_index(max_elements=num_atoms, ef_construction=ef_construction, M=M)
-
-                # Element insertion (can be called several times):
-                ids = np.arange(num_atoms)
-                index.add_items(atoms, ids)
-                index.set_ef(ef)
-
-                labels, distances, budget = index.knn_query(signals, k=num_best_atoms)
-                budget_array = np.array(budget)
-                candidates_array = np.sort(np.array(labels))
-
-                runtimes.append(time.time() - start_time)
-                budgets.append(np.mean(budget_array))
-                accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
-                accuracies.append(np.sum(accuracy_array))
-                accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
-                print(ef, np.mean(budget_array), np.sum(accuracy_array))
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 

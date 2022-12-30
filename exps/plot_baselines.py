@@ -102,13 +102,13 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
-    data_types: List[str] = [],
-    alg_names: List[str] = [],
-    include_error_bar: bool = False,
-    is_fit: bool = False,
-    is_logspace: bool = False,
-    is_plot_accuracy: bool = False,
-    dirname: str = None,
+        data_types: List[str] = [],
+        alg_names: List[str] = [],
+        include_error_bar: bool = False,
+        is_fit: bool = False,
+        is_logspace: bool = False,
+        is_plot_accuracy: bool = False,
+        dirname: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
@@ -205,11 +205,11 @@ def create_scaling_plots(
 
 
 def create_tradeoff_plots(
-    data_types: List[str] = [],
-    alg_names: List[str] = [],
-    top_k: int = 1,
-    include_error_bar: bool = False,
-    max_speedup: int = None
+        data_types: List[str] = [],
+        alg_names: List[str] = [],
+        top_k: int = 1,
+        include_error_bar: bool = False,
+        max_speedup: int = None
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -284,14 +284,14 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[CRYPTO_PAIRS],  # NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
+        data_types=[NETFLIX], # NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
         alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
+            # ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS
+            # MEDIAN_ELIMINATION,
+            # GREEDY_MIPS,
+            # PCA_MIPS,
+            # LSH_MIPS
         ]
     )
 
@@ -300,14 +300,14 @@ def generate_scaling_plots():
         is_fit=True,
         is_logspace=True,
         include_error_bar=True,
-        data_types=[CRYPTO_PAIRS],
+        data_types=[NETFLIX],
         alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
+            # ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS
+            # MEDIAN_ELIMINATION,
+            # GREEDY_MIPS,
+            # PCA_MIPS,
+            # LSH_MIPS
         ]
     )
 
@@ -324,8 +324,8 @@ def generate_tradeoff_plots(top_k: int = 1):
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            PCA_MIPS,
+            # GREEDY_MIPS,
+            # PCA_MIPS,
             LSH_MIPS,
         ],
         top_k=top_k,
@@ -349,6 +349,6 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    # generate_scaling_plots()
-    #generate_tradeoff_plots(top_k=20)
-    generate_tradeoff_plots(top_k=5)
+    generate_scaling_plots()
+    # generate_tradeoff_plots(top_k=20)
+    # generate_tradeoff_plots()

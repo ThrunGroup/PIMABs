@@ -1,6 +1,4 @@
-import numpy as np
-import math
-from typing import Tuple
+from typing import List
 from exps.scaling_exp import scaling_exp
 from utils.constants import (
     BATCH_SIZE,
@@ -38,13 +36,13 @@ from utils.constants import (
 )
 
 
-def run_scaling():
+def run_scaling(algorithms: List[str], data_types: List[str]):
     """
     Run scaling experiment for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [CRYPTO_PAIRS, ADVERSARIAL_CUSTOM]:  # NORMAL_CUSTOM, NETFLIX, MOVIE_LENS
+    for data_type in data_types:  # NORMAL_CUSTOM, NETFLIX, MOVIE_LENS
         if data_type is CRYPTO_PAIRS:
             num_atoms = SCALING_NUM_ATOMS_CRYPTO_PAIRS
             maxmin = CRYPTO_PAIRS_MAXMIN
@@ -62,95 +60,49 @@ def run_scaling():
         if data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:
             epsilon = SCALING_EPSILON
             delta = SCALING_DELTA
+        elif data_type in [CRYPTO_PAIRS]:
+            epsilon = SCALING_EPSILON
+            delta = 0.0001
         else:  # real datasets
             epsilon = SCALING_EPSILON_REAL
             delta = SCALING_DELTA_REAL
 
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            maxmin=maxmin,
-            num_atoms=num_atoms,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=ADAPTIVE_ACTION_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            maxmin=maxmin,
-            num_atoms=num_atoms,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=ACTION_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            maxmin=maxmin,
-            num_atoms=num_atoms,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=MEDIAN_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            maxmin=maxmin,
-            num_atoms=num_atoms,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=GREEDY_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            maxmin=maxmin,
-            num_atoms=num_atoms,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=PCA_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            maxmin=maxmin,
-            num_atoms=num_atoms,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=LSH_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
+        for algorithm in algorithms:
+            parameters = {
+                'epsilon': epsilon,
+                'delta': delta,
+                'maxmin': maxmin,
+                'num_atoms': num_atoms,
+                'size_minmax': size_minmax,
+                'num_experiments': SCALING_NUM_EXPERIMENTS,
+                'num_signals': SCALING_NUM_SIGNALS,
+                'data_type': data_type,
+                'with_replacement': False,
+                'is_normalize': False,
+                'is_logspace': True,
+                'mips_alg': algorithm
+            }
+
+            scaling_exp(**parameters)
 
 
 if __name__ == "__main__":
-    run_scaling()
+    algorithms = [
+        # ADAPTIVE_ACTION_ELIMINATION,
+        ACTION_ELIMINATION,
+        # MEDIAN_ELIMINATION,
+        # GREEDY_MIPS,
+        # PCA_MIPS,
+        # LSH_MIPS,
+    ]
+
+    data_types = [
+        # NORMAL_CUSTOM,
+        # ADVERSARIAL_CUSTOM,
+        NETFLIX,
+        # MOVIE_LENS,
+        # CRYPTO_PAIRS,
+    ]
+
+    run_scaling(
+        algorithms=algorithms, data_types=data_types)
