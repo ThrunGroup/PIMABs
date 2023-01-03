@@ -10,6 +10,7 @@ from utils.constants import (
     MOVIE_LENS,
     NETFLIX,
     ACTION_ELIMINATION,
+    DEFAULT_MAXMIN,
 )
 
 from math import sqrt
@@ -142,7 +143,11 @@ def orthogonal_matching_pursuit(
 
     L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
     iter = 1
+    maxmin = (2, 0)
     while np.linalg.norm(residual) > min_residual:
+        #m = max(0.2, np.mean(residual))
+        #maxmin = (m, -m)
+        #print(f"this is maxmin: {maxmin}")
         # solve the MIPS problem
         if len(bandit_alg) > 0:
             # Todo: only supports caching with Action Elimination for now
@@ -157,7 +162,7 @@ def orthogonal_matching_pursuit(
             candidate, budget, cache, cache_tracker, cache_map = mips_bandit(
                 atoms.T,
                 residual.T,  # need to pass in 2d array
-                maxmin=(np.min(atoms), np.max(atoms)),
+                maxmin=maxmin,
                 bandit_alg=bandit_alg,
                 epsilon=0.0,
                 abs=abs,
@@ -221,7 +226,11 @@ def orthogonal_matching_pursuit(
             L[:n_active, :n_active], alpha[:n_active], lower=True, overwrite_b=False
         )
 
-        residual = signal - np.dot(atoms[:, :n_active], gamma)
+        # need to update residual and maxmin since delta (i.e. arm distances) will get smaller
+        projection = np.dot(atoms[:, :n_active], gamma)
+        residual = signal - projection
+
+        print(f"this is budget {budget}")
         if n_active == n_nonzero_coefs:
              break
 
@@ -234,12 +243,12 @@ if __name__ == "__main__":
     for seed in range(1):
         print("\nSeed : ", seed)
         num_atoms = 100
-        len_signal = 10000
+        len_signal = 1000
         atoms, signals = get_data(
             num_atoms=num_atoms,
             len_signal=len_signal,
             seed=seed,
-            data_type=NORMAL_CUSTOM,
+            data_type=NETFLIX,
             num_signals=1,
         )
 
@@ -256,7 +265,7 @@ if __name__ == "__main__":
             atoms=atoms.T,
             signal=signals[0],
             n_nonzero_coefs=5,
-            min_residual=0.001,
+            min_residual=0.01,
             bandit_alg="",
             abs=True,
             seed=0,
@@ -265,17 +274,17 @@ if __name__ == "__main__":
         print("indices: ", candidates, " budget: ", budget)
 
         # bandit version
-        print("\n------ running bandit OMP with cache ------")
+        print("\n------ running bandit OMP without cache ------")
         candidates, budget = orthogonal_matching_pursuit(
             atoms=atoms.T,
             signal=signals[0],
             n_nonzero_coefs=5,
-            min_residual=0.001,
+            min_residual=0.01,
             bandit_alg=ACTION_ELIMINATION,
             abs=True,
             seed=0,
-            use_cache=True,
-            use_naive=True,
+            use_cache=False,
+            use_naive=False,
             cache_multiplier=1,
         )
         print("indices: ", candidates, " budget: ", budget[0])

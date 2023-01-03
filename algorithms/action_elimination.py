@@ -138,7 +138,7 @@ def action_elimination(
                 delta=new_delta,
                 var_proxy=var_proxy,
                 ci_bound=HOEFFDING,
-                num_samples=t * batch_size,
+                num_samples=end,
                 pop_size=d,
                 with_replacement=False,
             )

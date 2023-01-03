@@ -12,7 +12,7 @@ if __name__ == "__main__":
         include_error_bar=True,
         dir_name="mp_scaling",
         caching_type="",
-        data_types=[NORMAL_CUSTOM],
+        data_types=[NETFLIX],
         alg_names=[ACTION_ELIMINATION]
     )
     create_scaling_plots(
