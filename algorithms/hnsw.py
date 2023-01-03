@@ -62,8 +62,48 @@ def compare(seed, n, d):
     print("===============")
 
 
+def hnsw_exp(seed, n, d, mode):
+    atoms, signals = get_data(
+        num_atoms=n,
+        len_signal=d,
+        data_type=NORMAL_CUSTOM,
+        num_signals=3,
+        seed=seed
+    )
+
+    index = hnswlib.Index(space="ip", dim=d, useNormFactor_=mode=="NAHNSW")
+
+    # Initializing index - the maximum number of elements should be known beforehand
+    index.init_index(max_elements=n, ef_construction=200, M=16)
+
+    # Element insertion (can be called several times):
+    ids = np.arange(n)
+    index.add_items(atoms, ids)
+
+    labels, distances, budget1 = index.knn_query(signals, k=4)
+    labels.sort()
+
+    candidates_array, budget_array = mips_bandit(
+        atoms=atoms,
+        signals=signals,
+        maxmin=NORMALIZED_MAXMIN,
+        bandit_alg=ACTION_ELIMINATION,
+        epsilon=0.01,
+        delta=0.001,
+        num_best_atoms=4,
+        is_experiment=False,
+        with_replacement=False,
+    )
+
+    candidates_array.sort()
+
+    print(f"seed: {seed}")
+    print("accuracy: ", np.mean(labels == candidates_array))
+
+
 n = 1000
 d = 100
 
-for seed in range(10):
-    compare(seed, n, d)
+# hnsw_exp(1, n, d, "NAHNSW")
+for i in range(10):
+    compare(i, n, d)

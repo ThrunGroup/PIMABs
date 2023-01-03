@@ -1,10 +1,6 @@
-import numpy as np
-import math
-from typing import Tuple
+from typing import List
 from exps.scaling_exp import scaling_exp
 from utils.constants import (
-    BATCH_SIZE,
-
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
@@ -35,7 +31,7 @@ from utils.constants import (
 )
 
 
-def run_scaling():
+def run_scaling(algorithms: List[str], datasets: List[str]):
     """
     Run scaling experiment for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
@@ -54,118 +50,40 @@ def run_scaling():
             epsilon = SCALING_EPSILON_REAL
             delta = SCALING_DELTA_REAL
 
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=ADAPTIVE_ACTION_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
+        for algorithm in algorithms:
+            parameters = {
+                "epsilon": epsilon,
+                "delta": delta,
+                "num_atoms": SCALING_NUM_ATOMS,
+                "size_minmax": size_minmax,
+                "num_experiments": SCALING_NUM_EXPERIMENTS,
+                "num_signals": SCALING_NUM_SIGNALS,
+                "data_type": data_type,
+                "mips_alg": algorithm,
+                "with_replacement": False,
+                "is_normalize": False,
+                "is_logspace": True,
+            }
 
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=ACTION_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=GREEDY_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=HNSW_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=NAHNSW_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=MEDIAN_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=PCA_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=LSH_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
+            scaling_exp(**parameters)
 
 
 if __name__ == "__main__":
-    run_scaling()
+    algorithms = [
+        # ADAPTIVE_ACTION_ELIMINATION,
+        # ACTION_ELIMINATION,
+        # MEDIAN_ELIMINATION,
+        NAHNSW_MIPS,
+        HNSW_MIPS,
+        # PCA_MIPS,
+        # LSH_MIPS
+    ]
+
+    datasets = [
+        NORMAL_CUSTOM,
+        # ADVERSARIAL_CUSTOM,
+        # NETFLIX,
+        # MOVIE_LENS
+    ]
+
+    run_scaling(algorithms=algorithms, datasets=datasets)
