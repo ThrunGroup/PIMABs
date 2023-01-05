@@ -83,7 +83,7 @@ def matching_pursuit(
 def orthogonal_matching_pursuit(
     atoms: np.ndarray,
     signal: np.ndarray,
-    n_nonzero_coefs: int = 5,
+    n_nonzero_coefs: int = 3,
     min_residual: float = 0.001,
     bandit_alg: str = "",
     seed: int = 0,
@@ -130,6 +130,8 @@ def orthogonal_matching_pursuit(
     n_active = 0
     indices = np.arange(num_atoms)  # keeping track of swapping
 
+    original_norm = np.linalg.norm(signal, ord=2)
+
     # need to set these default values even if we don't use cache due to numba type errors
     max_cache_size = int((cache_multiplier * num_dimensions))
     shuffled_indices = np.arange(num_dimensions)
@@ -149,6 +151,12 @@ def orthogonal_matching_pursuit(
             #print(f"\nMP iteration {iter}")
             iter += 1
 
+            residual_norm = np.linalg.norm(residual, ord=2)
+            # print(residual)
+            factor = original_norm / residual_norm / iter
+            # print(factor)
+            # factor = 1
+
             # naive-caching uses different permutations for each MP iteration.
             # this makes it less likely that we'll get cache hits compared to PI caching.
             if use_naive:
@@ -156,8 +164,8 @@ def orthogonal_matching_pursuit(
 
             candidate, budget, cache, cache_tracker, cache_map = mips_bandit(
                 atoms.T,
-                residual.T,  # need to pass in 2d array
-                maxmin=(np.min(atoms), np.max(atoms)),
+                residual.T * factor,  # need to pass in 2d array
+                maxmin=(2, 0),
                 bandit_alg=bandit_alg,
                 epsilon=0.0,
                 abs=abs,
@@ -169,6 +177,7 @@ def orthogonal_matching_pursuit(
                 cache_map=cache_map,
             )
             lam = candidate[0][0]
+            # print("budget: ", budget)
             #print(f"permutation: \n {shuffled_indices}")
             #print(f"cache tracker: \n {np.sum(cache_tracker)}")
             #print(f"cache_map first atom: \n {cache_map[0]}")
@@ -234,12 +243,12 @@ if __name__ == "__main__":
     for seed in range(1):
         print("\nSeed : ", seed)
         num_atoms = 100
-        len_signal = 10000
+        len_signal = 1000
         atoms, signals = get_data(
             num_atoms=num_atoms,
             len_signal=len_signal,
             seed=seed,
-            data_type=NORMAL_CUSTOM,
+            data_type=NETFLIX,
             num_signals=1,
         )
 
@@ -274,8 +283,8 @@ if __name__ == "__main__":
             bandit_alg=ACTION_ELIMINATION,
             abs=True,
             seed=0,
-            use_cache=True,
-            use_naive=True,
+            use_cache=False,
+            use_naive=False,
             cache_multiplier=1,
         )
         print("indices: ", candidates, " budget: ", budget[0])
