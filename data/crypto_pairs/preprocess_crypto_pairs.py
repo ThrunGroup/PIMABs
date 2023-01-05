@@ -42,4 +42,4 @@ def main(with_volume: bool = True):
 
 
 if __name__ == "__main__":
-    main(with_volume=False)
+    main(with_volume=True)
