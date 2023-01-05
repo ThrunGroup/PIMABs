@@ -4,13 +4,16 @@ import os
 import tqdm
 
 
-def main(with_volume: bool):
+def main(with_volume: bool = True):
     """
     Make a dataset for 110 crypto pairs with 1M dimensions
     """
     directory = "archive"
     num_atoms = 105
-    min_size = 16 * 1024 * 1024  # 16MB
+    if with_volume:
+        min_size = 16 * 1024 * 1024  # 16MB
+    else:
+        min_size = 22 * 1024 * 1024  # 22MB
     columns = ["open", "close", "high", "low"]
     if with_volume:
         columns += "volume",  # volume columns has unexceptionally large values
@@ -39,4 +42,4 @@ def main(with_volume: bool):
 
 
 if __name__ == "__main__":
-    main(with_volume=True)
+    main(with_volume=False)
