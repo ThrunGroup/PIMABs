@@ -29,15 +29,34 @@ from utils.constants import (
     SCALING_DELTA_REAL,
     SCALING_EPSILON_REAL,
 )
+import time
 
-
-def run_scaling(algorithms: List[str], datasets: List[str]):
+def run_scaling(algorithms: List[str] = None, datasets: List[str] = None):
     """
     Run scaling experiment for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
+    if not algorithms:
+        algorithms = [
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            NAHNSW_MIPS,
+            HNSW_MIPS,
+            PCA_MIPS,
+            LSH_MIPS
+        ]
+
+    if not datasets:
+        datasets = [
+            NORMAL_CUSTOM,
+            ADVERSARIAL_CUSTOM,
+            NETFLIX,
+            MOVIE_LENS
+        ]
+
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
+    for data_type in datasets:
         if data_type is MOVIE_LENS:
             size_minmax = SCAlING_SIZE_MINMAX_MOVIE
         else:
@@ -65,7 +84,9 @@ def run_scaling(algorithms: List[str], datasets: List[str]):
                 "is_logspace": True,
             }
 
+            start_time = time.time()
             scaling_exp(**parameters)
+            print(algorithm, " : ", time.time() - start_time)
 
 
 if __name__ == "__main__":
@@ -73,8 +94,8 @@ if __name__ == "__main__":
         # ADAPTIVE_ACTION_ELIMINATION,
         # ACTION_ELIMINATION,
         # MEDIAN_ELIMINATION,
-        NAHNSW_MIPS,
         HNSW_MIPS,
+        NAHNSW_MIPS,
         # PCA_MIPS,
         # LSH_MIPS
     ]
@@ -82,7 +103,7 @@ if __name__ == "__main__":
     datasets = [
         NORMAL_CUSTOM,
         # ADVERSARIAL_CUSTOM,
-        # NETFLIX,
+        NETFLIX,
         # MOVIE_LENS
     ]
 

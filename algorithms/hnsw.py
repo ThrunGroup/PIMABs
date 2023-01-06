@@ -8,6 +8,7 @@ from utils.constants import (
     ACTION_ELIMINATION,
 )
 from mips_bandit import mips_bandit
+import time
 
 
 def compare(seed, n, d):
@@ -19,6 +20,9 @@ def compare(seed, n, d):
         seed=seed
     )
 
+    # print(atoms[0])
+
+    start_time = time.time()
     index = hnswlib.Index(space="ip", dim=d, useNormFactor_=True)
 
     # Initializing index - the maximum number of elements should be known beforehand
@@ -28,9 +32,12 @@ def compare(seed, n, d):
     ids = np.arange(n)
     index.add_items(atoms, ids)
 
+    print("nahnsw: ", time.time() - start_time)
+
     labels, distances, budget1 = index.knn_query(signals, k=4)
     labels.sort()
 
+    start_time = time.time()
     index2 = hnswlib.Index(space="ip", dim=d, useNormFactor_=False)
 
     # Initializing index - the maximum number of elements should be known beforehand
@@ -39,6 +46,8 @@ def compare(seed, n, d):
     # Element insertion (can be called several times):
     ids2 = np.arange(n)
     index2.add_items(atoms, ids2)
+
+    print("hnsw: ", time.time() - start_time)
 
     labels2, distances, budget2 = index2.knn_query(signals, k=4)
     labels2.sort()
@@ -71,7 +80,7 @@ def hnsw_exp(seed, n, d, mode):
         seed=seed
     )
 
-    index = hnswlib.Index(space="ip", dim=d, useNormFactor_=mode=="NAHNSW")
+    index = hnswlib.Index(space="ip", dim=d, useNormFactor_=mode == "NAHNSW")
 
     # Initializing index - the maximum number of elements should be known beforehand
     index.init_index(max_elements=n, ef_construction=200, M=16)
@@ -102,8 +111,8 @@ def hnsw_exp(seed, n, d, mode):
 
 
 n = 1000
-d = 100
+d = 1000
 
 # hnsw_exp(1, n, d, "NAHNSW")
-for i in range(10):
+for i in range(3):
     compare(i, n, d)
