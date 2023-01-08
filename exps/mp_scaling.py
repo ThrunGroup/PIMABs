@@ -12,7 +12,8 @@ from data.get_data import get_data
 from utils.constants import (
     NORMAL_CUSTOM,
     NETFLIX,
-    MOVIE_LENS,
+    ENVIRONMENTAL_SOUND,
+    ENVIRONMENTAL_SOUND_DL,
 
     ACTION_ELIMINATION,
     NUM_SEEDS,
@@ -83,13 +84,12 @@ def scaling_exp(
         rng = np.random.default_rng(seed)
         sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments)
         atoms, signals = get_data(
-            num_atoms=num_atoms,
+            num_atoms=100,
             len_signal=sizes_signal[-1],    # start with the largest signal size and index
             num_signals=num_signals,
             seed=seed,
             data_type=data_type,
         )
-        maxmin = DEFAULT_MAXMIN
 
         # params that we need to update
         avg_runtime = []
@@ -205,14 +205,14 @@ def scaling_exp(
 
 
 if __name__ == "__main__":
+    # scaling_exp(
+    #     data_type=NETFLIX,
+    #     use_cache=False,
+    #     use_naive=False,
+    # )
+
     scaling_exp(
-        data_type=NETFLIX,
+        data_type=ENVIRONMENTAL_SOUND,
         use_cache=False,
         use_naive=False,
     )
-
-    # scaling_exp(
-    #     data_type=NETFLIX,
-    #     use_cache=True,
-    #     use_naive=False,
-    # )

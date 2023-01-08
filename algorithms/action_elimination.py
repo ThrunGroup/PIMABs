@@ -143,6 +143,9 @@ def action_elimination(
                 with_replacement=False,
             )
 
+            print("means: ", means)
+            print("ci: ", ci)
+
             if 4 * ci < epsilon:
                 if abs:
                     candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
@@ -167,6 +170,7 @@ def action_elimination(
                     candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
             candidates = candidates[new_cand_idcs]
+            print(t, candidates)
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
     #print(f"hits = {hits}")

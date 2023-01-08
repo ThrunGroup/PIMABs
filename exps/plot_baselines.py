@@ -14,6 +14,8 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    ENVIRONMENTAL_SOUND,
+    ENVIRONMENTAL_SOUND_DL,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -66,6 +68,10 @@ def translate_dataset_name(dataset_name: str):
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
+    elif dataset_name == ENVIRONMENTAL_SOUND:
+        return "Environmental sound"
+    elif dataset_name == ENVIRONMENTAL_SOUND_DL:
+        return "Environmental sound DL"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -343,7 +349,7 @@ def generate_scaling_plots():
         is_fit=True,
         is_logspace=True,
         include_error_bar=True,
-        data_types=[NETFLIX, MOVIE_LENS],
+        data_types=[NETFLIX, MOVIE_LENS, ENVIRONMENTAL_SOUND],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
@@ -360,7 +366,7 @@ def generate_tradeoff_plots():
     """
     # precision-accuracy tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
-        data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
+        data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS, ENVIRONMENTAL_SOUND],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,

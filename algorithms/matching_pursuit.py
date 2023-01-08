@@ -54,7 +54,7 @@ def matching_pursuit(
             candidate, budget = mips_bandit(
                 atoms[unexplored],  # exclude previous decompositions
                 np.expand_dims(residual, axis=0),  # need to pass in 2d array
-                maxmin=(np.min(atoms), np.max(atoms)),
+                maxmin=(np.max(atoms), np.min(atoms)),
                 bandit_alg=bandit_alg,
                 epsilon=0.01,
                 abs=abs,
@@ -81,19 +81,19 @@ def matching_pursuit(
 
 # Todo: currently only supports single signal...
 def orthogonal_matching_pursuit(
-    atoms: np.ndarray,
-    signal: np.ndarray,
-    n_nonzero_coefs: int = 3,
-    min_residual: float = 0.001,
-    bandit_alg: str = "",
-    seed: int = 0,
-    abs: bool = False,
-    batch_size: int = 30,
+        atoms: np.ndarray,
+        signal: np.ndarray,
+        n_nonzero_coefs: int = 5,
+        min_residual: float = 0.001,
+        bandit_alg: str = "",
+        seed: int = 0,
+        abs: bool = False,
+        batch_size: int = 30,
 
-    # caching params
-    use_cache: bool = True,
-    use_naive: bool = False,
-    cache_multiplier: int = 1,
+        # caching params
+        use_cache: bool = True,
+        use_naive: bool = False,
+        cache_multiplier: int = 1,
 ) -> Tuple[np.ndarray, int]:
     """
     Runs the Orthogonal Matching Pursuit algorithm.
@@ -148,14 +148,14 @@ def orthogonal_matching_pursuit(
         # solve the MIPS problem
         if len(bandit_alg) > 0:
             # Todo: only supports caching with Action Elimination for now
-            #print(f"\nMP iteration {iter}")
+            # print(f"\nMP iteration {iter}")
             iter += 1
 
             residual_norm = np.linalg.norm(residual, ord=2)
-            # print(residual)
-            factor = original_norm / residual_norm / iter
+            print("residual: ", np.min(residual), np.max(residual))
+            # factor = original_norm / residual_norm / iter
+            factor = 1
             # print(factor)
-            # factor = 1
 
             # naive-caching uses different permutations for each MP iteration.
             # this makes it less likely that we'll get cache hits compared to PI caching.
@@ -164,12 +164,12 @@ def orthogonal_matching_pursuit(
 
             candidate, budget, cache, cache_tracker, cache_map = mips_bandit(
                 atoms.T,
-                residual.T * factor,  # need to pass in 2d array
-                maxmin=(2, 0),
+                residual.T,  # need to pass in 2d array
+                maxmin=(np.max(atoms), np.min(atoms)),
                 bandit_alg=bandit_alg,
                 epsilon=0.0,
                 abs=abs,
-                delta=0.3,
+                delta=0.001,
                 use_cache=use_cache,
                 shuffled_indices=shuffled_indices,
                 cache=cache,
@@ -177,10 +177,11 @@ def orthogonal_matching_pursuit(
                 cache_map=cache_map,
             )
             lam = candidate[0][0]
+            # print(candidate)
             # print("budget: ", budget)
-            #print(f"permutation: \n {shuffled_indices}")
-            #print(f"cache tracker: \n {np.sum(cache_tracker)}")
-            #print(f"cache_map first atom: \n {cache_map[0]}")
+            # print(f"permutation: \n {shuffled_indices}")
+            # print(f"cache tracker: \n {np.sum(cache_tracker)}")
+            # print(f"cache_map first atom: \n {cache_map[0]}")
 
             # update params
             cache = cache
@@ -197,6 +198,7 @@ def orthogonal_matching_pursuit(
 
         if lam < n_active or alpha[lam] ** 2 < min_float:
             # atom already selected or inner product too small
+            # print(lam)
             print("=> atom already selected")
             break
 
@@ -232,7 +234,7 @@ def orthogonal_matching_pursuit(
 
         residual = signal - np.dot(atoms[:, :n_active], gamma)
         if n_active == n_nonzero_coefs:
-             break
+            break
 
     indices = indices[:n_active]
     return indices, total_budget

@@ -1,6 +1,9 @@
 data/raw_data
 data/netflix/*.txt
 data/mnist/*ubyte
+data/environmental_sound/archive
+data/environmental_sound/*.npy
+data/environmental_sound/waves.py
 
 .idea/
 *.DS_Store*
