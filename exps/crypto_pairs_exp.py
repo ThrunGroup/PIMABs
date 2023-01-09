@@ -5,14 +5,12 @@ from data.get_data import get_data
 from algorithms.mips_bandit import mips_bandit
 from utils.constants import (
     BATCH_SIZE,
-
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
     CRYPTO_PAIRS,
-
     # algorithms
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -21,7 +19,6 @@ from utils.constants import (
     LSH_MIPS,
     PCA_MIPS,
     ASYMMETRIC,
-
     # scaling specific constants
     TRADEOFF_NUM_EXPERIMENTS,
     TRADEOFF_NUM_ATOMS,
@@ -33,13 +30,15 @@ from utils.constants import (
     NUM_ATOMS_SIGNAL,
     CRYPTO_PAIRS_SIGNAL_LENGTH,
 )
+from exps.plot_baselines import generate_scaling_plots
+
 
 
 def get_accuracy_array(
-        true_candidates: np.ndarray,
-        mips_candidates: np.ndarray,
-        num_signals,
-        num_best_atoms
+    true_candidates: np.ndarray,
+    mips_candidates: np.ndarray,
+    num_signals,
+    num_best_atoms,
 ) -> np.ndarray:
     """
     Returns the average accuracy of the candidates across the signals.
@@ -50,10 +49,8 @@ def get_accuracy_array(
     :param returns: an array of accuracies
     """
     accuracy = []
-    for idx in range(TRADEOFF_NUM_SIGNALS):
-        accuracy.append(len(
-            np.intersect1d(true_candidates[idx], mips_candidates[idx])
-        ))
+    for idx in range(num_signals):
+        accuracy.append(len(np.intersect1d(true_candidates[idx], mips_candidates[idx])))
     return np.array(accuracy) / (num_signals * num_best_atoms)
 
 
@@ -63,8 +60,8 @@ def run_exp():
     num_best_atoms = 1
     num_signals = 3
     num_experiments = len(deltas) * len(minmaxs)
-    num_seeds = 5
-    num_atoms = 100
+    num_seeds = 1
+    num_atoms = 80
     len_signal = 10 ** 6
 
     avg_accuracy = np.zeros(num_experiments)
@@ -112,6 +109,8 @@ def run_exp():
                                                         num_best_atoms)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+                    print(f"delta: {delta}, minmax: {minmax}, accuracy: {np.sum(accuracy_array)}")
+
 
             avg_accuracy += np.array(accuracies)
             avg_accuracy_std += np.array(accuracies_std)

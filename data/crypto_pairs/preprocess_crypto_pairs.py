@@ -32,7 +32,7 @@ def main(with_volume: bool = True):
     files.sort(key=lambda file: os.path.getsize(file))
     files = files[:num_atoms]  # Only keep the crypto pairs that have more than 1M dimensions
 
-    dataset = np.empty((num_atoms, num_max_dimensions))
+    dataset = np.empty((len(files), num_max_dimensions))
     print("Making a crypto pairs dataset...")
     for (i, file) in tqdm.tqdm(enumerate(files), total=len(files)):
         df = pd.read_csv(file)
