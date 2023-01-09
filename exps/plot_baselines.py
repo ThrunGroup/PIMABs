@@ -15,9 +15,9 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
-    GREG_LEADER_HARD,
-    GREG_LEADER_SOFT,
-    GREG_NO_LEADER,
+    CLEAR_LEADER_HARD,
+    CLEAR_LEADER_SOFT,
+    NO_CLEAR_LEADER,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -70,11 +70,11 @@ def translate_dataset_name(dataset_name: str):
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
-    elif dataset_name == GREG_LEADER_HARD:
+    elif dataset_name == CLEAR_LEADER_HARD:
         return "Greg Leader (Hard)"
-    elif dataset_name == GREG_LEADER_SOFT:
+    elif dataset_name == CLEAR_LEADER_SOFT:
         return "Greg Leader (Soft)"
-    elif dataset_name == GREG_NO_LEADER:
+    elif dataset_name == NO_CLEAR_LEADER:
         return "Greg No Leader"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
@@ -114,6 +114,7 @@ def create_scaling_plots(
     include_error_bar: bool = False,
     is_fit: bool = False,
     is_logspace: bool = False,
+    dirname: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
@@ -125,8 +126,7 @@ def create_scaling_plots(
     :param is_logspace: whether to plot in logspace or not
     """
     # get all csv files
-    path = os.path.join(os.getcwd(), "logs")
-    path = os.path.join(path, "scaling")
+    path = os.path.join(os.getcwd(), "logs", "scaling") if dirname is None else dirname
     csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
@@ -344,7 +344,7 @@ if __name__ == "__main__":
     create_scaling_plots(
         is_fit=True,
         include_error_bar=True,
-        data_types=[GREG_LEADER_HARD, GREG_LEADER_SOFT, GREG_NO_LEADER],
+        data_types=[CLEAR_LEADER_HARD, CLEAR_LEADER_SOFT, NO_CLEAR_LEADER],
         alg_names=[
             ACTION_ELIMINATION,
         ]

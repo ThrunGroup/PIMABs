@@ -53,7 +53,8 @@ def scaling_exp(
     is_plot: bool = True,
     is_logspace: bool = False,
     dirname: str = None,
-) -> None:
+    num_seeds: int = NUM_SEEDS,
+) -> float:
     """
     Run the time complexity of the bandit and baseline algorithms as the signal size scales and store them in
     the appropriate log files. MEDIAN_ELIMINATION algorithm should satisfy this scaling according to Corollary 3 in
@@ -76,7 +77,6 @@ def scaling_exp(
     :param dirname: Directory name to log the results
     """
     global budget_array
-
     # num_experiments determins the different sizes of d that we run
     avg_runtime = np.zeros(num_experiments)
     avg_budget = np.zeros(num_experiments)
@@ -84,8 +84,8 @@ def scaling_exp(
     avg_accuracy = np.zeros(num_experiments)
     print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
 
-    # average over NUM_SEEDS results
-    for seed in range(NUM_SEEDS):
+    # average over num_seeds results
+    for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
         sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
@@ -117,7 +117,7 @@ def scaling_exp(
                 atoms_subset /= atoms_norm
                 signals_subset /= signal_norm
                 epsilon /= atoms_norm.max() * signal_norm
-                maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given.
+                maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given
 
             # bandit algorithms
             if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION]:
@@ -141,8 +141,6 @@ def scaling_exp(
                     with_replacement=with_replacement,
                 )
                 runtime = time.time() - start_time
-
-            # baseline algorithms
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
                     "budget"
@@ -156,7 +154,6 @@ def scaling_exp(
                     num_best_atoms=num_best_atoms,
                 )
                 runtime = time.time() - start_time
-
             elif mips_alg is PCA_MIPS:
                 log_info = (
                     "depth"
@@ -170,7 +167,6 @@ def scaling_exp(
                     delta=SCALING_DEPTH,
                 )
                 runtime = time.time() - start_time
-
             elif mips_alg is LSH_MIPS:
                 log_info = (
                     "hfunc_"
@@ -213,10 +209,10 @@ def scaling_exp(
         avg_budget_std += np.array(budgets_std)
         avg_accuracy += np.array(accuracy_list)
 
-    avg_runtime /= NUM_SEEDS
-    avg_budget /= NUM_SEEDS
-    avg_budget_std /= NUM_SEEDS
-    avg_accuracy /= NUM_SEEDS
+    avg_runtime /= num_seeds
+    avg_budget /= num_seeds
+    avg_budget_std /= num_seeds
+    avg_accuracy /= num_seeds
 
     # save to log files
     if is_log:
@@ -228,7 +224,7 @@ def scaling_exp(
             "runtime": avg_runtime,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs/scaling" if dirname is None else dirname
+        log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg
@@ -244,4 +240,6 @@ def scaling_exp(
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
+
     print(f"Mean accuracy of {mips_alg} for {data_type}: {np.mean(avg_accuracy)} \n")
+    return np.mean(avg_accuracy)
