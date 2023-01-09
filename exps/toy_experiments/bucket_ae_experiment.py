@@ -4,8 +4,8 @@ from exps.scaling_exp import scaling_exp
 from exps.plot_baselines import generate_scaling_plots, create_scaling_plots
 from utils.constants import (
     BATCH_SIZE,
-    N,
-    D,
+    NUMBER_OF_ATOMS,
+    DIMENSION_OF_ATOMS,
 
     # datasets
     NORMAL_CUSTOM,
@@ -22,7 +22,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-    BUCKET_AE,
+    BUCKET_ACTION_ELIMINATION,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -38,77 +38,78 @@ from utils.constants import (
 
 
 def bucket_ae_exp():
-    for dataset in [NETFLIX_TRANSPOSE]:
-        scaling_exp(
-            epsilon=SCALING_EPSILON,
-            delta=0.1,
-            independent_var=N,
-            signal_dim=1000,
-            size_minmax=(100, 10 ** 5),
-            num_best_atoms=1,
-            num_experiments=15,
-            num_signals=2,
-            data_type=dataset,
-            mips_alg=BUCKET_AE,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=False,
-        )
+    # for dataset in [NETFLIX_TRANSPOSE]:
+    #     scaling_exp(
+    #         epsilon=SCALING_EPSILON,
+    #         delta=0.1,
+    #         independent_var=NUMBER_OF_ATOMS,
+    #         signal_dim=1000,
+    #         size_minmax=(1000, 10 ** 5),
+    #         num_best_atoms=1,
+    #         num_experiments=15,
+    #         num_signals=2,
+    #         data_type=dataset,
+    #         mips_alg=BUCKET_ACTION_ELIMINATION,
+    #         with_replacement=False,
+    #         is_normalize=False,
+    #         is_logspace=False,
+    #     )
+    #
+    #     scaling_exp(
+    #         epsilon=SCALING_EPSILON,
+    #         delta=0.1,
+    #         independent_var=NUMBER_OF_ATOMS,
+    #         signal_dim=1000,
+    #         size_minmax=(1000, 10 ** 5),
+    #         num_best_atoms=1,
+    #         num_experiments=15,
+    #         num_signals=2,
+    #         data_type=dataset,
+    #         mips_alg=ACTION_ELIMINATION,
+    #         with_replacement=False,
+    #         is_normalize=False,
+    #         is_logspace=False,
+    #     )
+    # for dataset in [NETFLIX]:
+    #     scaling_exp(
+    #         epsilon=SCALING_EPSILON,
+    #         delta=0.1,
+    #         independent_var=DIMENSION_OF_ATOMS,
+    #         num_atoms=1300,
+    #         signal_dim=3000,
+    #         size_minmax=(1000, 30000),
+    #         num_best_atoms=1,
+    #         num_experiments=15,
+    #         num_signals=2,
+    #         data_type=dataset,
+    #         mips_alg=BUCKET_ACTION_ELIMINATION,
+    #         with_replacement=False,
+    #         is_normalize=False,
+    #         is_logspace=False,
+    #     )
+    #
+    #     scaling_exp(
+    #         epsilon=SCALING_EPSILON,
+    #         delta=0.1,
+    #         independent_var=DIMENSION_OF_ATOMS,
+    #         num_atoms=1300,
+    #         signal_dim=3000,
+    #         size_minmax=(1000, 30000),
+    #         num_best_atoms=1,
+    #         num_experiments=15,
+    #         num_signals=2,
+    #         data_type=dataset,
+    #         mips_alg=ACTION_ELIMINATION,
+    #         with_replacement=False,
+    #         is_normalize=False,
+    #         is_logspace=False,
+    #     )
 
-        scaling_exp(
-            epsilon=SCALING_EPSILON,
-            delta=0.1,
-            independent_var=N,
-            signal_dim=1000,
-            size_minmax=(100, 10 ** 5),
-            num_best_atoms=1,
-            num_experiments=15,
-            num_signals=2,
-            data_type=dataset,
-            mips_alg=ACTION_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=False,
-        )
-    for dataset in [NETFLIX]:
-        scaling_exp(
-            epsilon=SCALING_EPSILON,
-            delta=0.1,
-            independent_var=D,
-            num_atoms=1300,
-            signal_dim=3000,
-            size_minmax=(100, 30000),
-            num_best_atoms=1,
-            num_experiments=15,
-            num_signals=2,
-            data_type=dataset,
-            mips_alg=BUCKET_AE,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=False,
-        )
-
-        scaling_exp(
-            epsilon=SCALING_EPSILON,
-            delta=0.1,
-            independent_var=D,
-            num_atoms=1300,
-            signal_dim=3000,
-            size_minmax=(100, 30000),
-            num_best_atoms=1,
-            num_experiments=15,
-            num_signals=2,
-            data_type=dataset,
-            mips_alg=ACTION_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=False,
-        )
     datasets = [NETFLIX, NETFLIX_TRANSPOSE]
     create_scaling_plots(
         data_types=datasets,
         alg_names=[ACTION_ELIMINATION],
-        ind_variables=[N, D],
+        ind_variables=[NUMBER_OF_ATOMS, DIMENSION_OF_ATOMS],
         include_error_bar=True,
         is_logspace=False,
         is_plot_accuracy=True,
@@ -116,8 +117,8 @@ def bucket_ae_exp():
     )
     create_scaling_plots(
         data_types=datasets,
-        alg_names=[BUCKET_AE],
-        ind_variables=[N, D],
+        alg_names=[BUCKET_ACTION_ELIMINATION],
+        ind_variables=[NUMBER_OF_ATOMS, DIMENSION_OF_ATOMS],
         include_error_bar=True,
         is_logspace=False,
         is_plot_accuracy=True,
@@ -125,8 +126,8 @@ def bucket_ae_exp():
     )
     create_scaling_plots(
         data_types=datasets,
-        alg_names=[ACTION_ELIMINATION, BUCKET_AE],
-        ind_variables=[N, D],
+        alg_names=[ACTION_ELIMINATION, BUCKET_ACTION_ELIMINATION],
+        ind_variables=[NUMBER_OF_ATOMS, DIMENSION_OF_ATOMS],
         include_error_bar=True,
         is_logspace=False,
         is_plot_accuracy=True,

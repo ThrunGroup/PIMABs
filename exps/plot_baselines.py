@@ -9,14 +9,12 @@ from typing import List, Any
 from utils.constants import (
     COLORS,
     ALG_TO_COLOR,
-
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     NETFLIX_TRANSPOSE,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
-
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
@@ -24,9 +22,9 @@ from utils.constants import (
     LSH_MIPS,
     PCA_MIPS,
     MAX_SPEEDUP,
-    BUCKET_AE,
-    D,
-    N
+    BUCKET_ACTION_ELIMINATION,
+    DIMENSION_OF_ATOMS,
+    NUMBER_OF_ATOMS,
 )
 from utils.utils import fit_and_plot
 
@@ -50,7 +48,7 @@ def translate_alg_name(alg_name: str):
         return "LSH-MIPS"
     elif alg_name == PCA_MIPS:
         return "PCA-MIPS"
-    elif alg_name == BUCKET_AE:
+    elif alg_name == BUCKET_ACTION_ELIMINATION:
         return "Bucket_AE"
     else:
         raise Exception("Bad algorithm name")
@@ -97,8 +95,8 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
-    elif BUCKET_AE in filename:
-        return BUCKET_AE
+    elif BUCKET_ACTION_ELIMINATION in filename:
+        return BUCKET_ACTION_ELIMINATION
     else:
         raise Exception("No algorithm was able to be extracted from " + filename)
 
@@ -114,7 +112,7 @@ def power10_sqrt(array):
 def create_scaling_plots(
     data_types: List[str] = [],
     alg_names: List[str] = [],
-    ind_variables: List[str] = [D],
+    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     include_error_bar: bool = False,
     is_fit: bool = False,
     is_logspace: bool = False,
@@ -135,9 +133,12 @@ def create_scaling_plots(
     """
     # get all csv files
     if dirname is None:
-        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        path = os.path.join(parent_dir, "logs")
-        path = os.path.join(path, "scaling")
+        current_file_directory = os.path.dirname(__file__)
+        path = (
+            os.path.join(current_file_directory, "logs", "scaling")
+            if dirname is None
+            else dirname
+        )
     else:
         path = dirname
 
@@ -148,13 +149,17 @@ def create_scaling_plots(
 
     for ind_variable in ind_variables:
         for datatype in data_types:
-            csv_files = glob.glob(os.path.join(path, f"*SCALING_{datatype}*ind_var{ind_variable}*"))
+            csv_files = glob.glob(
+                os.path.join(path, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+            )
             plt.figure(figsize=(6, 4.5))
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
             for f in csv_files:
                 alg_name = extract_alg(f)
                 data = read_csv(f)
-                independent_var = "signal_sizes" if "signal_sizes" in data.keys() else "num_atoms"
+                independent_var = (
+                    "signal_sizes" if "signal_sizes" in data.keys() else "num_atoms"
+                )
 
                 # only get relevant data
                 if f.find(datatype) < 0 or alg_name not in alg_names:
@@ -177,6 +182,7 @@ def create_scaling_plots(
                     else:
                         functions = [np.array, np.sqrt, np.log]
                         function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
+
                     fit_and_plot(
                         xs=x,
                         ys=y,
@@ -186,35 +192,52 @@ def create_scaling_plots(
                         is_logspace=is_logspace,
                     )
                     plt.title(title)
-                    xlabel = "Signal Vector Size (d)" if independent_var == "signal_sizes" else "Number of atoms (N)"
+                    xlabel = (
+                        "Signal Vector Size (d)"
+                        if independent_var == "signal_sizes"
+                        else "Number of atoms (N)"
+                    )
                     ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
 
                 else:
                     plt.scatter(
-                        x, y,
+                        x,
+                        y,
                         color=ALG_TO_COLOR[alg_name],
-                        label=f"{translate_alg_name(alg_name)}"
+                        label=f"{translate_alg_name(alg_name)}",
                     )
                     plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
                     # Sort the legend entries (labels and handles) by labels
                     handles, labels = plt.gca().get_legend_handles_labels()
-                    labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+                    labels, handles = zip(
+                        *sorted(zip(labels, handles), key=lambda t: t[0])
+                    )
                     plt.legend(handles, labels, loc="upper left")
 
                     if include_error_bar:
                         plt.errorbar(x, y, error, fmt=".", color="black")
                     plt.title(title)
-                    xlabel = "Signal Vector Size (d)" if independent_var == "signal_sizes" else "Number of atoms (N)"
+                    xlabel = (
+                        "Signal Vector Size (d)"
+                        if independent_var == "signal_sizes"
+                        else "Number of atoms (N)"
+                    )
                     ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
 
                 if is_plot_accuracy:
                     avg_accuracy = np.mean(data["accuracy"])
-                    plt.text(x[-1], y[-1], f"Accuracy: {avg_accuracy}", ha='right', va='bottom')
+                    plt.text(
+                        x[-1],
+                        y[-1],
+                        f"Accuracy: {avg_accuracy}",
+                        ha="right",
+                        va="bottom",
+                    )
 
             plt.show()
 
@@ -224,7 +247,7 @@ def create_tradeoff_plots(
     alg_names: List[str] = [],
     top_k: int = 1,
     include_error_bar: bool = False,
-    max_speedup: int = None
+    max_speedup: int = None,
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -235,8 +258,8 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    path = os.path.join(parent_dir, "logs")
+    current_file_directory = os.path.dirname(__file__)
+    path = os.path.join(current_file_directory, "logs")
     path = os.path.join(path, "precision_speed")
     csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
 
@@ -247,13 +270,19 @@ def create_tradeoff_plots(
 
     for datatype in data_types:
         plt.figure(figsize=(6, 4.5))
-        title = f"Precision-Speed Tradeoff Baselines: {translate_dataset_name(datatype)}"
+        title = (
+            f"Precision-Speed Tradeoff Baselines: {translate_dataset_name(datatype)}"
+        )
         for f in csv_files:
             alg_name = extract_alg(f)
             data = read_csv(f)
 
             # only get relevant data
-            if f.find(datatype) < 0 or alg_name not in alg_names or f.find(str("topk") + str(top_k)) < 0:
+            if (
+                f.find(datatype) < 0
+                or alg_name not in alg_names
+                or f.find(str("topk") + str(top_k)) < 0
+            ):
                 continue
 
             budget_data = data["budgets"].tolist()
@@ -266,9 +295,10 @@ def create_tradeoff_plots(
 
             # plot the datapoints
             plt.scatter(
-                x, y,
+                x,
+                y,
                 color=ALG_TO_COLOR[alg_name],
-                label=f"{translate_alg_name(alg_name)}"
+                label=f"{translate_alg_name(alg_name)}",
             )
             plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
@@ -298,7 +328,13 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS, COR_NORMAL_CUSTOM],
+        data_types=[
+            NORMAL_CUSTOM,
+            ADVERSARIAL_CUSTOM,
+            NETFLIX,
+            MOVIE_LENS,
+            COR_NORMAL_CUSTOM,
+        ],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
@@ -306,8 +342,8 @@ def generate_scaling_plots():
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
-            BUCKET_AE,
-        ]
+            BUCKET_ACTION_ELIMINATION,
+        ],
     )
 
     # fit the bandit algorithms and greedy-mips for better comparison
@@ -320,8 +356,8 @@ def generate_scaling_plots():
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
-            GREEDY_MIPS
-        ]
+            GREEDY_MIPS,
+        ],
     )
 
 
@@ -339,10 +375,10 @@ def generate_tradeoff_plots(top_k: int = 1):
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS
+            LSH_MIPS,
         ],
         top_k=top_k,
-        include_error_bar=False
+        include_error_bar=False,
     )
     create_tradeoff_plots(
         data_types=[ADVERSARIAL_CUSTOM],
@@ -352,15 +388,15 @@ def generate_tradeoff_plots(top_k: int = 1):
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             PCA_MIPS,
-            LSH_MIPS
+            LSH_MIPS,
         ],
         top_k=top_k,
         max_speedup=MAX_SPEEDUP,
-        include_error_bar=False
+        include_error_bar=False,
     )
 
 
 if __name__ == "__main__":
-    #generate_scaling_plots()
-    #generate_tradeoff_plots(top_k=20)
+    # generate_scaling_plots()
+    # generate_tradeoff_plots(top_k=20)
     generate_tradeoff_plots(top_k=5)

@@ -21,7 +21,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-    BUCKET_AE,
+    BUCKET_ACTION_ELIMINATION,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -146,7 +146,7 @@ if __name__ == "__main__":
             num_experiments=SCALING_NUM_EXPERIMENTS,
             num_signals=SCALING_NUM_SIGNALS,
             data_type=dataset,
-            mips_alg=BUCKET_AE,
+            mips_alg=BUCKET_ACTION_ELIMINATION,
             with_replacement=False,
             is_normalize=False,
             is_logspace=True,
@@ -165,9 +165,10 @@ if __name__ == "__main__":
             is_normalize=False,
             is_logspace=True,
         )
+
     create_scaling_plots(
         data_types=datasets,
-        alg_names =[ACTION_ELIMINATION, BUCKET_AE],
+        alg_names =[ACTION_ELIMINATION, BUCKET_ACTION_ELIMINATION],
         include_error_bar=True,
         is_logspace=True,
         is_plot_accuracy=True,

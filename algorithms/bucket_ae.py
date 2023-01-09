@@ -15,7 +15,7 @@ from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
-def bucket_ae(
+def bucket_action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
     var_proxy: np.ndarray,
@@ -28,21 +28,22 @@ def bucket_ae(
     seed=0,
     num_samples_bucket: int = 30,
     num_samples_norm: int = 1000,
-    z_score: float = 3,
-    # Scipy package is normally used for calculating z-score, but it is not compatible with numba
+    z_score: float = 3,  # Scipy package is normally used for calculating z-score, but it is not compatible with numba
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Put atoms into k buckets with descending order of their norm. Then, solve MIPS problem sequentially with bandit
     techniques.  If the lcb of inner product between the best atom and query is greater than the upper bound of
     remaining buckets( = norm of atom * norm of query vector), returns the best atom. This is to reduce unnecessary
-    computations to search maximum inner product atom in other buckets.
+    computations to search maximum inner product atom in other buckets. This is possible sicne the best atom can be
+    found by considering a few atoms. Hence, for a specific distribution, the linear scaling of sample complexity in
+    number of atoms can be removed.
 
     Note: Here, we don't compare the lcb and ucb of inner product values from each partition. Instead, we compare
-    the estimated inner product values. So it's not a mathematically valid algorithm.
+    the estimated inner product values. Hence, there are no theoretical guarantees as there may be errors due to
+    sampling noise.
 
     MIPS problem:= For each signal in signals matrix, find an atom in atoms matrix that has maximum dot product with
     the signal
-
     :param atoms: A 2d array that store atoms in rows.
     :param signals: A 2d array that store signals in rows
     :param var_proxy: Sub-gaussian variance of the distribution of arms (regarding an element of atom * an element of
@@ -58,41 +59,41 @@ def bucket_ae(
     :param num_samples_norm: Number of samples to estimate the norm of atoms
     :param z_score: Z score to calculate the upper bound and lower bound of the norm of atoms
     :return: An array of top k atoms and sample complexity
-
     """
-
     set_seed(seed)
     N = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms
-    k = min(int(N/num_samples_bucket), int(N/num_best_atoms))  # Todo: fix hard-coded
+    k = min(
+        int(N / num_samples_bucket), int(N / num_best_atoms)
+    )  # Todo: fix hard-coded
     m = int(N / k)
-    q = min(num_samples_norm, d)  # Number of samples from each atom to estimate its norm
+    q = min(
+        num_samples_norm, d
+    )  # Number of samples from each atom to estimate its norm
 
-    sample_idcs = np.random.randint(low=0, high=d, size=num_samples_norm, dtype=np.int64)
+    sample_idcs = np.random.randint(
+        low=0, high=d, size=num_samples_norm, dtype=np.int64
+    )
     sampled_atoms_squared = atoms[:, sample_idcs] * atoms[:, sample_idcs]
     sampled_signals_squared = signals[:, sample_idcs] * signals[:, sample_idcs]
-    # atoms_norms = np.mean(np.sqrt(sampled_atoms_squared), axis=1)
-    # signals_norms = np.mean(np.sqrt(sampled_signals_squared), axis=1)
-    # atoms_ub = atoms_norms + z_score * np.sqrt(
-    #     np.var(np.sqrt(sampled_atoms_squared), axis=1) / (q - 1) * (1 - q / N)
-    # )  # see shorturl.at/tABCP for the formula
-    # signals_ub = signals_norms + z_score * np.sqrt(
-    #     np.var(np.sqrt(sampled_signals_squared), axis=1) / (q - 1) * (1 - q / N))
-    # Todo: The lines below are not theoretically valid. Have to find a formula for finding the norm of random
-    #  vectors from unknown distribution. See the above commented lines for the general idea.
 
+    # TODO(vxbrandon): The lines below are not theoretically valid. Have to find a formula for finding the norm of
+    #  random vectors from unknown distribution. See the above commented lines for the general idea.
     # Partition the atoms
     atoms_ub = np.sqrt(np.sum(sampled_atoms_squared, axis=1))
     signals_ub = np.sqrt(np.sum(sampled_signals_squared, axis=1))
-    sort_idcs = np.argsort(atoms_ub)[::-1]  # Sorting indices of atoms in the descending order of their norms
+    sort_idcs = np.argsort(atoms_ub)[
+        ::-1
+    ]  # Sorting indices of atoms in the descending order of their norms
     ub_buckets = np.empty(k)  # Upper bound of each bucket
     bucket_idcs = []
     for idx in range(k):
         ub_buckets[idx] = atoms_ub[sort_idcs[idx * m]]
-        bucket_idcs.append(sort_idcs[idx * m: min((idx + 1) * m, N)])
+        bucket_idcs.append(sort_idcs[idx * m : min((idx + 1) * m, N)])
 
-    candidates_array = np.empty((signals.shape[0], num_best_atoms), dtype=np.int64)  # ith row contains
-    # top k(num_best_atoms) atoms of ith signal.
+    candidates_array = np.empty(
+        (signals.shape[0], num_best_atoms), dtype=np.int64
+    )  # ith row contains top k(num_best_atoms) atoms of ith signal.
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
@@ -102,7 +103,12 @@ def bucket_ae(
         candidates = np.empty(0)
         budgets = 0
         for idx in range(k):
-            bucket_candidates, bucket_means, bucket_lcbs, bucket_budgets = bucket_ae_helper(
+            (
+                bucket_candidates,
+                bucket_means,
+                bucket_lcbs,
+                bucket_budgets,
+            ) = bucket_action_elimination_helper(
                 atoms[bucket_idcs[idx]],
                 signal,
                 var_proxy,
@@ -117,13 +123,17 @@ def bucket_ae(
             concatenated_means = np.concatenate((means, bucket_means))
             best_k_idcs = np.argsort(concatenated_means)[::-1][:num_best_atoms]
             means = concatenated_means
-            candidates = np.concatenate((candidates, bucket_idcs[idx][bucket_candidates]))[best_k_idcs]
+            candidates = np.concatenate(
+                (candidates, bucket_idcs[idx][bucket_candidates])
+            )[best_k_idcs]
             lcbs = np.concatenate((lcbs, bucket_lcbs))[best_k_idcs]
             budgets += bucket_budgets
             if idx == k - 1:
                 break
+
             if np.max(lcbs) > temp_ub_buckets[idx + 1]:
                 break
+
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
 
@@ -131,7 +141,7 @@ def bucket_ae(
 
 
 @nb.njit
-def bucket_ae_helper(
+def bucket_action_elimination_helper(
     atoms: np.ndarray,
     signal: np.ndarray,
     var_proxy: np.ndarray,
@@ -148,13 +158,13 @@ def bucket_ae_helper(
     arm with highest estimated reward in each round. See algorithm 1 in https://arxiv.org/pdf/2006.06856.pdf and
     AE algorithm in https://homes.cs.washington.edu/~jamieson/resources/bestArmSurvey.pdf#page=2
 
-    :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
+    :return: Returns the k (num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
     set_seed(seed)
     D = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms/signal
     t = 0  # time step
-    new_delta = delta * batch_size / (d * D)
+    new_delta = delta / D
     budgets = 0  # Number of calculations
     candidates = np.arange(D, dtype=np.int64)  # arms (atoms)
     lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
@@ -165,6 +175,7 @@ def bucket_ae_helper(
         np.random.shuffle(shuffled_idcs)
     else:
         shuffled_idcs = None
+
     # TODO: Add exact computation if total mnist too big
     # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
     # TODO: Don't let old candidates come back?
@@ -188,20 +199,22 @@ def bucket_ae_helper(
                     + (candidates_sampled @ signal_sampled)
                 ) / d
                 budgets += (d - (t - 1) * batch_size) * len(candidates)
+
             lcbs = ucbs = means
             candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
             break
+
         budgets += batch_size * len(candidates)
 
         if with_replacement:
-            sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False)
+            sample_idcs = np.random.choice(np.arange(d), batch_size, replace=True)
         else:
             sample_idcs = shuffled_idcs[(t - 1) * batch_size : t * batch_size]
+
         signal_sampled = signal[sample_idcs]
         candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
         means[candidates] = (
-            (t * batch_size * means[candidates])
-            + (candidates_sampled @ signal_sampled)
+            (t * batch_size * means[candidates]) + (candidates_sampled @ signal_sampled)
         ) / (
             (t + 1) * batch_size
         )  # Update the running means of arm returns # Does this np.dot do implicit broadcasting?
@@ -221,6 +234,7 @@ def bucket_ae_helper(
                 pop_size=d,
                 with_replacement=False,
             )
+
         ucbs[candidates] = means[candidates] + ci
         lcbs[candidates] = means[candidates] - ci
         new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
@@ -236,8 +250,8 @@ def bucket_ae_helper(
             sort_idcs = np.argsort(-means[candidates])
             candidates = candidates[sort_idcs][:num_best_atoms]
             break
+
         candidates = candidates[new_cand_idcs]
     candidates_lcbs = lcbs[candidates]
     candidates_means = means[candidates]
     return candidates, candidates_means, candidates_lcbs, budgets
-

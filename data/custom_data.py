@@ -57,10 +57,12 @@ def generate_custom_data(
     elif (
             data_type is COR_NORMAL_CUSTOM
     ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+        # Unlike other datasets, try to create a signal that is correlated to a few atoms. Correlation coefficient
+        # is drawn from a normal distribution.
         correlations = rng.normal(size=(num_signals + 1, num_atoms))
         correlations = np.abs(correlations) / np.sum(np.abs(correlations), axis=0, keepdims=True)
         atoms_array = np.zeros((num_atoms, len_signal))
-        signal = rng.normal(loc=rng.normal(), size=(num_signals + 1, len_signal))  # To include independet normal rv
+        signal = rng.normal(loc=rng.normal(), size=(num_signals + 1, len_signal))  # To include independent normal rv
         for idx in range(num_atoms):
             for cor_idx in range(num_signals):
                 atoms_array[idx] += correlations[cor_idx, idx] * signal[cor_idx]
