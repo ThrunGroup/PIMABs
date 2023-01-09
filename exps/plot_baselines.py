@@ -71,11 +71,11 @@ def translate_dataset_name(dataset_name: str):
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
     elif dataset_name == CLEAR_LEADER_HARD:
-        return "Greg Leader (Hard)"
+        return "Clear Leader (Hard)"
     elif dataset_name == CLEAR_LEADER_SOFT:
-        return "Greg Leader (Soft)"
+        return "Clear Leader (Soft)"
     elif dataset_name == NO_CLEAR_LEADER:
-        return "Greg No Leader"
+        return "No Clear Leader"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
