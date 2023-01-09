@@ -77,7 +77,7 @@ def run_scaling():
             num_signals=SCALING_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=ACTION_ELIMINATION,
-            with_replacement=True,
+            with_replacement=False,
             is_normalize=False,
             is_logspace=True,
         )

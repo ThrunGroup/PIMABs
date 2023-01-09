@@ -89,21 +89,22 @@ def scaling_exp(
     avg_accuracy = np.zeros(num_experiments)
     print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
 
+    sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+
+    # If the dataset is a toy dataset, the randomness will include the data generation process
+    # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
+    atoms, signals = get_data(
+        num_atoms=num_atoms,
+        len_signal=sizes_signal[-1],
+        num_signals=num_signals,
+        seed=data_generation_seed,
+        data_type=data_type,
+    )
+
     # average over num_seeds results
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
-        sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
-
-        # If the dataset is a toy dataset, the randomness will include the data generation process
-        # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
-        atoms, signals = get_data(
-            num_atoms=num_atoms,
-            len_signal=sizes_signal[-1],
-            num_signals=num_signals,
-            seed=data_generation_seed,
-            data_type=data_type,
-        )
 
         budgets = []
         budgets_std = []
