@@ -15,11 +15,9 @@ def get_ci(
     sum_var_proxy: float = None,
 ) -> np.ndarray:
     if with_replacement:
-        #print("With replacement")
         if ci_bound == HOEFFDING:  # see https://arxiv.org/pdf/2006.06856.pdf#page=20
             return np.sqrt(-2 * np.log(delta) * var_proxy / num_samples)
     else:
-        #print("WithOUT replacement")
         if (
             ci_bound == HOEFFDING
         ):  # see Corollary 1 in https://arxiv.org/pdf/1812.06360.pdf

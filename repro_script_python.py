@@ -11,18 +11,18 @@ def main():
     tradeoff_path = os.path.join(path, "precision_speed")
 
     # scaling experiments
-    # if os.path.exists(scaling_path):
-    #     print("=> Scaling log files already exist")
-    # else:
-    print("=> Creating Scaling log files")
-    run_scaling()
+    if os.path.exists(scaling_path):
+        print("=> Scaling log files already exist")
+    else:
+        print("=> Creating Scaling log files")
+        run_scaling()
 
-    # # precision-speed tradeoff experiments
-    # if os.path.exists(tradeoff_path):
-    #     print("=> Precision-Speed tradeoff log files already exist")
-    # else:
-    #     print("=> Creating Precision-Speed log files")
-    #     run_tradeoff()
+    # precision-speed tradeoff experiments
+    if os.path.exists(tradeoff_path):
+        print("=> Precision-Speed tradeoff log files already exist")
+    else:
+        print("=> Creating Precision-Speed log files")
+        run_tradeoff()
 
     print("=> Generating scaling plots")
     generate_scaling_plots()
