@@ -317,7 +317,11 @@ def fit_and_plot(
             xs_predict = lr.predict(function(xs).reshape(-1, 1))
             hashes_predict = lr.predict(function(hashes).reshape(-1, 1))
             mean_ys = np.mean(ys)
-            r2 = 1 - ((xs_predict - ys) ** 2).sum() / ((ys - mean_ys) ** 2).sum()
+            if ((ys - mean_ys) ** 2).sum() < 1e-10:
+                # Gracefully handle the case where ys is a constant
+                r2 = 1
+            else:
+                r2 = 1 - ((xs_predict - ys) ** 2).sum() / ((ys - mean_ys) ** 2).sum()
             plt.plot(
                 hashes,
                 hashes_predict,
