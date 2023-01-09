@@ -32,7 +32,7 @@ def generate_custom_data(
     """
     rng = np.random.default_rng(seed)
     atoms_array = np.empty((num_atoms, len_signal))
-    
+
     if data_type == UNIFORM_PAPER:
         # Hardcode so that variance proxy(sub-gaussian distribution) is 1
         signal = rng.uniform(low=0, high=2, size=(num_signals, len_signal))

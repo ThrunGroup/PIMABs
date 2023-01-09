@@ -42,7 +42,7 @@ def run_toy_scaling(run: bool = True, plot: bool = True):
         for data_type in [CLEAR_LEADER_HARD, CLEAR_LEADER_SOFT, NO_CLEAR_LEADER]:
             # Because we expect linear scaling with d in the NO_CLEAR_LEADER dataset, we have to run it on
             #  a smaller scale
-            size_minmax = (10**2, 10**4) if data_type == NO_CLEAR_LEADER else (10**2, 10**6)
+            size_minmax = (10**2, 10**5) if data_type == NO_CLEAR_LEADER else (10**2, 10**6)
             mean_acc = scaling_exp(
                 epsilon=0.01,
                 delta=0.01,
