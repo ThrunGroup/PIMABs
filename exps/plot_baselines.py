@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pandas import read_csv
-from typing import List, Any
+from typing import List
 from utils.constants import (
     COLORS,
     ALG_TO_COLOR,

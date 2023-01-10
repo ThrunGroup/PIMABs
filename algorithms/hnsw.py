@@ -111,8 +111,8 @@ def hnsw_exp(seed, n, d, mode):
 
 
 n = 1000
-d = 1000
+d = 2000
 
 # hnsw_exp(1, n, d, "NAHNSW")
-for i in range(3):
+for i in range(1):
     compare(i, n, d)
