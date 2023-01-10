@@ -12,7 +12,6 @@ def main(num_signals: int = 20, num_dimensions: int = 10 ** 5):
     num_points_per_file = 220500
     num_files = num_dimensions // num_points_per_file + 1
 
-    print("Making a dataset...")
     for signal_index in tqdm.tqdm(range(num_signals), total=num_signals):
         files = glob(os.path.join(audio_directory, f"*-{signal_index}.wav"))[:num_files]
 
