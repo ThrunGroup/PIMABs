@@ -5,12 +5,12 @@ from typing import Tuple
 
 class H2ALSH_MIPS:
     """
-    Python Implementation of Homocentric Hypersphere Asymmetric Locally Sensitive Hashing scheme for MIPS, see
+    Implementation of Homocentric Hypersphere Asymmetric Locally Sensitive Hashing scheme for MIPS, see
     https://dl.acm.org/doi/pdf/10.1145/3219819.3219971 for the details.
     """
     def __init__(self, atoms: np.ndarray, delta: float = 0.1, c0: float = 2.0, c: float = 0.9,  N0: int = 500):
         """
-        :param atoms: Atoms/Objects that we consider in MIPS problem
+        :param atoms: Atoms that we consider in MIPS problem
         :param delta: Error probability (QALSH solves c-ANN problem with 1/2 - delta probability)
         :param c0: denotes c0 in c0-ANN problem. See 2.1 in the paper for the definition of c0-ANN.
         :param c: denotes c in c-AMIP problem. See 2.1 in the paper for the definition of c-AMIP.
@@ -27,7 +27,7 @@ class H2ALSH_MIPS:
         # Partitioning atoms
         b = sqrt(1 - (1-c)/(c0 ** 4 - c))  # Partition ratio, see 3.3 in the paper for the formula
         atoms_norm = np.linalg.norm(atoms, axis=1)
-        sort_idcs = np.argsort(atoms_norm)[::-1]  # Sort in the ascending order
+        sort_idcs = np.argsort(atoms_norm)[::-1]  # Sort in ascending order
         j = 0
         i = 0
         partitions = []  # List of partitions
@@ -54,6 +54,7 @@ class H2ALSH_MIPS:
                 qalsh = QALSH(np.array(current_partition), delta=delta, approx_const=c0)
                 qalsh.generate_hash_tables()
                 self.qalsh_dict[i] = qalsh
+
             i += 1
 
             partitions.append(np.array(current_partition))
@@ -65,7 +66,15 @@ class H2ALSH_MIPS:
         self.M = partitions_norms
         self.partitions_idcs = partitions_idcs
 
-    def mip_search(self, query, top_k: int = 1):
+    def mip_search(self, query: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, int]:
+        """
+        Do maximum inner product search on given atoms and query using pre-constructed hash tables.
+
+        :param query: 1d numpy array of query vector
+        :param top_k: Number of atoms that H2ALSH algorithm identify as top/best atoms in terms of their inner
+        product values
+        :return: top_k atoms and sample complexity
+        """
         query_norm = np.linalg.norm(query)
         candidates = []
         candidates_ip = []  # Inner product between candidates and the query
@@ -75,6 +84,7 @@ class H2ALSH_MIPS:
             ub = self.M[i] * query_norm
             if ub <= mip_value:
                 break
+
             if self.linear_scan_mask[i] == 1:
                 current_ip = self.atoms[self.partitions_idcs[i]] @ query
                 current_candidates_idcs = np.argsort(current_ip)[::-1][:top_k]
@@ -88,6 +98,7 @@ class H2ALSH_MIPS:
                 current_candidates = self.partitions_idcs[i][current_candidates_idcs]
                 current_candidates_ip = self.atoms[current_candidates] @ query
                 sample_complexity += current_sample_complexity + len(current_candidates) * len(query)
+
             new_candidates_idcs = np.argsort(np.concatenate((candidates_ip, current_candidates_ip)))[::-1][:top_k]
             candidates = np.concatenate((candidates, current_candidates))[new_candidates_idcs]
             candidates_ip = np.concatenate((candidates_ip, current_candidates_ip))[new_candidates_idcs]
@@ -95,6 +106,14 @@ class H2ALSH_MIPS:
         return np.array(candidates, dtype=np.int64), sample_complexity
 
     def mip_search_queries(self, queries: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Vectorized version of self.mip_search function.
+
+        :param queries: 2d numpy array of queries
+        :param top_k: Number of atoms that H2ALSH algorithm identify as top/best atoms in terms of their inner
+        product values
+        :return: top_k atoms for each query and sample complexity
+        """
         sample_complexities = []
         candidates_array = []
         for query in queries:
@@ -104,7 +123,12 @@ class H2ALSH_MIPS:
         return np.array(candidates_array), np.array(sample_complexities)
 
 
-def toy_experiment_h2alsh(seed: int = 0):
+def toy_experiment_h2alsh(seed: int = 0) -> None:
+    """
+    A toy experiment on h2alsh with tabular data whose datapoints are drawn from a normal distribution.
+
+    :param seed: Random seed number
+    """
     np.random.seed(seed)
     atoms = np.random.normal(size=(300000, 10))
     query = np.random.normal(size=10)
@@ -123,16 +147,3 @@ def toy_experiment_h2alsh(seed: int = 0):
 
 if __name__ == "__main__":
     toy_experiment_h2alsh(1)
-
-
-
-
-
-
-
-
-
-
-
-
-

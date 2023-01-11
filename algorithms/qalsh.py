@@ -13,8 +13,12 @@ class QALSH:
     def __init__(
         self, atoms: np.ndarray, delta: float = 0.1, approx_const: float = 2.0,
     ):
-        delta_condition = (delta > 0) & (delta < 1)
-        assert delta_condition, "Error probability should be less than 1"
+        """
+        :param atoms: 2d numpy array of atoms
+        :param delta: Error probability
+        :param approx_const: Approximation constant that decides the radius of each hash bucket.
+        """
+        assert 0 < delta < 1, "Error probability should be strictly between 0 and 1"
         assert (
             approx_const > 1
         ), "Approximation constant(c) in c-ANN search should be greater than 1"
@@ -44,10 +48,16 @@ class QALSH:
         self.width = width  # Width of hash bucket
         self.is_generate_hash_table = False
 
-    def generate_hash_tables(self):
+    def generate_hash_tables(self) -> int:
+        """
+        Generate hash tables with a query-aware hash function described in the 3.1 of the paper.
+
+        :return: Sample complexity of generating hash tables
+        """
         if self.is_generate_hash_table:
             print("Hash table is already generated")
-            return
+            return 0
+
         self.random_vectors = np.random.normal(size=(self.atoms.shape[1], self.m))
         self.hash_tables = [None] * self.m
         for i in range(self.m):
@@ -60,12 +70,23 @@ class QALSH:
         self.is_generate_hash_table = True
 
         # Cost in generating random vectors + having dot product between atoms and random vectors + sorting hash tables
-        sample_complexity = self.m * self.atoms.shape[1]
-        +self.m * self.atoms.shape[0] * self.atoms.shape[1]
-        +self.m * self.atoms.shape[0] * log(self.atoms.shape[0])
+        sample_complexity = (
+            self.m * self.atoms.shape[1]
+            + self.m * self.atoms.shape[0] * self.atoms.shape[1]
+            + self.m * self.atoms.shape[0] * log(self.atoms.shape[0])
+        )
         return int(sample_complexity)
 
     def nn_search(self, query: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, int]:
+        """
+        Do Nearest Neighbor search on given atoms and query after narrowing down the possible candidates by
+        removing atoms that don't collide much with query in the previously generated hash tables.
+
+        :param query: 1d numpy array of query vector
+        :param top_k: Number of atoms that H2ALSH algorithm identify as top/best atoms in terms of their inner
+        product values
+        :return: top_k atoms and sample complexity
+        """
         assert len(query.shape) == 1, "Query should be a 1d vector"
         assert self.is_generate_hash_table, "Hash tables should be generated"
         radius = 1
@@ -103,7 +124,9 @@ class QALSH:
             sample_complexity += self.m * self.atoms.shape[1] + self.m * log2(
                 self.atoms.shape[0]
             )  # Cost in computing query hash value + locating the lower/upper bound in the hash table
-            new_candidates = np.setdiff1d(np.where(collision_counts >= self.collision_threshold)[0], candidates)
+            new_candidates = np.setdiff1d(
+                np.where(collision_counts >= self.collision_threshold)[0], candidates
+            )
             candidates = np.concatenate((candidates, new_candidates))
             candidates_dist = np.concatenate(
                 (
@@ -139,7 +162,12 @@ class QALSH:
         return candidates[np.argsort(candidates_dist)[:top_k]], int(sample_complexity)
 
 
-def toy_experiment_qalsh(seed: int = 0):
+def toy_experiment_qalsh(seed: int = 0) -> None:
+    """
+     A toy experiment on QALSH with tabular data whose datapoints are drawn from a normal distribution.
+
+    :param seed: Random seed number
+    """
     np.random.seed(seed)
     atoms = np.random.normal(size=(300000, 10))
     query = np.random.normal(size=10)
