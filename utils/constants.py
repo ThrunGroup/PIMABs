@@ -43,13 +43,15 @@ SYNTHETIC = "SYNTHETIC"
 NETFLIX = "NETFLIX"
 MOVIE_LENS = "MOVIE_LENS"
 YAHOO = "YAHOO"
+TOY_SINE = "TOY_SINE"
+TOY_DISCRETE = "TOY_DISCRETE"
 
 # Concentration Inequality bound
 HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
-NUM_SEEDS = 3
-DEFAULT_MAXMIN = (5, 0)
+NUM_SEEDS = 10
+DEFAULT_MAXMIN = (2, 0)   # TODO: change this
 NORMALIZED_MAXMIN = (1, -1)
 DEFAULT_GREEDY_BUDGET = 50
 SCALING_NUM_EXPERIMENTS = 10  # corresponds to the number of points on the plot

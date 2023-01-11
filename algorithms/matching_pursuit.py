@@ -143,11 +143,11 @@ def orthogonal_matching_pursuit(
 
     L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
     iter = 1
-    maxmin = (2, 0)
+    maxmin = (0.5, 0) # Todo: make it so that we can set this before entering MP loop
     while np.linalg.norm(residual) > min_residual:
-        #m = max(0.2, np.mean(residual))
-        #maxmin = (m, -m)
-        #print(f"this is maxmin: {maxmin}")
+        #print(f"residual norm: {np.linalg.norm(residual)}")
+        #print(f"maxmin: {maxmin}")
+
         # solve the MIPS problem
         if len(bandit_alg) > 0:
             # Todo: only supports caching with Action Elimination for now
@@ -229,8 +229,9 @@ def orthogonal_matching_pursuit(
         # need to update residual and maxmin since delta (i.e. arm distances) will get smaller
         projection = np.dot(atoms[:, :n_active], gamma)
         residual = signal - projection
-
-        print(f"this is budget {budget}")
+        decrease_by =  np.linalg.norm(residual) / np.linalg.norm(signal)
+        maxmin = (maxmin[0] * decrease_by, maxmin[1] * decrease_by)
+        #print(f"this is budget {budget}")
         if n_active == n_nonzero_coefs:
              break
 

@@ -17,7 +17,7 @@ from utils.utils import subset_2d, subset_2d_cached, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
-@nb.njit
+#@nb.njit
 def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,

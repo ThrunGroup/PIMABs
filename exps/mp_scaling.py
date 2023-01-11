@@ -13,6 +13,7 @@ from utils.constants import (
     NORMAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    TOY_SINE,
 
     ACTION_ELIMINATION,
     NUM_SEEDS,
@@ -206,7 +207,7 @@ def scaling_exp(
 
 if __name__ == "__main__":
     scaling_exp(
-        data_type=NETFLIX,
+        data_type=TOY_SINE,
         use_cache=False,
         use_naive=False,
     )

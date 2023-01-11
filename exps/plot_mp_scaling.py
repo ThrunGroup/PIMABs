@@ -3,6 +3,7 @@ from utils.constants import (
     NORMAL_CUSTOM,
     NETFLIX,
     ACTION_ELIMINATION,
+    TOY_SINE,
 )
 
 if __name__ == "__main__":
@@ -12,15 +13,15 @@ if __name__ == "__main__":
         include_error_bar=True,
         dir_name="mp_scaling",
         caching_type="",
-        data_types=[NETFLIX],
+        data_types=[TOY_SINE],
         alg_names=[ACTION_ELIMINATION]
     )
-    create_scaling_plots(
-        is_fit=True,
-        is_logspace=True,
-        include_error_bar=True,
-        dir_name="mp_scaling",
-        caching_type="PI_cache",
-        data_types=[NETFLIX],
-        alg_names=[ACTION_ELIMINATION]
-    )
+    # create_scaling_plots(
+    #     is_fit=True,
+    #     is_logspace=True,
+    #     include_error_bar=True,
+    #     dir_name="mp_scaling",
+    #     caching_type="PI_cache",
+    #     data_types=[NETFLIX],
+    #     alg_names=[ACTION_ELIMINATION]
+    # )

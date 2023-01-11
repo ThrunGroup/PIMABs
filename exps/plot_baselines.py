@@ -14,6 +14,7 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    TOY_SINE,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -66,6 +67,8 @@ def translate_dataset_name(dataset_name: str):
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
+    elif dataset_name == TOY_SINE:
+        return "Toy Sine"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 

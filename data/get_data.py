@@ -11,9 +11,12 @@ from utils.constants import (
     YAHOO,
     NETFLIX,
     MOVIE_LENS,
+    TOY_SINE,
+    TOY_DISCRETE,
 )
 from data.custom_data import generate_custom_data
 from utils.utils import subset_2d
+from tests.MP_test import create_toy_waves
 
 
 def get_data(
@@ -43,6 +46,9 @@ def get_data(
             "movie_lens_1m_ratings.npy",
         )
         data = np.load(filename)
+    elif data_type is TOY_SINE:
+        atoms, signal = create_toy_waves(num_atoms, len_signal)
+        return atoms, np.array([signal])
     else:
         raise NotImplementedError(f"{data_type} is not implemented")
 
