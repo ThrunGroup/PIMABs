@@ -1,6 +1,3 @@
-import numpy as np
-import math
-from typing import Tuple
 from exps.speedup_precision_exps import speedup_precision_exps
 from utils.constants import (
     BATCH_SIZE,
@@ -21,7 +18,7 @@ from utils.constants import (
     ASYMMETRIC,
     SYMMETRIC,
     HNSW_MIPS,
-    NAHNSW_MIPS,
+    NAPG_MIPS,
 
     # scaling specific constants
     TRADEOFF_NUM_EXPERIMENTS,
@@ -106,7 +103,7 @@ def run_tradeoff():
             len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,
             data_type=data_type,
-            mips_alg=NAHNSW_MIPS,
+            mips_alg=NAPG_MIPS,
             with_replacement=False,
         )
 

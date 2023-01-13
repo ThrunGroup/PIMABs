@@ -22,7 +22,7 @@ from utils.constants import (
     LSH_MIPS,
     PCA_MIPS,
     HNSW_MIPS,
-    NAHNSW_MIPS,
+    NAPG_MIPS,
     MAX_SPEEDUP
 )
 from utils.utils import fit_and_plot
@@ -49,7 +49,7 @@ def translate_alg_name(alg_name: str):
         return "PCA-MIPS"
     elif alg_name == HNSW_MIPS:
         return "HNSW-MIPS"
-    elif alg_name == NAHNSW_MIPS:
+    elif alg_name == NAPG_MIPS:
         return "NAHNSW-MIPS"
     else:
         raise Exception("Bad algorithm name")
@@ -92,8 +92,8 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
-    elif NAHNSW_MIPS in filename:
-        return NAHNSW_MIPS
+    elif NAPG_MIPS in filename:
+        return NAPG_MIPS
     elif HNSW_MIPS in filename:
         return HNSW_MIPS
     else:
@@ -130,7 +130,8 @@ def create_scaling_plots(
     """
     # get all csv files
     if dirname is None:
-        path = os.path.join(os.getcwd(), "logs")
+        directory = os.path.dirname(os.path.realpath(__file__))
+        path = os.path.join(directory, "logs")
         path = os.path.join(path, "scaling")
     else:
         path = dirname
@@ -227,7 +228,8 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    path = os.path.join(os.getcwd(), "logs")
+    directory = os.path.dirname(os.path.realpath(__file__))
+    path = os.path.join(directory, "logs")
     path = os.path.join(path, "precision_speed")
 
     csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
@@ -299,7 +301,7 @@ def generate_scaling_plots():
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
-            NAHNSW_MIPS
+            NAPG_MIPS
         ]
     )
 
@@ -317,7 +319,7 @@ def generate_scaling_plots():
             PCA_MIPS,
             LSH_MIPS,
             HNSW_MIPS,
-            NAHNSW_MIPS
+            NAPG_MIPS
         ]
     )
 
@@ -329,7 +331,7 @@ def generate_tradeoff_plots(top_k: int = 1):
     """
     # precision-accuracy tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
-        data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
+        data_types=[NORMAL_CUSTOM],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
@@ -338,7 +340,7 @@ def generate_tradeoff_plots(top_k: int = 1):
             PCA_MIPS,
             LSH_MIPS,
             HNSW_MIPS,
-            NAHNSW_MIPS
+            NAPG_MIPS
         ],
         top_k=top_k,
         include_error_bar=False
@@ -354,7 +356,7 @@ def generate_tradeoff_plots(top_k: int = 1):
             PCA_MIPS,
             LSH_MIPS,
             HNSW_MIPS,
-            NAHNSW_MIPS
+            NAPG_MIPS
         ],
         top_k=top_k,
         max_speedup=MAX_SPEEDUP,
@@ -363,6 +365,6 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    # generate_scaling_plots()
+    generate_scaling_plots()
     #generate_tradeoff_plots(top_k=20)
-    generate_tradeoff_plots()
+    # generate_tradeoff_plots()

@@ -1,118 +1,51 @@
 import numpy as np
 import hnswlib
-
-from data.get_data import get_data
-from utils.constants import (
-    NORMAL_CUSTOM,
-    NORMALIZED_MAXMIN,
-    ACTION_ELIMINATION,
-)
-from mips_bandit import mips_bandit
-import time
+from typing import Tuple
 
 
-def compare(seed, n, d):
-    atoms, signals = get_data(
-        num_atoms=n,
-        len_signal=d,
-        data_type=NORMAL_CUSTOM,
-        num_signals=3,
-        seed=seed
-    )
+def hnsw(
+        atoms: np.ndarray,
+        signals: np.ndarray,
+        num_best_atoms: int = 1,
+        ef_construction: int = 200,
+        ef_search: int = 10,
+        num_links_per_node: int = 16,
+        use_norm_adjusted_factors: bool = True
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    A hierarchical navigable small world algorithm that approximately solves MIPS using a graph.
+    Implementation is mostly based on https://github.com/nmslib/hnswlib
 
-    # print(atoms[0])
+    :param atoms: 2d array that contains atoms in rows. Atoms are the vectors one of which will be selected
+                    as the vector with maximum inner product with a signal vector.
+    :param signals: A matrix whose each row contains a signal vector.
+    :param num_best_atoms: Number of atoms that bandit algorithm identify as top/best arms.
+    :param ef_search: Number of the nearest neighbors to search for each node when searching the query.
+                                The larger it is, the longer it takes to search the query, but the accuracy can
+                                be higher.
+    :param ef_construction: Number of the nearest neighbors to search for each node when constructing the graph.
+                                The larger it is, the longer it takes to construct the graph, but the accuracy can
+                                be higher.
+    :param num_links_per_node: Number of bi-directional links between nodes
+    :param use_norm_adjusted_factors: Whether to use NAPG proposed in "Norm Adjusted Proximity Graph for Fast
+                                        Inner Product Retrieval." NAPG calculates the factors based on the norm
+                                        of data to increase the chance of connecting more appropriate nodes.
+    :return: Indices of best atom that have maximum inner product with a signal vector and the budget (total number of
+            calculations)
+    """
+    num_atoms, num_dimensions = atoms.shape
 
-    start_time = time.time()
-    index = hnswlib.Index(space="ip", dim=d, useNormFactor_=True)
+    # Initialise a graph
+    index = hnswlib.Index(space="ip", dim=num_dimensions, useNormFactor_=use_norm_adjusted_factors)
+    index.init_index(max_elements=num_atoms, ef_construction=ef_construction, M=num_links_per_node)
 
-    # Initializing index - the maximum number of elements should be known beforehand
-    index.init_index(max_elements=n, ef_construction=200, M=16)
-
-    # Element insertion (can be called several times):
-    ids = np.arange(n)
+    # Data insertion
+    ids = np.arange(num_atoms)
     index.add_items(atoms, ids)
+    index.set_ef(ef_search)
 
-    print("nahnsw: ", time.time() - start_time)
-
-    labels, distances, budget1 = index.knn_query(signals, k=4)
+    # Query
+    labels, distances, budget = index.knn_query(signals, k=num_best_atoms)
     labels.sort()
 
-    start_time = time.time()
-    index2 = hnswlib.Index(space="ip", dim=d, useNormFactor_=False)
-
-    # Initializing index - the maximum number of elements should be known beforehand
-    index2.init_index(max_elements=n, ef_construction=200, M=16)
-
-    # Element insertion (can be called several times):
-    ids2 = np.arange(n)
-    index2.add_items(atoms, ids2)
-
-    print("hnsw: ", time.time() - start_time)
-
-    labels2, distances, budget2 = index2.knn_query(signals, k=4)
-    labels2.sort()
-
-    candidates_array, budget_array = mips_bandit(
-        atoms=atoms,
-        signals=signals,
-        maxmin=NORMALIZED_MAXMIN,
-        bandit_alg=ACTION_ELIMINATION,
-        epsilon=0.01,
-        delta=0.001,
-        num_best_atoms=4,
-        is_experiment=False,
-        with_replacement=False,
-    )
-    candidates_array.sort()
-
-    print(f"seed: {seed}")
-    print("NAHNSW accuracy: ", np.mean(labels == candidates_array))
-    print("HNSW accuracy  : ", np.mean(labels2 == candidates_array))
-    print("===============")
-
-
-def hnsw_exp(seed, n, d, mode):
-    atoms, signals = get_data(
-        num_atoms=n,
-        len_signal=d,
-        data_type=NORMAL_CUSTOM,
-        num_signals=3,
-        seed=seed
-    )
-
-    index = hnswlib.Index(space="ip", dim=d, useNormFactor_=mode == "NAHNSW")
-
-    # Initializing index - the maximum number of elements should be known beforehand
-    index.init_index(max_elements=n, ef_construction=200, M=16)
-
-    # Element insertion (can be called several times):
-    ids = np.arange(n)
-    index.add_items(atoms, ids)
-
-    labels, distances, budget1 = index.knn_query(signals, k=4)
-    labels.sort()
-
-    candidates_array, budget_array = mips_bandit(
-        atoms=atoms,
-        signals=signals,
-        maxmin=NORMALIZED_MAXMIN,
-        bandit_alg=ACTION_ELIMINATION,
-        epsilon=0.01,
-        delta=0.001,
-        num_best_atoms=4,
-        is_experiment=False,
-        with_replacement=False,
-    )
-
-    candidates_array.sort()
-
-    print(f"seed: {seed}")
-    print("accuracy: ", np.mean(labels == candidates_array))
-
-
-n = 1000
-d = 2000
-
-# hnsw_exp(1, n, d, "NAHNSW")
-for i in range(1):
-    compare(i, n, d)
+    return labels, budget

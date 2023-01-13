@@ -27,7 +27,7 @@ from utils.constants import (
     SYMMETRIC,
     ASYMMETRIC,
     HNSW_MIPS,
-    NAHNSW_MIPS,
+    NAPG_MIPS,
 
     # constants
     NUM_SEEDS,
@@ -71,7 +71,7 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips, generate_conditer
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
-import hnswlib
+from algorithms.hnsw import hnsw
 
 
 def get_accuracy_array(
@@ -388,31 +388,27 @@ def speedup_precision_exps(
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
 
-        elif mips_alg in [HNSW_MIPS, NAHNSW_MIPS]:
+        elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
             Ms = np.geomspace(4, 64, num_experiments).astype(np.int64)
             ef_constructions = np.geomspace(4, num_atoms//2, num_experiments).astype(np.int64)
-            efs = np.geomspace(2, num_atoms//2, num_experiments).astype(np.int64)
+            ef_searches = np.geomspace(2, num_atoms//2, num_experiments).astype(np.int64)
 
-            for (M, ef_construction, ef) in zip(Ms, ef_constructions, efs):
+            for (M, ef_construction, ef_search) in zip(Ms, ef_constructions, ef_searches):
                 log_info = (
                         "ef_construction"
                         + str(ef_construction)
                 )
 
                 start_time = time.time()
-                index = hnswlib.Index(space="ip", dim=len_signals, useNormFactor_=mips_alg == NAHNSW_MIPS)
-
-                # Initializing index - the maximum number of elements should be known beforehand
-                index.init_index(max_elements=num_atoms, ef_construction=ef_construction, M=M)
-
-                # Element insertion (can be called several times):
-                ids = np.arange(num_atoms)
-                index.add_items(atoms, ids)
-                index.set_ef(ef)
-
-                labels, distances, budget = index.knn_query(signals, k=num_best_atoms)
-                budget_array = np.array(budget)
-                candidates_array = np.sort(np.array(labels))
+                candidates_array, budget_array = hnsw(
+                    atoms=atoms,
+                    signals=signals,
+                    ef_construction=ef_construction,
+                    ef_search=ef_search,
+                    num_links_per_node=M,
+                    num_best_atoms=num_best_atoms,
+                    use_norm_adjusted_factors=(mips_alg == NAPG_MIPS)
+                )
 
                 runtimes.append(time.time() - start_time)
                 budgets.append(np.mean(budget_array))
@@ -420,7 +416,7 @@ def speedup_precision_exps(
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
 
-                print(ef, np.mean(budget_array), np.sum(accuracy_array))
+                print(ef_search, np.mean(budget_array), np.sum(accuracy_array))
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 
@@ -443,12 +439,13 @@ def speedup_precision_exps(
             "runtime": avg_runtime,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = os.path.join(os.getcwd(), "logs/precision_speed") if dirname is None else dirname
+        log_dir = os.path.join(os.getcwd(), "logs", "precision_speed") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg
             + "_"
-              "SPEEDUP_"
+            + "SPEEDUP"
+            + "_"
             + data_type
             + "_"
             + "atoms"
