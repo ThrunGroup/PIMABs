@@ -416,7 +416,6 @@ def speedup_precision_exps(
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
 
-                print(ef_search, np.mean(budget_array), np.sum(accuracy_array))
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 

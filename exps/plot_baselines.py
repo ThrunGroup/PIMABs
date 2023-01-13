@@ -51,7 +51,7 @@ def translate_alg_name(alg_name: str):
     elif alg_name == HNSW_MIPS:
         return "HNSW-MIPS"
     elif alg_name == NAPG_MIPS:
-        return "NAHNSW-MIPS"
+        return "NAPG-MIPS"
     else:
         raise Exception("Bad algorithm name")
 
@@ -110,13 +110,13 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
-    data_types: List[str] = [],
-    alg_names: List[str] = [],
-    include_error_bar: bool = False,
-    is_fit: bool = False,
-    is_logspace: bool = False,
-    is_plot_accuracy: bool = False,
-    dirname: str = None,
+        data_types: List[str] = [],
+        alg_names: List[str] = [],
+        include_error_bar: bool = False,
+        is_fit: bool = False,
+        is_logspace: bool = False,
+        is_plot_accuracy: bool = False,
+        dirname: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
@@ -130,12 +130,7 @@ def create_scaling_plots(
     :param dirname: directory name of log files
     """
     # get all csv files
-    if dirname is None:
-        directory = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(directory, "logs")
-        path = os.path.join(path, "scaling")
-    else:
-        path = dirname
+    path = os.path.join(os.getcwd(), "logs", "scaling") if dirname is None else dirname
     csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
@@ -214,11 +209,11 @@ def create_scaling_plots(
 
 
 def create_tradeoff_plots(
-    data_types: List[str] = [],
-    alg_names: List[str] = [],
-    top_k: int = 1,
-    include_error_bar: bool = False,
-    max_speedup: int = None
+        data_types: List[str] = [],
+        alg_names: List[str] = [],
+        top_k: int = 1,
+        include_error_bar: bool = False,
+        max_speedup: int = None
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -229,8 +224,7 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    directory = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(directory, "logs")
+    path = os.path.join(os.getcwd(), "logs")
     path = os.path.join(path, "precision_speed")
 
     csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
@@ -302,11 +296,11 @@ def generate_scaling_plots():
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
-            NAPG_MIPS
+            NAPG_MIPS,
         ]
     )
 
-    # fit the bandit algorithms and greedy-mips for better comparison
+    # fit the bandit algorithms, NAPG, and greedy-mips for better comparison
     create_scaling_plots(
         is_fit=True,
         is_logspace=True,
@@ -317,10 +311,7 @@ def generate_scaling_plots():
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS,
-            HNSW_MIPS,
-            NAPG_MIPS
+            NAPG_MIPS,
         ]
     )
 
@@ -367,5 +358,5 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 if __name__ == "__main__":
     generate_scaling_plots()
-    #generate_tradeoff_plots(top_k=20)
-    # generate_tradeoff_plots()
+    generate_tradeoff_plots(top_k=20)
+    generate_tradeoff_plots()
