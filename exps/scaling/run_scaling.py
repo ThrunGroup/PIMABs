@@ -1,10 +1,5 @@
-import numpy as np
-import math
-from typing import Tuple
 from exps.scaling_exp import scaling_exp
 from utils.constants import (
-    BATCH_SIZE,
-
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,

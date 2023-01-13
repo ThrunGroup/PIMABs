@@ -15,7 +15,6 @@ from utils.constants import (
     GREEDY_ATOM_SIZE,
     GREEDY_QUERY_SIZE,
 )
-from data.custom_data import generate_custom_data
 
 
 def generate_conditer(atoms: np.ndarray) -> np.ndarray:

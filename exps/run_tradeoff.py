@@ -1,7 +1,5 @@
-from exps.speedup_precision_exps import speedup_precision_exps
+from exps.tradeoff.speedup_precision_exps import speedup_precision_exps
 from utils.constants import (
-    BATCH_SIZE,
-
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
@@ -16,7 +14,6 @@ from utils.constants import (
     LSH_MIPS,
     PCA_MIPS,
     ASYMMETRIC,
-    SYMMETRIC,
     HNSW_MIPS,
     NAPG_MIPS,
 
@@ -27,7 +24,6 @@ from utils.constants import (
     TRADEOFF_PCA_NUM_EXPERIMENTS,
     TRADEOFF_LSH_NUM_EXPERIMENTS,
     TRADEOFF_DIMENSION,
-    TRADEOFF_DIMENSION_MOVIE,
     NUM_ATOMS_REAL,
     NUM_ATOMS_SIGNAL,
 )

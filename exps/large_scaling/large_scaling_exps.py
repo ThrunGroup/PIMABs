@@ -15,7 +15,6 @@ from utils.constants import (
     LARGE_SIZE_MINMAX,
     LARGE_NUM_ATOMS,
     LARGE_NUM_EXPERIMENTS,
-    LARGE_NUM_SEEDS,
     LARGE_DELTA,
     LARGE_EPSILON,
     LARGE_MAXMIN
