@@ -29,7 +29,7 @@ from utils.constants import (
     TRADEOFF_DIMENSION,
     TRADEOFF_DIMENSION_MOVIE,
     NUM_ATOMS_REAL,
-    NUM_ATOMS_SIGNAL
+    NUM_ATOMS_SIGNAL,
 )
 
 
