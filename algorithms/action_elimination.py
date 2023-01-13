@@ -42,17 +42,19 @@ def action_elimination(
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
-        new_delta = delta * batch_size / (d * D)
+        new_delta = delta / D
         budgets = 0  # Number of calculations
         candidates = np.arange(D)  # arms (atoms)
         lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
         ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
         means = np.zeros(D)  # estimated means of arm returns
+
         if not with_replacement:
             shuffled_idcs = np.arange(d)
             np.random.shuffle(shuffled_idcs)
         else:
             shuffled_idcs = None
+
         # TODO: Add exact computation if total mnist too big
         # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
         # TODO: Don't let old candidates come back?
@@ -112,6 +114,8 @@ def action_elimination(
                 break
             ucbs[candidates] = means[candidates] + ci
             lcbs[candidates] = means[candidates] - ci
+
+            # TODO(@motiwari): Make sure there are no NaNs here
             new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
 
             if (
