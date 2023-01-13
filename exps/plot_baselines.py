@@ -23,6 +23,7 @@ from utils.constants import (
     PCA_MIPS,
     HNSW_MIPS,
     NAPG_MIPS,
+
     MAX_SPEEDUP
 )
 from utils.utils import fit_and_plot
