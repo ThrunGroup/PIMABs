@@ -60,9 +60,9 @@ def run_scaling(algorithms: List[str], data_types: List[str]):
         if data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:
             epsilon = SCALING_EPSILON
             delta = SCALING_DELTA
-        elif data_type in [CRYPTO_PAIRS]:
+        elif data_type is CRYPTO_PAIRS:
             epsilon = SCALING_EPSILON
-            delta = 0.0001
+            delta = 0.01
         else:  # real datasets
             epsilon = SCALING_EPSILON_REAL
             delta = SCALING_DELTA_REAL
@@ -99,9 +99,9 @@ if __name__ == "__main__":
     data_types = [
         # NORMAL_CUSTOM,
         # ADVERSARIAL_CUSTOM,
-        NETFLIX,
+        # NETFLIX,
         # MOVIE_LENS,
-        # CRYPTO_PAIRS,
+        CRYPTO_PAIRS,
     ]
 
     run_scaling(

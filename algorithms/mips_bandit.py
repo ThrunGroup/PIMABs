@@ -83,6 +83,8 @@ def mips_bandit(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                max=maxmin[0],
+                min=maxmin[1],
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,

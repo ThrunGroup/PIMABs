@@ -70,7 +70,7 @@ def run_tradeoff(algorithms: List[str]):
 
 if __name__ == "__main__":
     run_tradeoff([
-        ADAPTIVE_ACTION_ELIMINATION,
+        # ADAPTIVE_ACTION_ELIMINATION,
         ACTION_ELIMINATION,
         # MEDIAN_ELIMINATION,
         # GREEDY_MIPS,

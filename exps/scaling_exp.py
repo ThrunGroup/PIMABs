@@ -91,6 +91,7 @@ def scaling_exp(
     print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
 
     sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+
     atoms, signals = get_data(
         num_atoms=num_atoms,
         len_signal=sizes_signal[-1],
@@ -143,6 +144,7 @@ def scaling_exp(
                     is_experiment=False,
                     with_replacement=with_replacement,
                 )
+                print(delta, budget_array)
                 runtime = time.time() - start_time
 
             # baseline algorithms

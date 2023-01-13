@@ -1,4 +1,6 @@
 data/raw_data
+data/crypto_pairs/archive
+data/crypto_pairs/*.npy
 
 .idea/
 *.DS_Store*

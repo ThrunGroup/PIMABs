@@ -60,7 +60,7 @@ def get_data(
         len_signal <= data.shape[1]
     ), "Length of signal given is greater than the number of columns of data"
 
-    signal_idcs = rng.choice(np.arange(num_atoms, data.shape[0] - 1), num_signals)
+    signal_idcs = rng.choice(np.arange(num_atoms, data.shape[0] - 1), num_signals, replace=False)
     sample_idcs = rng.choice(data.shape[1], len_signal)
 
     atoms = subset_2d(data, np.arange(num_atoms), sample_idcs)

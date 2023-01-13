@@ -13,7 +13,7 @@ def main(with_volume: bool = True):
     if with_volume:
         min_size = 16 * 1024 * 1024  # 16MB
     else:
-        min_size = 22 * 1024 * 1024  # 22MB
+        min_size = 19 * 1024 * 1024  # 22MB
     columns = ["open", "close", "high", "low"]
     if with_volume:
         columns += "volume",  # volume columns has unexceptionally large values
@@ -32,7 +32,7 @@ def main(with_volume: bool = True):
     files.sort(key=lambda file: os.path.getsize(file))
     files = files[:num_atoms]  # Only keep the crypto pairs that have more than 1M dimensions
 
-    dataset = np.empty((num_atoms, num_max_dimensions))
+    dataset = np.empty((len(files), num_max_dimensions))
     print("Making a crypto pairs dataset...")
     for (i, file) in tqdm.tqdm(enumerate(files), total=len(files)):
         df = pd.read_csv(file)
@@ -42,4 +42,4 @@ def main(with_volume: bool = True):
 
 
 if __name__ == "__main__":
-    main(with_volume=True)
+    main(with_volume=False)

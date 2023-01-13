@@ -284,12 +284,12 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[NETFLIX], # NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
+        data_types=[CRYPTO_PAIRS], # NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
         alg_names=[
             # ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             # MEDIAN_ELIMINATION,
-            # GREEDY_MIPS,
+            GREEDY_MIPS,
             # PCA_MIPS,
             # LSH_MIPS
         ]
@@ -300,12 +300,12 @@ def generate_scaling_plots():
         is_fit=True,
         is_logspace=True,
         include_error_bar=True,
-        data_types=[NETFLIX],
+        data_types=[CRYPTO_PAIRS],
         alg_names=[
             # ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             # MEDIAN_ELIMINATION,
-            # GREEDY_MIPS,
+            GREEDY_MIPS,
             # PCA_MIPS,
             # LSH_MIPS
         ]

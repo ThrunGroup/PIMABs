@@ -20,6 +20,8 @@ def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
     var_proxy: np.ndarray,
+    max: float,
+    min: float,
     epsilon: float,
     delta: float,
     num_best_atoms: int = 1,
@@ -41,6 +43,9 @@ def action_elimination(
 
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
+        signal_median = np.median(signal)
+        var_proxy = 1 / 4 * ((max - min) * signal_median) ** 2
+
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step

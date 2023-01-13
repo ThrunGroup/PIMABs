@@ -228,7 +228,7 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-                    print(delta, new_maxmin, np.sum(accuracy_array))
+                    print(delta, new_maxmin, np.sum(accuracy_array), np.mean(budget_array))
 
         elif mips_alg is ACTION_ELIMINATION:
             epsilons = np.linspace(EPSILON_MINMAX_ACTION[0], EPSILON_MINMAX_ACTION[1],
