@@ -216,11 +216,9 @@ def speedup_precision_exps(
                     )
                     runtimes.append(time.time() - start_time)
                     budgets.append(np.mean(budget_array))
-
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is ACTION_ELIMINATION:
             epsilons = np.linspace(EPSILON_MINMAX_ACTION[0], EPSILON_MINMAX_ACTION[1],
                                    num_experiments // DELTA_BINS_ACTION)
@@ -252,7 +250,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is MEDIAN_ELIMINATION:
             if data_type in [NETFLIX, MOVIE_LENS]:
                 idx = -1
@@ -309,7 +306,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is GREEDY_MIPS:
             conditer = generate_conditer(atoms)
 
@@ -331,7 +327,6 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is PCA_MIPS:
             for depth in np.linspace(
                     tradeoff_depth_minmax[0], tradeoff_depth_minmax[1], num_experiments
@@ -352,7 +347,6 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is LSH_MIPS:
             table_diff = TRADEOFF_TABLES_MINMAX[1] - TRADEOFF_TABLES_MINMAX[0] + 1
             num_hfuncs = np.linspace(
@@ -387,7 +381,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
             Ms = np.geomspace(4, 64, num_experiments).astype(np.int64)
             ef_constructions = np.geomspace(4, num_atoms//2, num_experiments).astype(np.int64)
@@ -415,7 +408,6 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 

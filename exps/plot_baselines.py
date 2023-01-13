@@ -332,7 +332,7 @@ def generate_tradeoff_plots(top_k: int = 1):
             PCA_MIPS,
             LSH_MIPS,
             HNSW_MIPS,
-            NAPG_MIPS
+            NAPG_MIPS,
         ],
         top_k=top_k,
         include_error_bar=False
@@ -348,7 +348,7 @@ def generate_tradeoff_plots(top_k: int = 1):
             PCA_MIPS,
             LSH_MIPS,
             HNSW_MIPS,
-            NAPG_MIPS
+            NAPG_MIPS,
         ],
         top_k=top_k,
         max_speedup=MAX_SPEEDUP,
