@@ -25,7 +25,7 @@ def main():
         run_tradeoff()
 
     print("=> Generating scaling plots")
-    # generate_scaling_plots()
+    generate_scaling_plots()
     print("=> Generating tradeoff plots")
     generate_tradeoff_plots()
     # large_scaling_exps()
