@@ -233,7 +233,7 @@ def chunk_compress(pq, vecs):
     return compressed_vecs
 
 
-def execute(pq, X, Q, G, train_size=1300):
+def execute(pq, X, Q, G, top_k=5, train_size=1300):
     """
     Function that preprocesses and queries the dataset.
     Params:
@@ -246,10 +246,7 @@ def execute(pq, X, Q, G, train_size=1300):
     np.random.seed(123)
     pq.fit(X[:train_size].astype(dtype=np.float32), iter=20)
     compressed = chunk_compress(pq, X)
-
-    # [2^0, 2^1, ..., 2^logn] <- standard protocol for evaluating VQ techniques
-    Ts = np.array([2 ** i for i in range(2+int(math.log2(len(X))))])
-    precisions, budgets = BatchSorter(compressed, Q, G, Ts, batch_size=200).precision()
+    precisions, budgets = BatchSorter(compressed, Q, G, top_k, batch_size=200).precision()
     return precisions, budgets
 
 
@@ -270,4 +267,4 @@ if __name__ == '__main__':
     pqs = [PQ(M=1, Ks=Ks) for _ in range(codebook - 1)]
     quantizer = ResidualPQ(pqs=pqs)
     quantizer = NormPQ(n_percentile=Ks, quantize=quantizer)
-    execute(quantizer, atoms, signals.astype('float32'), groundtruth, train_size=num_atoms)
+    execute(quantizer, atoms, signals.astype('float32'), groundtruth, top_k=5, train_size=num_atoms)

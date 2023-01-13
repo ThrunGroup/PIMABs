@@ -12,17 +12,18 @@ def normalize(vecs):
 
 
 @nb.jit
-def true_positives(ranks, Q, G, T):
+def true_positives(ranks, Q, G, top_k):
     result = np.empty(shape=(len(Q)))
     for i in nb.prange(len(Q)):
-        for t in nb.prange(len(T)):
-            # get rid of multiplication of "len(Q[0])/t" for recall
-            result[i] += len(np.intersect1d(G[i], ranks[i][:(t+1)])) * len(Q[0]) / (t+1)
+        # get rid of multiplication of "len(Q[0])/t" for recall
+        result[i] += len(
+            np.intersect1d(G[i], ranks[i][:(top_k + 1)])
+        ) * len(Q[0]) / (top_k + 1)
     return result
 
 
 @nb.jit
-def parallel_sort(compressed, Q):
+def parallel_sort(compressed, Q, top_k):
     """
     For each q in 'Q', sort the items in "compressed" by their euclidean product distance.
     :param compressed: compressed items, same dimension as origin data, shape(N * D)
@@ -30,37 +31,37 @@ def parallel_sort(compressed, Q):
     :return: indices of the topk closest items and the budget
     """
     budgets = np.zeros(len(Q))
-    ranks = np.empty((Q.shape[0], min(131072, compressed.shape[0]-1)), dtype=np.int32)
+    ranks = np.empty((Q.shape[0], min(top_k, compressed.shape[0]-1)), dtype=np.int32)
     for i in nb.prange(Q.shape[0]):
         distances = compressed @ -Q[i]
         budgets[i] += len(compressed) * len(Q[i])
 
         # originally the method is to argpartition -> argsort, but numba doesn't support argpartition
-        size = min(131072, len(distances) - 1)
+        size = min(top_k, len(distances) - 1)
         ranks[i, :] = np.argsort(distances)[:size]
         budgets[i] += (len(distances) + size * math.log(size))
     return ranks, budgets
 
 
 class Sorter(object):
-    def __init__(self, compressed, Q):
+    def __init__(self, compressed, Q, top_k):
         self.Q = Q
-        self.ranks, budgets = parallel_sort(compressed, Q)
+        self.ranks, budgets = parallel_sort(compressed, Q, top_k)
         self.budgets = budgets
 
     def precision(self, G, T):
         t = min(T, len(self.ranks[0]))
         return t, self.avg_precision(G, T)
 
-    def avg_precision(self, G, T):
+    def avg_precision(self, G, top_k):
         assert len(self.Q) == len(self.ranks), "number of query not equals"
         assert len(self.ranks) <= len(G), "number of queries should not exceed the number of queries in ground truth"
-        true_positive = true_positives(self.ranks, self.Q, G, T)
+        true_positive = true_positives(self.ranks, self.Q, G, top_k)
         return true_positive / len(T)
 
 
 class BatchSorter(object):
-    def __init__(self, compressed, Q, G, Ts, batch_size):
+    def __init__(self, compressed, Q, G, top_k, batch_size):
         self.Q = Q
         self.precisions = np.zeros(len(Q))
         self.budgets = np.zeros(len(Q))
@@ -68,9 +69,9 @@ class BatchSorter(object):
         for i in range(math.ceil(len(Q) / float(batch_size))):
             q = Q[i*batch_size: (i + 1) * batch_size, :]
             g = G[i*batch_size: (i + 1) * batch_size, :]
-            sorter = Sorter(compressed, q)
+            sorter = Sorter(compressed, q, top_k)
             self.budgets[i*batch_size: (i + 1) * batch_size] += sorter.budgets
-            self.precisions[i * batch_size: (i + 1) * batch_size] += sorter.avg_precision(g, Ts)
+            self.precisions[i * batch_size: (i + 1) * batch_size] += sorter.avg_precision(g, top_k)
 
     def precision(self):
         return self.precisions, self.budgets
