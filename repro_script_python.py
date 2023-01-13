@@ -1,6 +1,6 @@
 import os
 from exps.scaling.run_scaling import run_scaling
-from exps.run_tradeoff import run_tradeoff
+from exps.tradeoff.run_tradeoff import run_tradeoff
 from exps.plot_baselines import generate_scaling_plots, generate_tradeoff_plots
 from exps.large_scaling.large_scaling_exps import large_scaling_exps
 

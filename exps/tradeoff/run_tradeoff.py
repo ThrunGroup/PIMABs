@@ -1,4 +1,4 @@
-from exps.tradeoff.speedup_precision_exps import speedup_precision_exps
+from exps.speedup_precision_exps import speedup_precision_exps
 from utils.constants import (
     # datasets
     NORMAL_CUSTOM,
