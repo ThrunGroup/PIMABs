@@ -44,12 +44,15 @@ NETFLIX = "NETFLIX"
 MOVIE_LENS = "MOVIE_LENS"
 YAHOO = "YAHOO"
 CRYPTO_PAIRS = "CRYPTO_PAIRS"
+CLEAR_LEADER_HARD = "CLEAR_LEADER_HARD"
+CLEAR_LEADER_SOFT = "CLEAR_LEADER_SOFT"
+NO_CLEAR_LEADER = "NO_CLEAR_LEADER"
 
 # Concentration Inequality bound
 HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
-NUM_SEEDS = 10
+NUM_SEEDS = 5
 DEFAULT_MAXMIN = (5, 0)
 CRYPTO_PAIRS_MAXMIN = (10 ** 5, 0)
 NORMALIZED_MAXMIN = (1, -1)
@@ -67,10 +70,10 @@ SCALING_TOPK = 5
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
 SCALING_SIZE_MINMAX = (
-    100, 10 ** 4,
+    450, 10 ** 4,
 )
-SCAlING_SIZE_MINMAX_MOVIE = (  # movie dataset is only 6000 dimensions
-    100, 5000,
+SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
+    450, 5000,
 )
 SCAlING_SIZE_MINMAX_CRYPTO_PAIRS = (  # crypto pairs dataset has 1M dimensions
     100, 10 ** 6,

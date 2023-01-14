@@ -138,4 +138,3 @@ dmypy.json
 
 # real datasets
 *.npy
-data/crypto_pairs/archive

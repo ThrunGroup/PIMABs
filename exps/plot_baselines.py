@@ -102,13 +102,13 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
-        data_types: List[str] = [],
-        alg_names: List[str] = [],
-        include_error_bar: bool = False,
-        is_fit: bool = False,
-        is_logspace: bool = False,
-        is_plot_accuracy: bool = False,
-        dirname: str = None,
+    data_types: List[str] = [],
+    alg_names: List[str] = [],
+    include_error_bar: bool = False,
+    is_fit: bool = False,
+    is_logspace: bool = False,
+    is_plot_accuracy: bool = False,
+    dirname: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
@@ -122,11 +122,7 @@ def create_scaling_plots(
     :param dirname: directory name of log files
     """
     # get all csv files
-    if dirname is None:
-        path = os.path.join(os.getcwd(), "logs")
-        path = os.path.join(path, "scaling")
-    else:
-        path = dirname
+    path = os.path.join(os.getcwd(), "logs", "scaling") if dirname is None else dirname
     csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
@@ -137,6 +133,7 @@ def create_scaling_plots(
     for datatype in data_types:
         plt.figure(figsize=(6, 4.5))
         title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+
         for f in csv_files:
             alg_name = extract_alg(f)
             data = read_csv(f)
@@ -205,11 +202,11 @@ def create_scaling_plots(
 
 
 def create_tradeoff_plots(
-        data_types: List[str] = [],
-        alg_names: List[str] = [],
-        top_k: int = 1,
-        include_error_bar: bool = False,
-        max_speedup: int = None
+    data_types: List[str] = [],
+    alg_names: List[str] = [],
+    top_k: int = 1,
+    include_error_bar: bool = False,
+    max_speedup: int = None
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -220,10 +217,8 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    current_file_directory = os.path.dirname(__file__)
-    path = os.path.join(current_file_directory, "logs")
+    path = os.path.join(os.getcwd(), "logs")
     path = os.path.join(path, "precision_speed")
-
     csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
 
     if len(data_types) == 0:
@@ -232,7 +227,6 @@ def create_tradeoff_plots(
         raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
-        plt.figure(figsize=(6, 4.5))
         title = f"Precision-Speed Tradeoff Baselines: {translate_dataset_name(datatype)}"
         for f in csv_files:
             alg_name = extract_alg(f)
@@ -272,6 +266,8 @@ def create_tradeoff_plots(
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
 
+        fig = plt.gcf()
+        fig.set_size_inches(6, 4.5)
         plt.show()
 
 
@@ -331,7 +327,6 @@ def generate_tradeoff_plots(top_k: int = 1):
         top_k=top_k,
         include_error_bar=False
     )
-
     create_tradeoff_plots(
         data_types=[CRYPTO_PAIRS],
         alg_names=[
@@ -350,5 +345,5 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 if __name__ == "__main__":
     generate_scaling_plots()
-    # generate_tradeoff_plots(top_k=20)
-    # generate_tradeoff_plots()
+    generate_tradeoff_plots(top_k=5)
+    generate_tradeoff_plots(top_k=20)

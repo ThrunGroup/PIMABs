@@ -89,7 +89,8 @@ def mips_bandit(
                 delta=delta,
                 num_best_atoms=num_best_atoms,
                 with_replacement=False,
-                batch_size=batch_size
+                batch_size=batch_size,
+                verbose=verbose
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
