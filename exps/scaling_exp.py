@@ -21,10 +21,7 @@ from utils.constants import (
     DEFAULT_MAXMIN,
     NORMALIZED_MAXMIN,
     DEFAULT_GREEDY_BUDGET,
-
-    PARTITION,
-    NUM_CODEBOOKS,
-    NUM_CODEWORDS,
+    SCALING_SIZE_MINMAX,
 
     SCALING_DELTA,
     SCALING_DEPTH,
@@ -32,6 +29,12 @@ from utils.constants import (
     SCALING_EPSILON,
     SCALING_NUM_HFUNC,
     SCALING_NUM_TABLES,
+)
+
+from neq_mips.constants import (
+    PARTITION,
+    NUM_CODEBOOKS,
+    NUM_CODEWORDS,
 )
 
 from utils.utils import get_sizes_arr
@@ -52,7 +55,7 @@ def scaling_exp(
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
     num_seeds: int = NUM_SEEDS,
     data_generation_seed: int = 0,
-    size_minmax: Tuple[int, int] = (10, 10**6),
+    size_minmax: Tuple[int, int] = SCALING_SIZE_MINMAX,
     num_atoms: int = 10**3,
     num_signals: int = 1,
     num_best_atoms: int = SCALING_TOPK,
@@ -216,10 +219,13 @@ def scaling_exp(
                 start_time = time.time()
 
                 accuracies, budget_array = execute(
+                    top_k=num_best_atoms,
                     pq=quantizer,
                     X=atoms_subset,
                     Q=signals_subset.astype('float32'),
                     G=naive_candidates_array,
+                    num_codebooks=NUM_CODEBOOKS,
+                    num_codewords=NUM_CODEWORDS,
                     train_size=num_atoms
                 )
                 # includes the time finding recall (other baselines don't)
@@ -240,7 +246,7 @@ def scaling_exp(
                         np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
                     )
 
-            accuracy /= num_signals * num_best_atoms
+                accuracy /= num_signals * num_best_atoms
             accuracy_list.append(accuracy)
 
         avg_runtime += np.array(runtimes)

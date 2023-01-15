@@ -11,10 +11,7 @@ from scipy.cluster.vq import vq, kmeans2
 from utils.quantization_sorters import normalize, BatchSorter
 
 from data.get_data import get_data
-from utils.constants import (
-    NETFLIX,
-    NORM_BUFFER
-)
+from neq_mips.constants import NORM_BUFFER
 
 
 class NormPQ(object):
@@ -161,7 +158,7 @@ class PQ(object):
         assert 0 < Ks <= 2 ** 32
         self.M, self.Ks, self.verbose = M, Ks, verbose
         self.code_dtype = np.uint8 if Ks <= 2 ** 8 else (np.uint16 if Ks <= 2 ** 16 else np.uint32)
-        self.codewords = None
+        self.codewords = Ks
         self.Ds = None
         self.Dim = -1
 
@@ -233,7 +230,7 @@ def chunk_compress(pq, vecs):
     return compressed_vecs
 
 
-def execute(pq, X, Q, G, top_k=5, train_size=1300):
+def execute(pq, X, Q, G, num_codebooks, num_codewords, top_k=5, train_size=1300):
     """
     Function that preprocesses and queries the dataset.
     Params:
@@ -246,25 +243,13 @@ def execute(pq, X, Q, G, top_k=5, train_size=1300):
     np.random.seed(123)
     pq.fit(X[:train_size].astype(dtype=np.float32), iter=20)
     compressed = chunk_compress(pq, X)
-    precisions, budgets = BatchSorter(compressed, Q, G, top_k, batch_size=200).precision()
+    precisions, budgets = BatchSorter(
+        compressed=compressed,
+        Q=Q,
+        G=G,
+        top_k=top_k,
+        num_codebooks=num_codebooks,
+        num_codewords=num_codewords,
+        batch_size=200
+    ).precision()
     return precisions, budgets
-
-
-if __name__ == '__main__':
-    topk = 20
-    codebook = 4    # i.e. subspaces
-    Ks = 256    # i.e. quantizers per subspace
-    num_atoms = 1000
-    len_signal = 30
-
-    atoms, signals = get_data(data_type=NETFLIX, num_atoms=num_atoms, len_signal=len_signal)
-    assert (atoms.shape[1] == signals.shape[-1]), "atoms and signals are not current shape for matrix multiplication"
-    groundtruth = np.argsort(-atoms @ signals.T)
-    groundtruth = groundtruth[:topk].T
-    assert (groundtruth.shape == (len(signals), topk))
-
-    # X, Q, G is equivalent to atoms, signals, and groundtruth (naive MIPS)
-    pqs = [PQ(M=1, Ks=Ks) for _ in range(codebook - 1)]
-    quantizer = ResidualPQ(pqs=pqs)
-    quantizer = NormPQ(n_percentile=Ks, quantize=quantizer)
-    execute(quantizer, atoms, signals.astype('float32'), groundtruth, top_k=5, train_size=num_atoms)

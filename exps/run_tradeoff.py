@@ -2,6 +2,7 @@ import numpy as np
 import math
 from typing import Tuple
 from exps.speedup_precision_exps import speedup_precision_exps
+from neq_mips.constants import TRADEOFF_NEQ_NUM_EXPERIMENTS
 from utils.constants import (
     BATCH_SIZE,
 
@@ -28,11 +29,11 @@ from utils.constants import (
     TRADEOFF_NUM_SIGNALS,
     TRADEOFF_PCA_NUM_EXPERIMENTS,
     TRADEOFF_LSH_NUM_EXPERIMENTS,
-    TRADEOFF_NEQ_NUM_EXPERIMENTS,
     TRADEOFF_DIMENSION,
     TRADEOFF_DIMENSION_MOVIE,
     NUM_ATOMS_REAL,
-    NUM_ATOMS_SIGNAL
+    LEN_SIGNAL_NETFLIX,
+    LEN_SIGNAL_MOVIE
 )
 
 
@@ -42,10 +43,13 @@ def run_tradeoff():
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
-        if data_type in [NETFLIX, MOVIE_LENS]:
+    for data_type in [MOVIE_LENS]:
+        if data_type is NETFLIX:
             num_atoms = NUM_ATOMS_REAL
-            len_signals = NUM_ATOMS_SIGNAL
+            len_signals = LEN_SIGNAL_NETFLIX
+        elif data_type is MOVIE_LENS:
+            num_atoms = NUM_ATOMS_REAL
+            len_signals = LEN_SIGNAL_MOVIE
         else:
             num_atoms = TRADEOFF_NUM_ATOMS
             len_signals = TRADEOFF_DIMENSION
@@ -86,23 +90,23 @@ def run_tradeoff():
             mips_alg=GREEDY_MIPS,
             with_replacement=False,
         )
-        speedup_precision_exps(
-            num_atoms=num_atoms,
-            num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=PCA_MIPS,
-        )
-        speedup_precision_exps(
-            num_atoms=num_atoms,
-            num_experiments=TRADEOFF_LSH_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=LSH_MIPS,
-            lsh_type=ASYMMETRIC,
-        )
+        # speedup_precision_exps(
+        #     num_atoms=num_atoms,
+        #     num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
+        #     len_signals=len_signals,
+        #     num_signals=TRADEOFF_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=PCA_MIPS,
+        # )
+        # speedup_precision_exps(
+        #     num_atoms=num_atoms,
+        #     num_experiments=TRADEOFF_LSH_NUM_EXPERIMENTS,
+        #     len_signals=len_signals,
+        #     num_signals=TRADEOFF_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=LSH_MIPS,
+        #     lsh_type=ASYMMETRIC,
+        # )
         speedup_precision_exps(
             num_atoms=num_atoms,
             num_experiments=TRADEOFF_NEQ_NUM_EXPERIMENTS,

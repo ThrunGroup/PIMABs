@@ -105,32 +105,32 @@ def run_scaling():
             is_normalize=False,
             is_logspace=True,
         )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=PCA_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=LSH_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=PCA_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=LSH_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
         scaling_exp(
             epsilon=epsilon,
             delta=delta,

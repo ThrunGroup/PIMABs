@@ -3,6 +3,8 @@ import numpy as np
 import numba as nb
 import math
 
+from neq_mips.constants import NUM_CODEWORDS, NUM_CODEBOOKS
+
 
 def normalize(vecs):
     norms = np.linalg.norm(vecs, axis=1)
@@ -16,14 +18,14 @@ def true_positives(ranks, Q, G, top_k):
     result = np.empty(shape=(len(Q)))
     for i in nb.prange(len(Q)):
         # get rid of multiplication of "len(Q[0])/t" for recall
-        result[i] += len(
+        result[i] = len(
             np.intersect1d(G[i], ranks[i][:(top_k + 1)])
-        ) * len(Q[0]) / (top_k + 1)
+        ) / (len(Q) * top_k)
     return result
 
 
 @nb.jit
-def parallel_sort(compressed, Q, top_k):
+def parallel_sort(compressed, Q, top_k, num_codebooks, num_codewords):
     """
     For each q in 'Q', sort the items in "compressed" by their euclidean product distance.
     :param compressed: compressed items, same dimension as origin data, shape(N * D)
@@ -34,7 +36,7 @@ def parallel_sort(compressed, Q, top_k):
     ranks = np.empty((Q.shape[0], min(top_k, compressed.shape[0]-1)), dtype=np.int32)
     for i in nb.prange(Q.shape[0]):
         distances = compressed @ -Q[i]
-        budgets[i] += len(compressed) * len(Q[i])
+        budgets[i] += (num_codewords * len(Q[i]) + len(distances) * num_codebooks)
 
         # originally the method is to argpartition -> argsort, but numba doesn't support argpartition
         size = min(top_k, len(distances) - 1)
@@ -44,9 +46,9 @@ def parallel_sort(compressed, Q, top_k):
 
 
 class Sorter(object):
-    def __init__(self, compressed, Q, top_k):
+    def __init__(self, compressed, Q, top_k, num_codebooks, num_codewords):
         self.Q = Q
-        self.ranks, budgets = parallel_sort(compressed, Q, top_k)
+        self.ranks, budgets = parallel_sort(compressed, Q, top_k, num_codebooks, num_codewords)
         self.budgets = budgets
 
     def precision(self, G, T):
@@ -56,12 +58,11 @@ class Sorter(object):
     def avg_precision(self, G, top_k):
         assert len(self.Q) == len(self.ranks), "number of query not equals"
         assert len(self.ranks) <= len(G), "number of queries should not exceed the number of queries in ground truth"
-        true_positive = true_positives(self.ranks, self.Q, G, top_k)
-        return true_positive / len(T)
+        return true_positives(self.ranks, self.Q, G, top_k)
 
 
 class BatchSorter(object):
-    def __init__(self, compressed, Q, G, top_k, batch_size):
+    def __init__(self, compressed, Q, G, top_k, num_codebooks, num_codewords, batch_size):
         self.Q = Q
         self.precisions = np.zeros(len(Q))
         self.budgets = np.zeros(len(Q))
@@ -69,7 +70,7 @@ class BatchSorter(object):
         for i in range(math.ceil(len(Q) / float(batch_size))):
             q = Q[i*batch_size: (i + 1) * batch_size, :]
             g = G[i*batch_size: (i + 1) * batch_size, :]
-            sorter = Sorter(compressed, q, top_k)
+            sorter = Sorter(compressed, q, top_k, num_codebooks, num_codewords)
             self.budgets[i*batch_size: (i + 1) * batch_size] += sorter.budgets
             self.precisions[i * batch_size: (i + 1) * batch_size] += sorter.avg_precision(g, top_k)
 

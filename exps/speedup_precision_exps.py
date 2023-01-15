@@ -63,11 +63,14 @@ from utils.constants import (
     DELTA_POWER_MINMAX,
     DELTA_BINS_AD,
     MAXMIN_AD,
-
+)
+from neq_mips.constants import (
     PARTITION,
     TRADEOFF_CODEBOOK_MINMAX,
-    TRADEOFF_CODEWORD_MINMAX
+    TRADEOFF_CODEWORD_MINMAX,
+    TRADEOFF_NEQ_NUM_EXPERIMENTS,
 )
+
 from data.get_data import get_data
 
 from algorithms.mips_bandit import mips_bandit
@@ -414,10 +417,13 @@ def speedup_precision_exps(
 
                     start_time = time.time()
                     accuracy_array, budget_array = execute(
+                        top_k=num_best_atoms,
                         pq=quantizer,
                         X=atoms,
                         Q=signals.astype('float32'),
                         G=naive_candidates_array,
+                        num_codebooks=num_codebook,
+                        num_codewords=num_codeword,
                         train_size=num_atoms
                     )
 
@@ -427,7 +433,6 @@ def speedup_precision_exps(
                     budgets.append(np.mean(budget_array))
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 
