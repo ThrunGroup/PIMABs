@@ -15,7 +15,7 @@ from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
-# @nb.njit
+@nb.njit
 def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -150,14 +150,6 @@ def action_elimination(
                 break
 
             candidates = candidates[new_cand_idcs]
-            print(candidates)
-            print(np.argmax(np.abs(means)))
-            print(np.abs(means))
-            print(lcbs)
-            print(ucbs)
-            print()
-            print()
-
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
     return candidates_array, budgets_array
