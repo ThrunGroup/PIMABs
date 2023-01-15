@@ -30,7 +30,6 @@ from utils.constants import (
     SCALING_NUM_HFUNC,
     SCALING_NUM_TABLES,
 )
-
 from utils.utils import get_sizes_arr
 from data.get_data import get_data
 from algorithms.mips_bandit import mips_bandit
@@ -39,25 +38,26 @@ from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
 from algorithms.hnsw import hnsw
 
+
 def scaling_exp(
-    epsilon: Optional[float] = SCALING_EPSILON,
-    delta: Optional[float] = SCALING_DELTA,
-    maxmin: Tuple[float, float] = DEFAULT_MAXMIN,
-    data_type: str = NORMAL_CUSTOM,
-    mips_alg: str = MEDIAN_ELIMINATION,
-    num_experiments: int = SCALING_NUM_EXPERIMENTS,
-    num_seeds: int = NUM_SEEDS,
-    data_generation_seed: int = 0,
-    size_minmax: Tuple[int, int] = (10, 10**6),
-    num_atoms: int = 10**3,
-    num_signals: int = 1,
-    num_best_atoms: int = SCALING_TOPK,
-    with_replacement: bool = False,
-    is_normalize: bool = False,
-    is_log: bool = True,
-    is_plot: bool = True,
-    is_logspace: bool = False,
-    dirname: str = None,
+        epsilon: Optional[float] = SCALING_EPSILON,
+        delta: Optional[float] = SCALING_DELTA,
+        maxmin: Tuple[float, float] = DEFAULT_MAXMIN,
+        data_type: str = NORMAL_CUSTOM,
+        mips_alg: str = MEDIAN_ELIMINATION,
+        num_experiments: int = SCALING_NUM_EXPERIMENTS,
+        num_seeds: int = NUM_SEEDS,
+        data_generation_seed: int = 0,
+        size_minmax: Tuple[int, int] = (10, 10 ** 6),
+        num_atoms: int = 10 ** 3,
+        num_signals: int = 1,
+        num_best_atoms: int = SCALING_TOPK,
+        with_replacement: bool = False,
+        is_normalize: bool = False,
+        is_log: bool = True,
+        is_plot: bool = True,
+        is_logspace: bool = False,
+        dirname: str = None,
 ) -> float:
     """
     Run the time complexity of the bandit and baseline algorithms as the signal size scales and store them in
@@ -132,10 +132,10 @@ def scaling_exp(
             # bandit algorithms
             if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION]:
                 log_info = (
-                    "epsilon"
-                    + str(epsilon)
-                    + "_delta"
-                    + str(delta)
+                        "epsilon"
+                        + str(epsilon)
+                        + "_delta"
+                        + str(delta)
                 )
                 start_time = time.time()
                 candidates_array, budget_array = mips_bandit(
@@ -153,8 +153,8 @@ def scaling_exp(
                 runtime = time.time() - start_time
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
-                    "budget"
-                    + str(DEFAULT_GREEDY_BUDGET)
+                        "budget"
+                        + str(DEFAULT_GREEDY_BUDGET)
                 )
                 start_time = time.time()
                 candidates_array, _, _, budget_array = greedy_mips(
@@ -166,8 +166,8 @@ def scaling_exp(
                 runtime = time.time() - start_time
             elif mips_alg is PCA_MIPS:
                 log_info = (
-                    "depth"
-                    + str(delta)
+                        "depth"
+                        + str(delta)
                 )
                 start_time = time.time()
                 candidates_array, budget_array = run_pca_mips(
@@ -179,10 +179,10 @@ def scaling_exp(
                 runtime = time.time() - start_time
             elif mips_alg is LSH_MIPS:
                 log_info = (
-                    "hfunc_"
-                    + str(SCALING_NUM_HFUNC)
-                    + "_tables"
-                    + str(SCALING_NUM_TABLES)
+                        "hfunc_"
+                        + str(SCALING_NUM_HFUNC)
+                        + "_tables"
+                        + str(SCALING_NUM_TABLES)
                 )
                 start_time = time.time()
                 candidates_array, budget_array = run_lsh_mips(
@@ -193,17 +193,16 @@ def scaling_exp(
                     num_tables=SCALING_NUM_TABLES
                 )
                 runtime = time.time() - start_time
-
-            elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
+            elif mips_alg is HNSW_MIPS:
                 log_info = (
-                        mips_alg
+                    mips_alg
                 )
                 start_time = time.time()
                 candidates_array, budget_array = hnsw(
                     atoms=atoms_subset,
                     signals=signals_subset,
                     num_best_atoms=num_best_atoms,
-                    use_norm_adjusted_factors=(mips_alg==NAPG_MIPS)
+                    use_norm_adjusted_factors=(mips_alg == NAPG_MIPS)
                 )
                 runtime = time.time() - start_time
             else:
@@ -215,8 +214,8 @@ def scaling_exp(
             budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
             naive_candidates_array = np.sort(
                 np.matmul(-atoms_subset, signals_subset.transpose())
-                .argsort(axis=0)[:num_best_atoms]
-                .transpose()
+                    .argsort(axis=0)[:num_best_atoms]
+                    .transpose()
             )
 
             accuracy = 0
@@ -247,12 +246,12 @@ def scaling_exp(
             "runtime": avg_runtime,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = os.path.join(os.getcwd(), "logs", "") if dirname is None else dirname
+        log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg
             + "_"
-            "SCALING_"
+              "SCALING_"
             + data_type
             + "_"
             + "atoms"
