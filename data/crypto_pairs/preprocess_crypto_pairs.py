@@ -8,7 +8,8 @@ def main(with_volume: bool = True):
     """
     Make a dataset for 105 crypto pairs with 1M dimensions
     """
-    directory = "archive"
+    directory_path = os.path.dirname(os.path.abspath(__file__))
+    dataset_directory = os.path.join(directory_path, "archive")
     num_atoms = 105
     if with_volume:
         min_file_size = 16 * 1024 * 1024  # 16MB
@@ -20,11 +21,10 @@ def main(with_volume: bool = True):
     num_max_dimensions = 10 ** 6
     num_max_timestamps = num_max_dimensions // len(columns)
 
-    # Only store the files larger than 20MB
     files = []
 
-    for file in os.listdir(directory):
-        file_path = os.path.join(directory, file)
+    for file in os.listdir(dataset_directory):
+        file_path = os.path.join(dataset_directory, file)
 
         if os.path.getsize(file_path) > min_file_size:
             files.append(file_path)
