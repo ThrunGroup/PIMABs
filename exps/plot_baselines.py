@@ -18,6 +18,7 @@ from utils.constants import (
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
+    MNIST_T,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -25,7 +26,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-    MAX_SPEEDUP
+    MAX_SPEEDUP,
 )
 from utils.utils import fit_and_plot
 
@@ -76,6 +77,8 @@ def translate_dataset_name(dataset_name: str):
         return "Clear Leader (Soft)"
     elif dataset_name == NO_CLEAR_LEADER:
         return "No Clear Leader"
+    elif dataset_name == MNIST_T:
+        return "MNIST Transposed"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
