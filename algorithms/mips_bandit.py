@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Tuple
 
+from utils.utils import set_seed
 from utils.constants import (
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -59,6 +60,7 @@ def mips_bandit(
     assert len(atoms.shape) == 2, "Invalid size of data atoms" " matrix"
     assert len(signals.shape) == 2, "Invalid size of signal vector"
 
+    set_seed(seed)
     if with_replacement:
         if bandit_alg is ACTION_ELIMINATION:
             return action_elimination(

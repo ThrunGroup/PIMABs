@@ -3,7 +3,7 @@ import numba as nb
 
 from sklearn.linear_model import OrthogonalMatchingPursuit  # for debugging purposes
 from data.get_data import get_data
-from utils.utils import set_seed
+from utils.utils import set_seed, get_recon_error
 from utils.constants import (
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
@@ -90,6 +90,7 @@ def orthogonal_matching_pursuit(
     seed: int = 0,
     abs: bool = False,
     batch_size: int = 30,
+    maxmin: Tuple[float, float] = (2.0, 0.0),
 
     # caching params
     use_cache: bool = True,
@@ -108,12 +109,13 @@ def orthogonal_matching_pursuit(
     :param bandit_alg: Name of the bandit algorithm to get MIPS. Default naive.
     :param seed: Seed
     :param abs: Whether to take absolute value when computing maximal inner product search.
+    :param batch_size: the batch_size that will be passed down to the MIPS algorithm
+    :param maxmin: the del
     :return: an array of indices similar to scikit-learn OMP's indices attribute AND budget
     """
     if use_naive:
         assert use_cache == True, "cannot use naive-cache if use_cache isn't specified"
 
-    set_seed(seed)
     if signal.ndim == 1:
         signal = signal.reshape(-1, 1)
 
@@ -134,6 +136,7 @@ def orthogonal_matching_pursuit(
     # need to set these default values even if we don't use cache due to numba type errors
     max_cache_size = int((cache_multiplier * num_dimensions))
     shuffled_indices = np.arange(num_dimensions)
+    np.random.seed(seed)
     np.random.shuffle(shuffled_indices)
     cache = np.empty((num_atoms, max_cache_size))
     cache_tracker = np.zeros(num_atoms, dtype=np.int64)  # track how many cached values each atom has
@@ -142,17 +145,14 @@ def orthogonal_matching_pursuit(
         cache_map.append(nb.typed.Dict.empty(key_type=nb.int64, value_type=nb.int64))
 
     L = np.empty((n_nonzero_coefs, n_nonzero_coefs), dtype=atoms.dtype)
-    iter = 1
-    maxmin = (0.5, 0) # Todo: make it so that we can set this before entering MP loop
+    iter = 0
     while np.linalg.norm(residual) > min_residual:
-        #print(f"residual norm: {np.linalg.norm(residual)}")
-        #print(f"maxmin: {maxmin}")
 
         # solve the MIPS problem
         if len(bandit_alg) > 0:
             # Todo: only supports caching with Action Elimination for now
-            #print(f"\nMP iteration {iter}")
             iter += 1
+            #print(f"MP iteration {iter}\n => residual is {np.linalg.norm(residual)}\n => maxmin is {maxmin}\n")
 
             # naive-caching uses different permutations for each MP iteration.
             # this makes it less likely that we'll get cache hits compared to PI caching.
@@ -166,17 +166,15 @@ def orthogonal_matching_pursuit(
                 bandit_alg=bandit_alg,
                 epsilon=0.0,
                 abs=abs,
-                delta=0.3,
+                delta=0.1,
                 use_cache=use_cache,
                 shuffled_indices=shuffled_indices,
                 cache=cache,
                 cache_tracker=cache_tracker,
                 cache_map=cache_map,
+                seed=seed,
             )
             lam = candidate[0][0]
-            #print(f"permutation: \n {shuffled_indices}")
-            #print(f"cache tracker: \n {np.sum(cache_tracker)}")
-            #print(f"cache_map first atom: \n {cache_map[0]}")
 
             # update params
             cache = cache
@@ -216,6 +214,7 @@ def orthogonal_matching_pursuit(
         else:
             L[0, 0] = linalg.norm(atoms[:, lam])
 
+        # @Todo need to account for this swapping in caching
         atoms.T[n_active], atoms.T[lam] = swap(atoms.T[n_active], atoms.T[lam])
         alpha[n_active], alpha[lam] = alpha[lam], alpha[n_active]
         indices[n_active], indices[lam] = indices[lam], indices[n_active]
@@ -229,19 +228,18 @@ def orthogonal_matching_pursuit(
         # need to update residual and maxmin since delta (i.e. arm distances) will get smaller
         projection = np.dot(atoms[:, :n_active], gamma)
         residual = signal - projection
-        decrease_by =  np.linalg.norm(residual) / np.linalg.norm(signal)
+        decrease_by = np.linalg.norm(residual) / np.linalg.norm(signal)
         maxmin = (maxmin[0] * decrease_by, maxmin[1] * decrease_by)
-        #print(f"this is budget {budget}")
         if n_active == n_nonzero_coefs:
              break
 
     indices = indices[:n_active]
-    return indices, total_budget
+    return indices, gamma, total_budget
 
 
 if __name__ == "__main__":
-
     for seed in range(1):
+        set_seed(seed)
         print("\nSeed : ", seed)
         num_atoms = 100
         len_signal = 1000
@@ -254,38 +252,45 @@ if __name__ == "__main__":
         )
 
         # scikit-learn
-        model1 = OrthogonalMatchingPursuit(normalize=False, n_nonzero_coefs=5, fit_intercept=False, precompute=False)
+        model1 = OrthogonalMatchingPursuit(normalize=False, n_nonzero_coefs=3, fit_intercept=False, precompute=False)
         print(f"-> Atoms dataset size: {atoms.shape}")
         print("------- running scikit-learn OMP ---------")
         model1.fit(atoms.T, signals[0])
         print("these are the coefficient indices (sorted by default)", model1.coef_.nonzero())
+        print("this is the reconstruction error", np.sum(
+                np.abs(signals[0] - np.sum(model1.coef_[:, np.newaxis] * atoms, axis=0))
+            )
+        )
 
         # naive version
         print("\n------ running naive OMP ------")
-        candidates, budget = orthogonal_matching_pursuit(
+        candidates, gamma, budget = orthogonal_matching_pursuit(
             atoms=atoms.T,
             signal=signals[0],
-            n_nonzero_coefs=5,
+            n_nonzero_coefs=3,
             min_residual=0.01,
             bandit_alg="",
             abs=True,
-            seed=0,
+            seed=seed,
             use_cache=False,
         )
         print("indices: ", candidates, " budget: ", budget)
+        naive_recon = get_recon_error(gamma, atoms[candidates], signals)
 
         # bandit version
         print("\n------ running bandit OMP without cache ------")
-        candidates, budget = orthogonal_matching_pursuit(
+        candidates, gamma, budget = orthogonal_matching_pursuit(
             atoms=atoms.T,
             signal=signals[0],
-            n_nonzero_coefs=5,
+            n_nonzero_coefs=3,
             min_residual=0.01,
             bandit_alg=ACTION_ELIMINATION,
             abs=True,
-            seed=0,
+            seed=seed,
             use_cache=False,
             use_naive=False,
             cache_multiplier=1,
         )
         print("indices: ", candidates, " budget: ", budget[0])
+        bandit_recon = get_recon_error(gamma, atoms[candidates], signals)
+        print(f"==> reconstruction error: {(bandit_recon - naive_recon) / naive_recon}")

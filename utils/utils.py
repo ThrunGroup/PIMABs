@@ -402,3 +402,50 @@ def get_sizes_arr(
             size_minmax[0], size_minmax[1], num_experiments
         ).astype(np.int64)
     return sizes_signal
+
+
+def get_recon_error(
+    coeffs: np.ndarray,
+    candidates: np.ndarray,
+    signals: np.ndarray,
+ ) -> np.ndarray:
+    assert len(coeffs) == candidates.shape[0], "all candidates must have corresponding coefficients"
+    return np.sum(
+        np.abs(
+            signals - np.sum(coeffs * candidates, axis=0)
+        )
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

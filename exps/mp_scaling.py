@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 
 from algorithms.matching_pursuit import orthogonal_matching_pursuit
-from utils.utils import get_sizes_arr
+from utils.utils import get_sizes_arr, get_recon_error
 from data.get_data import get_data
 from utils.constants import (
     NORMAL_CUSTOM,
@@ -35,6 +35,7 @@ def scaling_exp(
     mips_alg: str = ACTION_ELIMINATION,
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
     size_minmax: Tuple[int, int] = SCALING_SIZE_MINMAX,
+    maxmin: Tuple[float, float] = (2.0, 0.0),
     num_atoms: int = SCALING_NUM_ATOMS,
     num_signals: int = SCALING_NUM_SIGNALS,
     num_best_atoms: int = 1,
@@ -76,7 +77,9 @@ def scaling_exp(
     avg_runtime_ovr_seeds = np.zeros(num_experiments)
     avg_budget_ovr_seeds = np.zeros(num_experiments)
     avg_budget_std_ovr_seeds = np.zeros(num_experiments)
-    avg_accuracies_ovr_seeds = np.zeros(num_experiments)
+
+    avg_accuracies_ovr_seeds = np.zeros(num_experiments)    # this is in regards to the atom indices
+    avg_recon_error_ovr_seeds = np.zeros(num_experiments)   # defined as (bandit_recon - naive_recon) / naive_recon
     print(f"=> Scaling experiment for MP with  {mips_alg} on {data_type} dataset")
 
     for seed in range(NUM_SEEDS):
@@ -90,13 +93,13 @@ def scaling_exp(
             seed=seed,
             data_type=data_type,
         )
-        maxmin = DEFAULT_MAXMIN
 
         # params that we need to update
         avg_runtime = []
         avg_budget = []
         avg_budget_std = []
         avg_accuracies = []
+        avg_recon_error = []
 
         # currently MP only supports single signals at a time
         for size in sizes_signal:
@@ -117,26 +120,31 @@ def scaling_exp(
             budgets = []
             budgets_std = []
             accuracies = []
+            recon_error = []
             runtimes = []
             for signal in signals_subset:   # this is one signal out of num_signals signals of the same size
                 # naive version
-                naive_candidates, _ = orthogonal_matching_pursuit(
+                naive_candidates, naive_gamma, _ = orthogonal_matching_pursuit(
                     atoms=atoms_subset.T,
                     signal=signal,
                     bandit_alg="",
                     abs=True,
                     use_cache=False,
+                    maxmin=maxmin
                 )
+                naive_recon = get_recon_error(naive_gamma, atoms_subset[naive_candidates], signal)
 
                 start_time = time.time()
-                candidates, total_budget = orthogonal_matching_pursuit(
+                candidates, gamma, total_budget = orthogonal_matching_pursuit(
                     atoms=atoms_subset.T,
                     signal=signal,
                     bandit_alg=mips_alg,
                     abs=True,
                     use_cache=use_cache,
                     use_naive=use_naive,
+                    maxmin=maxmin,
                 )
+                bandit_recon = get_recon_error(gamma, atoms_subset[candidates], signal)
                 runtime = time.time() - start_time
 
                 # update param lists
@@ -144,6 +152,9 @@ def scaling_exp(
                 runtimes.append(runtime)
                 accuracies.append(
                     len(np.intersect1d(naive_candidates, candidates)) / len(candidates)
+                )
+                recon_error.append(
+                    (bandit_recon - naive_recon) / naive_recon
                 )
                 log_info = ""
                 if use_cache:
@@ -159,17 +170,20 @@ def scaling_exp(
                 np.std(np.sum(np.array(budgets))) / np.sqrt(num_signals)
             )
             avg_accuracies.append(np.array(np.mean(np.array(accuracies))))
+            avg_recon_error.append(np.array(np.mean(np.array(recon_error))))
 
         # keep track of params for all seeds (will find the average at the end)
         avg_runtime_ovr_seeds += avg_runtime
         avg_budget_ovr_seeds += avg_budget
         avg_budget_std_ovr_seeds += avg_budget_std
         avg_accuracies_ovr_seeds += avg_accuracies
+        avg_recon_error_ovr_seeds += avg_recon_error
 
     avg_runtime_ovr_seeds /= NUM_SEEDS
     avg_budget_ovr_seeds /= NUM_SEEDS
     avg_budget_std_ovr_seeds /= NUM_SEEDS
     avg_accuracies_ovr_seeds /= NUM_SEEDS
+    avg_recon_error_ovr_seeds /= NUM_SEEDS
 
     # save to log files
     if is_log:
@@ -178,7 +192,8 @@ def scaling_exp(
             "budgets": avg_budget_ovr_seeds,
             "budgets_std": avg_budget_std_ovr_seeds,
             "runtime": avg_runtime_ovr_seeds,
-            "accuracy": avg_accuracies_ovr_seeds,
+            "idx_accuracy": avg_accuracies_ovr_seeds,
+            "rec_error": avg_recon_error_ovr_seeds,
         }
         log_df = pd.DataFrame(log_dict)
         log_dir = "logs/mp_scaling" if dirname is None else dirname
@@ -202,7 +217,9 @@ def scaling_exp(
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
-    print(f"Mean accuracy of MP with {mips_alg} on {data_type} dataset: {np.mean(avg_accuracies_ovr_seeds)} \n")
+    print(f"Performance of {mips_alg} on {data_type} dataset:")
+    print(f"==> accuracy of indices selected: {np.mean(avg_accuracies_ovr_seeds)}")
+    print(f"==> reconstruction error: {np.mean(avg_recon_error_ovr_seeds)}")
 
 
 if __name__ == "__main__":
@@ -210,6 +227,7 @@ if __name__ == "__main__":
         data_type=TOY_SINE,
         use_cache=False,
         use_naive=False,
+        maxmin=(0.2, 0),
     )
 
     # scaling_exp(
