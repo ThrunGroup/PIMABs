@@ -49,6 +49,10 @@ def run_toy_dataset(
         num_atoms=100,
         mul=3000
 ):
+    """
+    Runs bandit-OMP on the specified toy dataset. The objective is for the OMP to find the first, second, third
+    atom indices, in that order
+    """
     print(f"number of atoms: {num_atoms}")
     print(f"dimension of query: {mul * 3}")
     if name == "discrete":

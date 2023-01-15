@@ -413,6 +413,10 @@ def get_recon_error(
     candidates: np.ndarray,
     signals: np.ndarray,
  ) -> np.ndarray:
+    """
+    Since the signal is decomposed into a linear combination of the selected indices, we also need to check that the
+    coefficients that OMP finds are accurate. This function computes the reconstruction error to give info on that.
+    """
     assert len(coeffs) == candidates.shape[0], "all candidates must have corresponding coefficients"
     return np.sum(
         np.abs(

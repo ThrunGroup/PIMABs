@@ -293,6 +293,13 @@ def compare_caching_budgets(
     alg_names=[ACTION_ELIMINATION],
     include_error_bar=True,
 ):
+    """
+    This function is used to plot the budget costs of PI caching and naive caching side-by-side to see that PI
+    caching has better computational costs.
+
+    :param dir_name: the directory name of where the log files are stored
+    :param caching_type: either PI or naive
+    """
     # get all csv files
     path = os.path.join(os.getcwd(), "logs")
     path = os.path.join(path, dir_name)
