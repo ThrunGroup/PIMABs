@@ -15,6 +15,9 @@ from utils.constants import (
     NETFLIX,
     MOVIE_LENS,
     CRYPTO_PAIRS,
+    CLEAR_LEADER_HARD,
+    CLEAR_LEADER_SOFT,
+    NO_CLEAR_LEADER,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -69,6 +72,12 @@ def translate_dataset_name(dataset_name: str):
         return "Movie Lens"
     elif dataset_name == CRYPTO_PAIRS:
         return "Crypto Pairs"
+    elif dataset_name == CLEAR_LEADER_HARD:
+        return "Clear Leader (Hard)"
+    elif dataset_name == CLEAR_LEADER_SOFT:
+        return "Clear Leader (Soft)"
+    elif dataset_name == NO_CLEAR_LEADER:
+        return "No Clear Leader"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 

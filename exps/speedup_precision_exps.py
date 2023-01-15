@@ -141,7 +141,6 @@ def speedup_precision_exps(
         tradeoff_depth_minmax = TRADEOFF_DEPTH_MINMAX_REAL
         tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
         greedy_budget = num_atoms - 1
-
     elif data_type is CRYPTO_PAIRS:
         tradeoff_delta_minmax = TRADEOFF_DELTA_MINMAX_REAL
         tradeoff_delta_bins = DELTA_BINS_REAL
@@ -150,7 +149,6 @@ def speedup_precision_exps(
         tradeoff_depth_minmax = TRADEOFF_DEPTH_MINMAX_REAL
         tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
         greedy_budget = num_atoms - 1
-
     elif data_type is ADVERSARIAL_CUSTOM:
         tradeoff_delta_minmax = TRADEOFF_DELTA_MINMAX_REAL
         tradeoff_delta_bins = DELTA_BINS_AD
@@ -159,7 +157,6 @@ def speedup_precision_exps(
         tradeoff_depth_minmax = TRADEOFF_DEPTH_MINMAX
         tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
         greedy_budget = num_atoms - 1
-
     else:
         tradeoff_delta_minmax = DELTA_MINMAX
         tradeoff_delta_bins = DELTA_BINS
@@ -229,7 +226,6 @@ def speedup_precision_exps(
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
                     print(delta, new_maxmin, np.sum(accuracy_array), np.mean(budget_array))
-
         elif mips_alg is ACTION_ELIMINATION:
             epsilons = np.linspace(EPSILON_MINMAX_ACTION[0], EPSILON_MINMAX_ACTION[1],
                                    num_experiments // DELTA_BINS_ACTION)
@@ -261,7 +257,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is MEDIAN_ELIMINATION:
             if data_type in [NETFLIX, MOVIE_LENS]:
                 idx = -1
@@ -318,7 +313,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is GREEDY_MIPS:
             conditer = generate_conditer(atoms)
 
@@ -361,7 +355,6 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is LSH_MIPS:
             table_diff = TRADEOFF_TABLES_MINMAX[1] - TRADEOFF_TABLES_MINMAX[0] + 1
             num_hfuncs = np.linspace(

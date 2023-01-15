@@ -3,10 +3,6 @@ import math
 from typing import Tuple
 from exps.scaling_exp import scaling_exp
 from utils.constants import (
-    BATCH_SIZE,
-    DEFAULT_MAXMIN,
-    CRYPTO_PAIRS_MAXMIN,
-
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
@@ -14,6 +10,9 @@ from utils.constants import (
     NETFLIX,
     MOVIE_LENS,
     CRYPTO_PAIRS,
+    CLEAR_LEADER_HARD,
+    CLEAR_LEADER_SOFT,
+    NO_CLEAR_LEADER,
 
     # algorithms
     MEDIAN_ELIMINATION,

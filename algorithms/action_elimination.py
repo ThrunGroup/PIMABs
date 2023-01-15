@@ -19,11 +19,12 @@ from utils.bandit_utils import get_ci
 def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
-    var_proxy: np.ndarray,
-    max: float,
-    min: float,
     epsilon: float,
     delta: float,
+    var_proxy: np.ndarray,
+    var_proxy_override: bool = False,
+    max: float = 0.0,
+    min: float = 0.0,
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
@@ -47,8 +48,9 @@ def action_elimination(
         # Some signals of a crypto pairs dataset can be small (most of the values around 0.001, for example),
         # making it hard to eliminate bad atoms.
         # Adjust maxmin according to the median value of the signal (There can be a more sophisticated way)
-        signal_median = np.median(signal)
-        var_proxy = 1 / 4 * ((max - min) * signal_median) ** 2
+        if var_proxy_override:
+            signal_median = np.median(signal)
+            var_proxy = 1 / 4 * ((max - min) * signal_median) ** 2
 
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
@@ -140,4 +142,5 @@ def action_elimination(
 
         if verbose:
             print(f"Num iterations: {t}")
+
     return candidates_array, budgets_array

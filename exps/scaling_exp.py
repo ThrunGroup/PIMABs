@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 
 from utils.constants import (
+    CRYPTO_PAIRS,
+
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -150,6 +152,7 @@ def scaling_exp(
                     is_experiment=False,
                     with_replacement=with_replacement,
                     verbose=verbose,
+                    var_proxy_override=(data_type==CRYPTO_PAIRS)
                 )
                 runtime = time.time() - start_time
             elif mips_alg is GREEDY_MIPS:

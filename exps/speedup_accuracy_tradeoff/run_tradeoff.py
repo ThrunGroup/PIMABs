@@ -1,4 +1,5 @@
 from typing import List
+
 from exps.speedup_precision_exps import speedup_precision_exps
 from utils.constants import (
     BATCH_SIZE,
@@ -37,7 +38,6 @@ def run_tradeoff(algorithms: List[str]):
     Run speedup_precision tradeoff experiment for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
-
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
     for data_type in [CRYPTO_PAIRS]:  # ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS
         if data_type in [CRYPTO_PAIRS, NETFLIX, MOVIE_LENS]:
@@ -56,7 +56,7 @@ def run_tradeoff(algorithms: List[str]):
                 'len_signals': len_signals,
                 'num_signals': TRADEOFF_NUM_SIGNALS,
                 'data_type': data_type,
-                'mips_alg': algorithm
+                'mips_alg': algorithm,
             }
 
             if algorithm in [ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION, MEDIAN_ELIMINATION, GREEDY_MIPS]:
