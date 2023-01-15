@@ -136,10 +136,10 @@ def scaling_exp(
                     + str(delta)
                 )
                 start_time = time.time()
-                candidates_array, budget_array = mips_bandit(
+                candidates_array, budget_array, _, _, _ = mips_bandit(
                     atoms=atoms_subset,
                     signals=signals_subset,
-                    maxmin=maxmin,
+                    maxmin=(2,0),
                     bandit_alg=mips_alg,
                     epsilon=epsilon,
                     delta=delta,
