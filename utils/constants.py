@@ -44,7 +44,8 @@ ALG_TO_COLOR = {
     ASYMMETRIC: "#7f7f7f",
     HNSW_MIPS: "#F4D03F",
     NAPG_MIPS: "#F409FF",
-    BUCKET_ACTION_ELIMINATION: "#17becf"
+    BUCKET_ACTION_ELIMINATION: "#17becf",
+    H2ALSH: "#5d8694",
 }
 
 # Datasets
@@ -124,6 +125,7 @@ SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
 SCAlING_SIZE_MINMAX_CRYPTO_PAIRS = (  # crypto pairs dataset has 1M dimensions
     100, 10 ** 6,
 )
+SCALING_H2ALSH_PARAMS = (0.4, 1.5, 0.8, 200) # it records (delta, c0, c, N0)
 
 # Precision-Speed Tradeoff Experiments
 TRADEOFF_NUM_EXPERIMENTS = 12  # corresponds to the number of points on the plot
@@ -182,6 +184,12 @@ DELTA_POWER_MINMAX = (0.05, 15)
 # Crypto Pairs Data params
 TRADEOFF_MAXMIN_CRYPTO_PAIRS = (10 ** 6, 0)
 CRYPTO_PAIRS_SIGNAL_LENGTH = 10 ** 6
+
+# H2ALSH TRADEOFF PARAMS
+TRADEOFF_H2ALSH = {"powers_delta": (-10, 0), "c0": (1.01, 3), "c": (1, 0.1), "N0": (101, 500)}
+
+# BUCKET ACTION ELIMINATION TRADEOFF PARAMS
+TRADEOFF_BUCKET_ACTION_ELIMINATION = {"deltas": (0.001, 0.1), "epsilons": (0, 0.3), "bucket_num_samples": (1000, 50)}
 
 # Large Scale params
 LARGE_SIZE_MINMAX = (10, 5 * 10 ** 6)

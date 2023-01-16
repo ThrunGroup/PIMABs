@@ -122,7 +122,7 @@ def bucket_action_elimination(
             )
             concatenated_means = np.concatenate((means, bucket_means))
             best_k_idcs = np.argsort(concatenated_means)[::-1][:num_best_atoms]
-            means = concatenated_means
+            means = concatenated_means[best_k_idcs]
             candidates = np.concatenate(
                 (candidates, bucket_idcs[idx][bucket_candidates])
             )[best_k_idcs]
