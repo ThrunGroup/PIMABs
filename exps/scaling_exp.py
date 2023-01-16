@@ -69,7 +69,7 @@ def scaling_exp(
     is_plot: bool = True,
     is_logspace: bool = False,
     dirname: str = None,
-) -> None:
+) -> float:
     """
     Run the time complexity of the bandit and baseline algorithms as the signal size scales and store them in
     the appropriate log files. MEDIAN_ELIMINATION algorithm should satisfy this scaling according to Corollary 3 in
@@ -95,8 +95,7 @@ def scaling_exp(
     :param dirname: Directory name to log the results
     """
     global budget_array
-
-    # average over NUM_SEEDS results
+    # num_experiments determins the different sizes of d that we run
     avg_runtime = np.zeros(num_experiments)
     avg_budget = np.zeros(num_experiments)
     avg_budget_std = np.zeros(num_experiments)
@@ -104,6 +103,9 @@ def scaling_exp(
     print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
 
     sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+
+    # If the dataset is a toy dataset, the randomness will include the data generation process
+    # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
     atoms, signals = get_data(
         num_atoms=num_atoms,
         len_signal=sizes_signal[-1],
@@ -111,9 +113,12 @@ def scaling_exp(
         seed=data_generation_seed,
         data_type=data_type,
     )
+
+    # average over num_seeds results
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
+
         budgets = []
         budgets_std = []
         accuracy_list = []
@@ -132,7 +137,7 @@ def scaling_exp(
                 atoms_subset /= atoms_norm
                 signals_subset /= signal_norm
                 epsilon /= atoms_norm.max() * signal_norm
-                maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given.
+                maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given
 
             # get the ground truth arrays
             naive_candidates_array = (
@@ -163,8 +168,6 @@ def scaling_exp(
                     with_replacement=with_replacement,
                 )
                 runtime = time.time() - start_time
-
-            # baseline algorithms
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
                     "budget"
@@ -178,7 +181,6 @@ def scaling_exp(
                     num_best_atoms=num_best_atoms,
                 )
                 runtime = time.time() - start_time
-
             elif mips_alg is PCA_MIPS:
                 log_info = (
                     "depth"
@@ -192,7 +194,6 @@ def scaling_exp(
                     delta=SCALING_DEPTH,
                 )
                 runtime = time.time() - start_time
-
             elif mips_alg is LSH_MIPS:
                 log_info = (
                     "hfunc_"
@@ -274,7 +275,7 @@ def scaling_exp(
             "runtime": avg_runtime,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs/scaling" if dirname is None else dirname
+        log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg
@@ -290,4 +291,6 @@ def scaling_exp(
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
+
     print(f"Mean accuracy of {mips_alg} for {data_type}: {np.mean(avg_accuracy)} \n")
+    return np.mean(avg_accuracy)

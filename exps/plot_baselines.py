@@ -1,6 +1,7 @@
 import os
 import glob
 import pandas as pd
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,6 +15,9 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    CLEAR_LEADER_HARD,
+    CLEAR_LEADER_SOFT,
+    NO_CLEAR_LEADER,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -71,6 +75,12 @@ def translate_dataset_name(dataset_name: str):
         return "Netflix"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
+    elif dataset_name == CLEAR_LEADER_HARD:
+        return "Clear Leader (Hard)"
+    elif dataset_name == CLEAR_LEADER_SOFT:
+        return "Clear Leader (Soft)"
+    elif dataset_name == NO_CLEAR_LEADER:
+        return "No Clear Leader"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -126,11 +136,7 @@ def create_scaling_plots(
     :param dirname: directory name of log files
     """
     # get all csv files
-    if dirname is None:
-        path = os.path.join(os.getcwd(), "logs")
-        path = os.path.join(path, "scaling")
-    else:
-        path = dirname
+    path = os.path.join(os.getcwd(), "logs", "scaling") if dirname is None else dirname
     csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
@@ -139,8 +145,8 @@ def create_scaling_plots(
         raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
-        plt.figure(figsize=(6, 4.5))
         title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+
         for f in csv_files:
             alg_name = extract_alg(f)
             data = read_csv(f)
@@ -274,6 +280,8 @@ def create_tradeoff_plots(
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
 
+        fig = plt.gcf()
+        fig.set_size_inches(6, 4.5)
         plt.show()
 
 
@@ -286,7 +294,7 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
+        data_types=[NETFLIX, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
@@ -308,7 +316,7 @@ def generate_scaling_plots():
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
-            GREEDY_MIPS
+            GREEDY_MIPS,
         ]
     )
 
@@ -351,6 +359,6 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    #generate_scaling_plots()
-    generate_tradeoff_plots(top_k=TRADEOFF_TOPK)
-
+    generate_scaling_plots()
+    generate_tradeoff_plots(top_k=5)
+    generate_tradeoff_plots(top_k=20)
