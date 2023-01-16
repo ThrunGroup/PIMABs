@@ -307,7 +307,7 @@ def create_tradeoff_plots(
                 continue
 
             budget_data = data["budgets"].tolist()
-            x = np.max(budget_data) / budget_data  # speed is inverse budget
+            x = data["naive_budget"] / budget_data  # speed is inverse budget
             y = data["accuracy"].tolist()
             error = data["accuracy_std"].tolist()
             if max_speedup is not None:

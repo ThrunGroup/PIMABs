@@ -402,6 +402,7 @@ def speedup_precision_exps(
             "accuracy": avg_accuracy,
             "accuracy_std": avg_accuracy_std,
             "runtime": avg_runtime,
+            "naive_budget": num_atoms * len_signals,
         }
         log_df = pd.DataFrame(log_dict)
         log_dir = "logs/precision_speed" if dirname is None else dirname
