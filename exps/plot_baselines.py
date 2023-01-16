@@ -19,6 +19,7 @@ from utils.constants import (
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
     MNIST_T,
+    SIMPLE_SONG,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -139,12 +140,12 @@ def create_scaling_plots(
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
+
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
         title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
-
         for f in csv_files:
             alg_name = extract_alg(f)
             data = read_csv(f)
@@ -170,6 +171,7 @@ def create_scaling_plots(
                 else:
                     functions = [np.array, np.sqrt, np.log]
                     function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
+
                 fit_and_plot(
                     xs=x,
                     ys=y,
@@ -177,13 +179,13 @@ def create_scaling_plots(
                     function_name_list=function_names,
                     ys_std=error,
                     is_logspace=is_logspace,
+
                 )
                 plt.title(title)
                 xlabel = "Signal Vector Size (d)"
                 ylabel = "Sample Complexity"
                 plt.ylabel(ylabel)
                 plt.xlabel(xlabel)
-
             else:
                 plt.scatter(
                     x, y,

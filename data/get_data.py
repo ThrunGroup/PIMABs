@@ -71,14 +71,11 @@ def get_data(
         atoms = np.vstack([C0, E0, G0, C1, E1, G1])
         for i in range(7, num_atoms):
             note_freq = math.floor(G1_freq * 2 ** ((i - 6) / 12))
-            print("Creating note with frequency", note_freq)
             extraneous_note = create_sin_wave(frequency_multiplier=note_freq, sampling_frequency=SAMPLE_RATE, num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE*num_mins)
             atoms = np.vstack([atoms, extraneous_note])
 
-        # sample_idcs = rng.choice(signals.shape[1], len_signal)
-        # TODO(@motiwari): This is not the length of sample_idcs!
-        import ipdb; ipdb.set_trace()
-        return atoms, signals
+        sample_idcs = rng.choice(signals.shape[1], len_signal, replace=False)
+        return atoms[:, sample_idcs], signals[:, sample_idcs]
     else:
         raise NotImplementedError(f"{data_type} is not implemented")
 
@@ -90,7 +87,7 @@ def get_data(
     ), "Length of signal given is greater than the number of columns of data"
 
     signal_idcs = rng.choice(np.arange(data.shape[0]), num_signals, replace=False)
-    sample_idcs = rng.choice(data.shape[1], len_signal)
+    sample_idcs = rng.choice(data.shape[1], len_signal, replace=False)
 
     atom_idcs = rng.choice(np.setdiff1d(np.arange(data.shape[0]), signal_idcs), num_atoms, replace=False)
     atoms = subset_2d(data, atom_idcs, sample_idcs)
