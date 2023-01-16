@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 
 from utils.constants import (
+    NUMBER_OF_ATOMS,
+    DIMENSION_OF_ATOMS,
+
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -14,6 +17,7 @@ from utils.constants import (
     GREEDY_MIPS,
     PCA_MIPS,
     LSH_MIPS,
+    BUCKET_ACTION_ELIMINATION,
 
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
@@ -35,6 +39,7 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
+from algorithms.bucket_ae import bucket_action_elimination
 
 
 def scaling_exp(
@@ -46,9 +51,11 @@ def scaling_exp(
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
     num_seeds: int = NUM_SEEDS,
     data_generation_seed: int = 0,
+    independent_var: str = DIMENSION_OF_ATOMS,
     size_minmax: Tuple[int, int] = (10, 10**6),
     num_atoms: int = 10**3,
     num_signals: int = 1,
+    signal_dim: int = 10 ** 2,
     num_best_atoms: int = SCALING_TOPK,
     with_replacement: bool = False,
     is_normalize: bool = False,
@@ -70,9 +77,11 @@ def scaling_exp(
     :param num_experiments: Number of experiments, determines the different sizes of d that we run
     :param num_seeds: Number of seeds
     :param data_generation_seed: Random seed for generating data
-    :param size_minmax: Minimum and Maximum of signal vector size
+    :param independent_var: The variable that is not constant (Either N=number of atoms or D=Dimension of atom)
+    :param size_minmax: Minimum and Maximum of independent variable
     :param num_atoms: Number of atoms
     :param num_signals: Number of signals
+    :param signal_dim: Dimension of atom/signal
     :param num_best_atoms: Number of atoms we rank in the descending order of inner product
     :param with_replacement: Whether to sample with replacement
     :param is_normalize: Whether to normalize atoms and signal
@@ -86,27 +95,50 @@ def scaling_exp(
     accuracies = np.zeros((num_experiments, num_seeds, num_signals))
     sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
 
-    # If the dataset is a toy dataset, the randomness will include the data generation process
-    # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
-    atoms, signals = get_data(
-        num_atoms=num_atoms,
-        len_signal=sizes_signal[-1],
-        num_signals=num_signals,
-        seed=data_generation_seed,
-        data_type=data_type,
-    )
+    if independent_var == DIMENSION_OF_ATOMS:
+        sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+        # If the dataset is a toy dataset, the randomness will include the data generation process
+        # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
+        atoms, signals = get_data(
+            num_atoms=num_atoms,
+            len_signal=sizes[-1],
+            num_signals=num_signals,
+            seed=data_generation_seed,
+            data_type=data_type,
+        )
+    elif independent_var == NUMBER_OF_ATOMS:
+        sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+        # If the dataset is a toy dataset, the randomness will include the data generation process
+        # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
+        atoms, signals = get_data(
+            num_atoms=sizes[-1],
+            len_signal=signal_dim,
+            num_signals=num_signals,
+            seed=data_generation_seed,
+            data_type=data_type,
+        )
+    else:
+        raise NotImplementedError(f"{independent_var} is not an implemented control variable")
 
-    # average over num_seeds results
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
-        # run the experiment for each signal size
-        for size_idx, size in enumerate(sizes_signal):
-            subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
-            atoms_subset, signals_subset = (
-                atoms[:, subset_indices],
-                signals[:, subset_indices],
-            )
+
+        # run the experiment for the different values of independent variable
+        for size_idx, size in enumerate(sizes):
+            subset_indices = rng.choice(sizes[-1], size, replace=False)
+            if independent_var is DIMENSION_OF_ATOMS:
+                atoms_subset, signals_subset = (
+                    atoms[:, subset_indices],
+                    signals[:, subset_indices],
+                )
+            elif independent_var is NUMBER_OF_ATOMS:
+                atoms_subset, signals_subset = (
+                    atoms[subset_indices, :],
+                    signals,
+                )
+            else:
+                raise NotImplementedError(f"{independent_var} is not an implemented control variable")
 
             if is_normalize:
                 atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
@@ -117,9 +149,11 @@ def scaling_exp(
                 maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given
 
             # bandit algorithms
-            if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION]:
+            if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION, BUCKET_ACTION_ELIMINATION]:
                 log_info = (
-                    "epsilon"
+                    "ind_var"
+                    + str(independent_var)
+                    + "_epsilon"
                     + str(epsilon)
                     + "_delta"
                     + str(delta)
@@ -210,15 +244,29 @@ def scaling_exp(
 
     # save to log files
     if is_log:
-        log_dict = {
-            "signal_sizes": sizes_signal,
-            "budgets": avg_budget,
-            "budgets_std": avg_budget_std,
-            "accuracy": avg_accuracy,
-            "runtime": avg_runtime,
-        }
+        if independent_var is DIMENSION_OF_ATOMS:
+            log_dict = {
+                "signal_sizes": sizes,
+                "budgets": avg_budget,
+                "budgets_std": avg_budget_std,
+                "accuracy": avg_accuracy,
+                "runtime": avg_runtime,
+            }
+        elif independent_var is NUMBER_OF_ATOMS:
+            log_dict = {
+                "num_atoms": sizes,
+                "budgets": avg_budget,
+                "budgets_std": avg_budget_std,
+                "accuracy": avg_accuracy,
+                "runtime": avg_runtime,
+            }
+        else:
+            raise NotImplementedError(f"{independent_var} is not an implemented control variable")
+
         log_df = pd.DataFrame(log_dict)
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
         log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
+        log_dir = os.path.join(parent_dir, log_dir)
         filename = os.path.join(
             log_dir,
             mips_alg
