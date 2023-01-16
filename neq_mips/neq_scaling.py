@@ -1,7 +1,8 @@
 import numpy as np
 
-from algorithms.quantization import PQ, ResidualPQ, NormPQ, execute
-from data.get_data import get_data
+from algorithms.quantization.norm_pq import NormPQ
+from algorithms.quantization.residual_pq import ResidualPQ
+from algorithms.quantization.base_pq import PQ
 from exps.scaling_exp import scaling_exp
 from utils.constants import (
     SCALING_NUM_ATOMS,

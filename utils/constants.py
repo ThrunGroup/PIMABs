@@ -66,7 +66,7 @@ SCALING_TOPK = 5
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
 SCALING_SIZE_MINMAX = (
-    100, 10 ** 3,
+    100, 10 ** 4,
 )
 SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
     100, 5000,

@@ -43,7 +43,11 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
-from algorithms.quantization import PQ, ResidualPQ, NormPQ, execute
+
+from algorithms.quantization.norm_pq import NormPQ
+from algorithms.quantization.residual_pq import ResidualPQ
+from algorithms.quantization.base_pq import PQ
+from algorithms.quantization.utils import execute
 
 
 def scaling_exp(
@@ -219,6 +223,7 @@ def scaling_exp(
                 start_time = time.time()
 
                 accuracies, budget_array = execute(
+                    seed=seed,
                     top_k=num_best_atoms,
                     pq=quantizer,
                     X=atoms_subset,

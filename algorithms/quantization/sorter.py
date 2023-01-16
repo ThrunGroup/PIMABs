@@ -1,16 +1,6 @@
-from multiprocessing import cpu_count
 import numpy as np
 import numba as nb
 import math
-
-from neq_mips.constants import NUM_CODEWORDS, NUM_CODEBOOKS
-
-
-def normalize(vecs):
-    norms = np.linalg.norm(vecs, axis=1)
-    norms_matrix = norms[:, np.newaxis]
-    normalized_vecs = np.divide(vecs, norms_matrix, out=np.zeros_like(vecs), where=norms_matrix != 0)  # divide by zero problem
-    return norms, normalized_vecs
 
 
 @nb.jit
@@ -59,20 +49,3 @@ class Sorter(object):
         assert len(self.Q) == len(self.ranks), "number of query not equals"
         assert len(self.ranks) <= len(G), "number of queries should not exceed the number of queries in ground truth"
         return true_positives(self.ranks, self.Q, G, top_k)
-
-
-class BatchSorter(object):
-    def __init__(self, compressed, Q, G, top_k, num_codebooks, num_codewords, batch_size):
-        self.Q = Q
-        self.precisions = np.zeros(len(Q))
-        self.budgets = np.zeros(len(Q))
-
-        for i in range(math.ceil(len(Q) / float(batch_size))):
-            q = Q[i*batch_size: (i + 1) * batch_size, :]
-            g = G[i*batch_size: (i + 1) * batch_size, :]
-            sorter = Sorter(compressed, q, top_k, num_codebooks, num_codewords)
-            self.budgets[i*batch_size: (i + 1) * batch_size] += sorter.budgets
-            self.precisions[i * batch_size: (i + 1) * batch_size] += sorter.avg_precision(g, top_k)
-
-    def precision(self):
-        return self.precisions, self.budgets

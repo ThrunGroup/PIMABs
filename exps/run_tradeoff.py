@@ -90,23 +90,23 @@ def run_tradeoff():
             mips_alg=GREEDY_MIPS,
             with_replacement=False,
         )
-        # speedup_precision_exps(
-        #     num_atoms=num_atoms,
-        #     num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
-        #     len_signals=len_signals,
-        #     num_signals=TRADEOFF_NUM_SIGNALS,
-        #     data_type=data_type,
-        #     mips_alg=PCA_MIPS,
-        # )
-        # speedup_precision_exps(
-        #     num_atoms=num_atoms,
-        #     num_experiments=TRADEOFF_LSH_NUM_EXPERIMENTS,
-        #     len_signals=len_signals,
-        #     num_signals=TRADEOFF_NUM_SIGNALS,
-        #     data_type=data_type,
-        #     mips_alg=LSH_MIPS,
-        #     lsh_type=ASYMMETRIC,
-        # )
+        speedup_precision_exps(
+            num_atoms=num_atoms,
+            num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
+            len_signals=len_signals,
+            num_signals=TRADEOFF_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=PCA_MIPS,
+        )
+        speedup_precision_exps(
+            num_atoms=num_atoms,
+            num_experiments=TRADEOFF_LSH_NUM_EXPERIMENTS,
+            len_signals=len_signals,
+            num_signals=TRADEOFF_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=LSH_MIPS,
+            lsh_type=ASYMMETRIC,
+        )
         speedup_precision_exps(
             num_atoms=num_atoms,
             num_experiments=TRADEOFF_NEQ_NUM_EXPERIMENTS,
