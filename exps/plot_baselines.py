@@ -79,6 +79,8 @@ def translate_dataset_name(dataset_name: str):
         return "No Clear Leader"
     elif dataset_name == MNIST_T:
         return "MNIST Transposed"
+    elif dataset_name == SIMPLE_SONG:
+        return "Simple Song"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 

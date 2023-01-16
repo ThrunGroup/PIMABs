@@ -51,8 +51,9 @@ def mips_bandit(
     :return: Indices of best atom that have maximum inner product with a signal vector and the budget (total number of
             calculations)
     """
-    assert len(atoms.shape) == 2, "Invalid size of data atoms" " matrix"
+    assert len(atoms.shape) == 2, "Invalid size of data atoms matrix"
     assert len(signals.shape) == 2, "Invalid size of signal vector"
+    assert atoms.shape[1] == signals.shape[1], "Dimension of atoms and signals must be equal"
 
     if with_replacement:
         if bandit_alg is ACTION_ELIMINATION:

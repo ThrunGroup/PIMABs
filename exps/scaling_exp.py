@@ -209,6 +209,7 @@ def scaling_exp(
                 accuracy += len(
                     np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
                 )
+                print("Accuracy is now ", accuracy)
             accuracy /= num_signals * num_best_atoms
             accuracy_list.append(accuracy)
 

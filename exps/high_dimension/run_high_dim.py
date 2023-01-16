@@ -56,7 +56,7 @@ def run_high_dim(run: bool = True, plot: bool = True):
                 dirname="high_dim_logs",
                 num_seeds=3,
             )
-            # assert mean_acc == 1.0, f"Mean accuracy on dataset {data_type} should be 1.0"
+            assert mean_acc == 1.0, f"Mean accuracy on dataset {data_type} should be 1.0"
 
     if plot:
         create_scaling_plots(

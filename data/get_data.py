@@ -16,8 +16,12 @@ from utils.constants import (
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
     MNIST_T,
+    SIMPLE_SONG,
+    SAMPLE_RATE,
+    SECONDS_PER_MINUTE,
 )
 from data.custom_data import generate_custom_data
+from data.simple_song import create_song, create_note_waves, create_sin_wave
 from utils.utils import subset_2d
 
 
@@ -55,6 +59,26 @@ def get_data(
         data = data.T
         num_atoms = 783
         num_signals = 1
+    elif data_type == SIMPLE_SONG:
+        assert num_atoms >= 6, "Need at least 6 atoms for the simple song's notes"
+        num_mins = 10  # Creates 26,460,000-dimensional data
+        song = create_song(num_minutes=num_mins)
+        signals = song.reshape(1, -1)
+        num_signals = 1
+
+        C0, E0, G0, C1, E1, G1 = create_note_waves()
+        G1_freq = 392
+        atoms = np.vstack([C0, E0, G0, C1, E1, G1])
+        for i in range(7, num_atoms):
+            note_freq = math.floor(G1_freq * 2 ** ((i - 6) / 12))
+            print("Creating note with frequency", note_freq)
+            extraneous_note = create_sin_wave(frequency_multiplier=note_freq, sampling_frequency=SAMPLE_RATE, num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE*num_mins)
+            atoms = np.vstack([atoms, extraneous_note])
+
+        # sample_idcs = rng.choice(signals.shape[1], len_signal)
+        # TODO(@motiwari): This is not the length of sample_idcs!
+        import ipdb; ipdb.set_trace()
+        return atoms, signals
     else:
         raise NotImplementedError(f"{data_type} is not implemented")
 

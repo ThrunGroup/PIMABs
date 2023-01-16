@@ -8,7 +8,7 @@ from utils.constants import (
 )
 
 
-def create_sin_wave(frequency_multiplier: int, sampling_frequency: int = SAMPLE_RATE, num_samples: int = SAMPLE_RATE * SECONDS_PER_MINUTE):
+def create_sin_wave(frequency_multiplier: float, sampling_frequency: int = SAMPLE_RATE, num_samples: int = SAMPLE_RATE * SECONDS_PER_MINUTE):
     """
     Create a discretized sine wave with the ith value being sin(frequency_multiplier * i / sampling_frequency)
 
@@ -23,7 +23,7 @@ def create_sin_wave(frequency_multiplier: int, sampling_frequency: int = SAMPLE_
     return np.sin(phase)
 
 
-def create_cos_wave(frequency_multiplier: int, sampling_frequency: int = SAMPLE_RATE, num_samples: int = SAMPLE_RATE * SECONDS_PER_MINUTE):
+def create_cos_wave(frequency_multiplier: float, sampling_frequency: int = SAMPLE_RATE, num_samples: int = SAMPLE_RATE * SECONDS_PER_MINUTE):
     """
     Create a discretized cosine wave with the ith value being cos(frequency_multiplier * i / sampling_frequency)
 
@@ -49,6 +49,29 @@ def stack(arr_, num):
     """
     return np.hstack([arr_ for _ in range(num)])
 
+def create_note_waves(num_minutes: int = 10):
+    """
+    Create the sine waves for the notes C0, E0, G0, C1, E1, G1.
+
+    :return: tuple of numpy arrays, one array per note
+    """
+    # Note: Need to use 2*\pi exactly here! Using 6.28 means that the waves won't go through
+    # full cycles each second, which means stacking them 10 times will give different answers from just continuing them
+    two_pi = 2 * np.pi
+    C0 = create_sin_wave(frequency_multiplier=256 * two_pi, sampling_frequency=SAMPLE_RATE,
+                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE * num_minutes)
+    E0 = create_sin_wave(frequency_multiplier=330 * two_pi, sampling_frequency=SAMPLE_RATE,
+                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE * num_minutes)
+    G0 = create_sin_wave(frequency_multiplier=392 * two_pi, sampling_frequency=SAMPLE_RATE,
+                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE * num_minutes)
+
+    C1 = create_sin_wave(frequency_multiplier=2 * 256 * two_pi, sampling_frequency=SAMPLE_RATE,
+                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE * num_minutes)
+    E1 = create_sin_wave(frequency_multiplier=2 * 330 * two_pi, sampling_frequency=SAMPLE_RATE,
+                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE * num_minutes)
+    G1 = create_sin_wave(frequency_multiplier=2 * 392 * two_pi, sampling_frequency=SAMPLE_RATE,
+                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE * num_minutes)
+    return C0, E0, G0, C1, E1, G1
 
 def create_song(num_minutes: int = 10):
     """
@@ -61,24 +84,7 @@ def create_song(num_minutes: int = 10):
     :param num_minutes: Number of minutes the song should play
     :return:
     """
-
-    # Note: Need to use 2*\pi exactly here! Using 6.28 means that the waves won't go through
-    # full cycles each second, which means stacking them 10 times will give different answers from just continuing them
-    two_pi = 2 * np.pi
-    C0 = create_sin_wave(frequency_multiplier=256 * two_pi, sampling_frequency=SAMPLE_RATE,
-                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE)
-    E0 = create_sin_wave(frequency_multiplier=330 * two_pi, sampling_frequency=SAMPLE_RATE,
-                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE)
-    G0 = create_sin_wave(frequency_multiplier=392 * two_pi, sampling_frequency=SAMPLE_RATE,
-                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE)
-
-    C1 = create_sin_wave(frequency_multiplier=2 * 256 * two_pi, sampling_frequency=SAMPLE_RATE,
-                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE)
-    E1 = create_sin_wave(frequency_multiplier=2 * 330 * two_pi, sampling_frequency=SAMPLE_RATE,
-                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE)
-    G1 = create_sin_wave(frequency_multiplier=2 * 392 * two_pi, sampling_frequency=SAMPLE_RATE,
-                         num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE)
-
+    C0, E0, G0, C1, E1, G1 = create_note_waves(num_minutes=1)
     song = np.array([])
     assert int(num_minutes) == num_minutes, "Must pass integer number of num_minutes"
     for i in range(int(num_minutes)):
