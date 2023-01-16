@@ -29,6 +29,10 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    NEQ_MIPS,
+
+    MAX_SPEEDUP,
+    TRADEOFF_TOPK
     MAX_SPEEDUP,
     BUCKET_ACTION_ELIMINATION,
     DIMENSION_OF_ATOMS,
@@ -56,6 +60,8 @@ def translate_alg_name(alg_name: str):
         return "LSH-MIPS"
     elif alg_name == PCA_MIPS:
         return "PCA-MIPS"
+    elif alg_name == NEQ_MIPS:
+        return "NEQ_MIPS"
     elif alg_name == BUCKET_ACTION_ELIMINATION:
         return "Bucket_AE"
     else:
@@ -115,6 +121,8 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
+    elif NEQ_MIPS in filename:
+        return NEQ_MIPS
     elif BUCKET_ACTION_ELIMINATION in filename:
         return BUCKET_ACTION_ELIMINATION
     else:
@@ -365,6 +373,7 @@ def generate_scaling_plots():
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            NEQ_MIPS,
             BUCKET_ACTION_ELIMINATION,
         ],
     )
@@ -399,6 +408,7 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            NEQ_MIPS,
         ],
         top_k=top_k,
         include_error_bar=False,
@@ -412,6 +422,7 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            NEQ_MIPS,
         ],
         top_k=top_k,
         max_speedup=MAX_SPEEDUP,

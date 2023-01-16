@@ -17,6 +17,7 @@ from utils.constants import (
     GREEDY_MIPS,
     PCA_MIPS,
     LSH_MIPS,
+    NEQ_MIPS,
     BUCKET_ACTION_ELIMINATION,
 
     NUM_SEEDS,
@@ -24,6 +25,7 @@ from utils.constants import (
     DEFAULT_MAXMIN,
     NORMALIZED_MAXMIN,
     DEFAULT_GREEDY_BUDGET,
+    SCALING_SIZE_MINMAX,
 
     SCALING_DELTA,
     SCALING_DEPTH,
@@ -33,6 +35,12 @@ from utils.constants import (
     SCALING_NUM_TABLES,
 )
 
+from neq_mips.constants import (
+    PARTITION,
+    NUM_CODEBOOKS,
+    NUM_CODEWORDS,
+)
+
 from utils.utils import get_sizes_arr
 from data.get_data import get_data
 from algorithms.mips_bandit import mips_bandit
@@ -40,6 +48,11 @@ from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
 from algorithms.bucket_ae import bucket_action_elimination
+
+from algorithms.quantization.norm_pq import NormPQ
+from algorithms.quantization.residual_pq import ResidualPQ
+from algorithms.quantization.base_pq import PQ
+from algorithms.quantization.utils import execute
 
 
 def scaling_exp(
@@ -51,8 +64,8 @@ def scaling_exp(
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
     num_seeds: int = NUM_SEEDS,
     data_generation_seed: int = 0,
+    size_minmax: Tuple[int, int] = SCALING_SIZE_MINMAX,
     independent_var: str = DIMENSION_OF_ATOMS,
-    size_minmax: Tuple[int, int] = (10, 10**6),
     num_atoms: int = 10**3,
     num_signals: int = 1,
     signal_dim: int = 10 ** 2,
@@ -148,6 +161,13 @@ def scaling_exp(
                 epsilon /= atoms_norm.max() * signal_norm
                 maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given
 
+            # get the ground truth arrays
+            naive_candidates_array = (
+                np.matmul(-atoms_subset, signals_subset.transpose())
+                    .argsort(axis=0)[:num_best_atoms]
+                    .transpose()
+            )
+
             # bandit algorithms
             if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION, BUCKET_ACTION_ELIMINATION]:
                 log_info = (
@@ -214,6 +234,33 @@ def scaling_exp(
                     num_tables=SCALING_NUM_TABLES
                 )
                 runtime = time.time() - start_time
+
+            elif mips_alg is NEQ_MIPS:
+                log_info = (
+                        "_codebooks"
+                        + str(NUM_CODEBOOKS)
+                        + "_codewords"
+                        + str(NUM_CODEWORDS)
+                )
+                pqs = [PQ(M=PARTITION, Ks=NUM_CODEWORDS) for _ in range(NUM_CODEBOOKS - 1)]
+                quantizer = ResidualPQ(pqs=pqs)
+                quantizer = NormPQ(n_percentile=NUM_CODEWORDS, quantize=quantizer)
+                start_time = time.time()
+
+                accuracies, budget_array = execute(
+                    seed=seed,
+                    top_k=num_best_atoms,
+                    pq=quantizer,
+                    X=atoms_subset,
+                    Q=signals_subset.astype('float32'),
+                    G=naive_candidates_array,
+                    num_codebooks=NUM_CODEBOOKS,
+                    num_codewords=NUM_CODEWORDS,
+                    train_size=num_atoms
+                )
+                # includes the time finding recall (other baselines don't)
+                runtime = time.time() - start_time
+                accuracy = np.sum(accuracies)
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
@@ -229,11 +276,12 @@ def scaling_exp(
                 .transpose()
             )
 
-            for signal_idx in range(num_signals):
-                matches = len(
-                    np.intersect1d(naive_candidates_array[signal_idx], candidates_array[signal_idx])
-                )
-                accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
+            if mips_alg is not NEQ_MIPS:
+                for signal_idx in range(num_signals):
+                    matches = len(
+                        np.intersect1d(naive_candidates_array[signal_idx], candidates_array[signal_idx])
+                    )
+                    accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
 
     avg_runtime = np.mean(avg_runtimes, axis=1)  # Average over seeds because it's already averaged over signals
     avg_budget = np.mean(budgets, axis=(1, 2))  # Average over seeds and signals
