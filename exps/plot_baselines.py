@@ -18,6 +18,9 @@ from utils.constants import (
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
+    MNIST_T,
+    SIMPLE_SONG,
+    SIFT_1M,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -25,7 +28,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-    MAX_SPEEDUP
+    MAX_SPEEDUP,
 )
 from utils.utils import fit_and_plot
 
@@ -76,6 +79,12 @@ def translate_dataset_name(dataset_name: str):
         return "Clear Leader (Soft)"
     elif dataset_name == NO_CLEAR_LEADER:
         return "No Clear Leader"
+    elif dataset_name == MNIST_T:
+        return "MNIST Transposed"
+    elif dataset_name == SIMPLE_SONG:
+        return "Simple Song"
+    elif dataset_name == SIFT_1M:
+        return "SIFT 1M"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -134,12 +143,12 @@ def create_scaling_plots(
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
+
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
         title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
-
         for f in csv_files:
             alg_name = extract_alg(f)
             data = read_csv(f)
@@ -165,6 +174,7 @@ def create_scaling_plots(
                 else:
                     functions = [np.array, np.sqrt, np.log]
                     function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
+
                 fit_and_plot(
                     xs=x,
                     ys=y,
@@ -172,13 +182,13 @@ def create_scaling_plots(
                     function_name_list=function_names,
                     ys_std=error,
                     is_logspace=is_logspace,
+
                 )
                 plt.title(title)
                 xlabel = "Signal Vector Size (d)"
                 ylabel = "Sample Complexity"
                 plt.ylabel(ylabel)
                 plt.xlabel(xlabel)
-
             else:
                 plt.scatter(
                     x, y,

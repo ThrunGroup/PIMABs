@@ -67,7 +67,7 @@ def scaling_exp(
     :param maxmin: Maximum and minimum of data
     :param data_type: A name of data generating function
     :param mips_alg: A name of algorithm
-    :param num_experiments: Number of experiments
+    :param num_experiments: Number of experiments, determines the different sizes of d that we run
     :param num_seeds: Number of seeds
     :param data_generation_seed: Random seed for generating data
     :param size_minmax: Minimum and Maximum of signal vector size
@@ -81,14 +81,9 @@ def scaling_exp(
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
     :param dirname: Directory name to log the results
     """
-    global budget_array
-    # num_experiments determins the different sizes of d that we run
-    avg_runtime = np.zeros(num_experiments)
-    avg_budget = np.zeros(num_experiments)
-    avg_budget_std = np.zeros(num_experiments)
-    avg_accuracy = np.zeros(num_experiments)
-    print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
-
+    avg_runtimes = np.zeros((num_experiments, num_seeds))  # Note that the runtime is average over all signals
+    budgets = np.zeros((num_experiments, num_seeds, num_signals))
+    accuracies = np.zeros((num_experiments, num_seeds, num_signals))
     sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
 
     # If the dataset is a toy dataset, the randomness will include the data generation process
@@ -105,14 +100,8 @@ def scaling_exp(
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
-
-        budgets = []
-        budgets_std = []
-        accuracy_list = []
-        runtimes = []
-
         # run the experiment for each signal size
-        for size in sizes_signal:
+        for size_idx, size in enumerate(sizes_signal):
             subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
             atoms_subset, signals_subset = (
                 atoms[:, subset_indices],
@@ -195,32 +184,29 @@ def scaling_exp(
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
             # store runtime, budget, budget_std, and accuracy of the experiment
-            runtimes.append(runtime)
-            budgets.append(np.mean(budget_array))
-            budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
+            avg_runtimes[size_idx, seed] = runtime / num_signals  # Note that the runtimes are averaged over all signals
+
+            assert budget_array.size == num_signals, "budget_array should be the size of the signals"
+            budgets[size_idx, seed, :] = budget_array
+
             naive_candidates_array = (
                 np.matmul(-atoms_subset, signals_subset.transpose())
                 .argsort(axis=0)[:num_best_atoms]
                 .transpose()
             )
 
-            accuracy = 0
-            for idx in range(num_signals):
-                accuracy += len(
-                    np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
+            for signal_idx in range(num_signals):
+                matches = len(
+                    np.intersect1d(naive_candidates_array[signal_idx], candidates_array[signal_idx])
                 )
-            accuracy /= num_signals * num_best_atoms
-            accuracy_list.append(accuracy)
+                accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
 
-        avg_runtime += np.array(runtimes)
-        avg_budget += np.array(budgets)
-        avg_budget_std += np.array(budgets_std)
-        avg_accuracy += np.array(accuracy_list)
+    avg_runtime = np.mean(avg_runtimes, axis=1)  # Average over seeds because it's already averaged over signals
+    avg_budget = np.mean(budgets, axis=(1, 2))  # Average over seeds and signals
+    avg_budget_std = np.std(budgets, axis=(1, 2))  # Std over seeds and signals for given size
+    avg_accuracy = np.mean(accuracies, axis=(1, 2)) # Average over seeds and signals
 
-    avg_runtime /= num_seeds
-    avg_budget /= num_seeds
-    avg_budget_std /= num_seeds
-    avg_accuracy /= num_seeds
+    assert avg_runtime.size == avg_budget.size == avg_budget_std.size == avg_accuracy.size == num_experiments, "The sizes of the arrays should be the same as num_experiments"
 
     # save to log files
     if is_log:

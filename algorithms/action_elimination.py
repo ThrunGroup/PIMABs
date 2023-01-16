@@ -23,6 +23,7 @@ def action_elimination(
     epsilon: float,
     delta: float,
     num_best_atoms: int = 1,
+    abs: bool = False,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
@@ -78,14 +79,21 @@ def action_elimination(
                         + (candidates_sampled @ signal_sampled)
                     ) / d
                     budgets += (d - (t - 1) * batch_size) * len(candidates)
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
                 break
+
             budgets += batch_size * len(candidates)
 
             if with_replacement:
                 sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False)
             else:
                 sample_idcs = shuffled_idcs[(t - 1) * batch_size : t * batch_size]
+
             signal_sampled = signal[sample_idcs]
             candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
             means[candidates] = (
@@ -110,11 +118,21 @@ def action_elimination(
                     pop_size=d,
                     with_replacement=False,
                 )
+
             if 4 * ci < epsilon:
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
                 break
-            ucbs[candidates] = means[candidates] + ci
-            lcbs[candidates] = means[candidates] - ci
+
+            if abs:
+                ucbs[candidates] = np.abs(means[candidates]) + ci
+                lcbs[candidates] = np.abs(means[candidates]) - ci
+            else:
+                ucbs[candidates] = means[candidates] + ci
+                lcbs[candidates] = means[candidates] - ci
 
             # TODO(@motiwari): Make sure there are no NaNs here
             new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
@@ -122,8 +140,14 @@ def action_elimination(
             if (
                 len(new_cand_idcs) < num_best_atoms
             ):  # Have to return candidates with length num_best_atoms
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
                 break
+
             candidates = candidates[new_cand_idcs]
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
