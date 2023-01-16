@@ -65,7 +65,6 @@ def action_elimination(
             t += 1
             # Find a true inner product value of candidates if we sample more than their dimension (length of atom/signal)
             if t * batch_size > d:
-                print("Doing exact computation")
                 if with_replacement:
                     means[candidates] = atoms[candidates] @ signal
                     budgets += d * len(candidates)

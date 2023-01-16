@@ -7,10 +7,8 @@ from exps.scaling_exp import scaling_exp
 from exps.plot_baselines import create_scaling_plots
 from utils.constants import (
     BATCH_SIZE,
-
-    #datasets
+    # datasets
     SIFT_1M,
-
     # algorithms
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -18,7 +16,6 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
     SCALING_NUM_ATOMS,
@@ -55,7 +52,9 @@ def sift_scaling(run: bool = True, plot: bool = True):
                 num_seeds=5,
             )
             # TODO(@motiwari): Figure out why this is not 100%
-            assert mean_acc >= 0.95, f"Mean accuracy on dataset {data_type} should be above 95\%"
+            assert (
+                mean_acc >= 0.95
+            ), f"Mean accuracy on dataset {data_type} should be above 95\%"
 
     if plot:
         create_scaling_plots(
@@ -66,6 +65,7 @@ def sift_scaling(run: bool = True, plot: bool = True):
             is_logspace=True,
             dirname="sift_scaling_logs",
         )
+
 
 if __name__ == "__main__":
     sift_scaling(run=True, plot=True)

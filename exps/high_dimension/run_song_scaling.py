@@ -7,10 +7,8 @@ from exps.scaling_exp import scaling_exp
 from exps.plot_baselines import create_scaling_plots
 from utils.constants import (
     BATCH_SIZE,
-
-    #datasets
+    # datasets
     SIMPLE_SONG,
-
     # algorithms
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -18,7 +16,6 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
     SCALING_NUM_ATOMS,
@@ -54,7 +51,9 @@ def song_scaling(run: bool = True, plot: bool = True):
                 num_seeds=10,
             )
             # TODO(@motiwari): Figure out why this is not 100%
-            assert mean_acc >= 0.95, f"Mean accuracy on dataset {data_type} should be above 95\%"
+            assert (
+                mean_acc >= 0.95
+            ), f"Mean accuracy on dataset {data_type} should be above 95\%"
 
     if plot:
         create_scaling_plots(
@@ -65,6 +64,7 @@ def song_scaling(run: bool = True, plot: bool = True):
             is_logspace=True,
             dirname="song_scaling_logs",
         )
+
 
 if __name__ == "__main__":
     song_scaling(run=True, plot=True)

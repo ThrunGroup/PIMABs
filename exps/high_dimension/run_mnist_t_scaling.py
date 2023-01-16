@@ -7,10 +7,8 @@ from exps.scaling_exp import scaling_exp
 from exps.plot_baselines import create_scaling_plots
 from utils.constants import (
     BATCH_SIZE,
-
-    #datasets
+    # datasets
     MNIST_T,
-
     # algorithms
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -18,7 +16,6 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
-
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
     SCALING_NUM_ATOMS,
@@ -40,7 +37,7 @@ def mnist_t_scaling(run: bool = True, plot: bool = True):
         for data_type in [MNIST_T]:
             # Because we expect linear scaling with d in the NO_CLEAR_LEADER dataset, we have to run it on
             #  a smaller scale
-            size_minmax = (10**2, 6*(10**4))
+            size_minmax = (10**2, 6 * (10**4))
             mean_acc = scaling_exp(
                 epsilon=0.01,
                 delta=0.01,
@@ -56,7 +53,9 @@ def mnist_t_scaling(run: bool = True, plot: bool = True):
                 dirname="mnist_t_scaling_logs",
                 num_seeds=3,
             )
-            assert mean_acc == 1.0, f"Mean accuracy on dataset {data_type} should be 1.0"
+            assert (
+                mean_acc == 1.0
+            ), f"Mean accuracy on dataset {data_type} should be 1.0"
 
     if plot:
         create_scaling_plots(
@@ -67,6 +66,7 @@ def mnist_t_scaling(run: bool = True, plot: bool = True):
             is_logspace=True,
             dirname="mnist_t_scaling_logs",
         )
+
 
 if __name__ == "__main__":
     mnist_t_scaling(run=True, plot=True)
