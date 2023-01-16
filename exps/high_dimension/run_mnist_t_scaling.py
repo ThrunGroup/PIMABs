@@ -37,21 +37,22 @@ def mnist_t_scaling(run: bool = True, plot: bool = True):
         for data_type in [MNIST_T]:
             # Because we expect linear scaling with d in the NO_CLEAR_LEADER dataset, we have to run it on
             #  a smaller scale
-            size_minmax = (10**2, 6 * (10**4))
+            size_minmax = (10**3, 6 * (10**4))
             mean_acc = scaling_exp(
-                epsilon=0.01,
-                delta=0.01,
-                num_atoms=SCALING_NUM_ATOMS,
+                epsilon=0.00,
+                delta=0.00001,
+                num_atoms=780,
                 size_minmax=size_minmax,
                 num_experiments=SCALING_NUM_EXPERIMENTS,
                 num_signals=1,
+                num_best_atoms=1,
                 data_type=data_type,
                 mips_alg=ACTION_ELIMINATION,
                 with_replacement=True,
                 is_normalize=False,
                 is_logspace=True,
                 dirname="mnist_t_scaling_logs",
-                num_seeds=3,
+                num_seeds=5,
             )
             assert (
                 mean_acc == 1.0
