@@ -35,7 +35,12 @@ def main1():
     np.save("Yahoo_Customer_biases_20_new", model.bi)
 
 
-def main2():
+def main2(filename: str = "Yahoo_ratings"):
+    """
+    Save the preprocessed Yahoo dataset as a file
+
+    :param filename: Name of the file to store as a dataset
+    """
     item_factors = np.load("Yahoo_items_factors_20_new.npy")
     item_biases = np.load("Yahoo_items_biases_20_new.npy")
     customer_factors = np.load("Yahoo_Customer_factors_20_new.npy")
@@ -43,7 +48,7 @@ def main2():
 
     yahoo_data = (item_factors + np.expand_dims(item_biases, axis=1)) @ \
            ((customer_factors + np.expand_dims(customer_biases, axis=1)).transpose())
-    np.save("Yahoo_ratings", yahoo_data)
+    np.save(filename, yahoo_data)
 
 
 if __name__ == "__main__":
