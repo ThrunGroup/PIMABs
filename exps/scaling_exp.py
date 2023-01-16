@@ -9,7 +9,6 @@ from typing import Tuple, Optional
 from utils.constants import (
     NUMBER_OF_ATOMS,
     DIMENSION_OF_ATOMS,
-
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -18,19 +17,19 @@ from utils.constants import (
     PCA_MIPS,
     LSH_MIPS,
     BUCKET_ACTION_ELIMINATION,
-
+    H2ALSH,
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
     DEFAULT_MAXMIN,
     NORMALIZED_MAXMIN,
     DEFAULT_GREEDY_BUDGET,
-
     SCALING_DELTA,
     SCALING_DEPTH,
     SCALING_TOPK,
     SCALING_EPSILON,
     SCALING_NUM_HFUNC,
     SCALING_NUM_TABLES,
+    SCALING_H2ALSH_PARAMS,
 )
 
 from utils.utils import get_sizes_arr
@@ -40,6 +39,7 @@ from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
 from algorithms.bucket_ae import bucket_action_elimination
+from algorithms.h2alsh_mips import H2ALSH_MIPS
 
 
 def scaling_exp(
@@ -52,8 +52,8 @@ def scaling_exp(
     num_seeds: int = NUM_SEEDS,
     data_generation_seed: int = 0,
     independent_var: str = DIMENSION_OF_ATOMS,
-    size_minmax: Tuple[int, int] = (10, 10**6),
-    num_atoms: int = 10**3,
+    size_minmax: Tuple[int, int] = (10, 10 ** 6),
+    num_atoms: int = 10 ** 3,
     num_signals: int = 1,
     signal_dim: int = 10 ** 2,
     num_best_atoms: int = SCALING_TOPK,
@@ -116,7 +116,9 @@ def scaling_exp(
             data_type=data_type,
         )
     else:
-        raise NotImplementedError(f"{independent_var} is not an implemented control variable")
+        raise NotImplementedError(
+            f"{independent_var} is not an implemented control variable"
+        )
 
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
@@ -140,7 +142,9 @@ def scaling_exp(
                     signals,
                 )
             else:
-                raise NotImplementedError(f"{independent_var} is not an implemented control variable")
+                raise NotImplementedError(
+                    f"{independent_var} is not an implemented control variable"
+                )
 
             if is_normalize:
                 atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
@@ -151,7 +155,12 @@ def scaling_exp(
                 maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given.
 
             # bandit algorithms
-            if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION, BUCKET_ACTION_ELIMINATION]:
+            if mips_alg in [
+                ACTION_ELIMINATION,
+                ADAPTIVE_ACTION_ELIMINATION,
+                MEDIAN_ELIMINATION,
+                BUCKET_ACTION_ELIMINATION,
+            ]:
                 log_info = (
                     "ind_var"
                     + str(independent_var)
@@ -178,7 +187,9 @@ def scaling_exp(
             # baseline algorithms
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
-                    "budget"
+                    "ind_var"
+                    + str(independent_var)
+                    + "budget"
                     + str(DEFAULT_GREEDY_BUDGET)
                 )
                 start_time = time.time()
@@ -191,10 +202,7 @@ def scaling_exp(
                 runtime = time.time() - start_time
 
             elif mips_alg is PCA_MIPS:
-                log_info = (
-                    "depth"
-                    + str(delta)
-                )
+                log_info = "ind_var" + str(independent_var) + "depth" + str(delta)
                 start_time = time.time()
                 candidates_array, budget_array = run_pca_mips(
                     atoms=atoms_subset,
@@ -206,7 +214,9 @@ def scaling_exp(
 
             elif mips_alg is LSH_MIPS:
                 log_info = (
-                    "hfunc_"
+                    "ind_var"
+                    + str(independent_var)
+                    + "hfunc_"
                     + str(SCALING_NUM_HFUNC)
                     + "_tables"
                     + str(SCALING_NUM_TABLES)
@@ -217,7 +227,28 @@ def scaling_exp(
                     signals=signals_subset,
                     num_best_atoms=num_best_atoms,
                     num_hfunc=SCALING_NUM_HFUNC,
-                    num_tables=SCALING_NUM_TABLES
+                    num_tables=SCALING_NUM_TABLES,
+                )
+                runtime = time.time() - start_time
+
+            elif mips_alg is H2ALSH:
+                delta, c0, c, N0 = SCALING_H2ALSH_PARAMS
+                log_info = (
+                    "ind_var"
+                    + str(independent_var)
+                    + "delta_"
+                    + str(delta)
+                    + "_c0_"
+                    + str(c0)
+                    + "_c_"
+                    + str(c)
+                    + "_N0_"
+                    + str(N0)
+                )
+                start_time = time.time()
+                h2alsh = H2ALSH_MIPS(atoms=atoms_subset, delta=delta, c0=c0, c=c, N0=N0)
+                candidates_array, budget_array = h2alsh.mip_search_queries(
+                    queries=signals_subset, top_k=num_best_atoms
                 )
                 runtime = time.time() - start_time
             else:
@@ -270,7 +301,9 @@ def scaling_exp(
                 "runtime": avg_runtime,
             }
         else:
-            raise NotImplementedError(f"{independent_var} is not an implemented control variable")
+            raise NotImplementedError(
+                f"{independent_var} is not an implemented control variable"
+            )
 
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))

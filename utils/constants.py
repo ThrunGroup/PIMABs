@@ -26,6 +26,7 @@ LSH_MIPS = "LSH_MIPS"
 SYMMETRIC = "SYMMETRIC"
 ASYMMETRIC = "ASYMMETRIC"
 BUCKET_ACTION_ELIMINATION = "BUCKET_ACTION_ELIMINATION"
+H2ALSH = "H2ALSH"
 
 ALG_TO_COLOR = {
     MEDIAN_ELIMINATION: "#8c564b",
@@ -36,7 +37,8 @@ ALG_TO_COLOR = {
     LSH_MIPS: "#1f77b4",
     SYMMETRIC: "#e377c2",
     ASYMMETRIC: "#7f7f7f",
-    BUCKET_ACTION_ELIMINATION: "#17becf"
+    BUCKET_ACTION_ELIMINATION: "#17becf",
+    H2ALSH: "#5d8694",
 }
 
 # Datasets
@@ -75,6 +77,7 @@ SCALING_SIZE_MINMAX = (
 SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
     100, 5000,
 )
+SCALING_H2ALSH_PARAMS = (0.4, 1.5, 0.8, 200) # it records (delta, c0, c, N0)
 
 # Precision-Speed Tradeoff Experiments
 TRADEOFF_NUM_EXPERIMENTS = 12  # corresponds to the number of points on the plot
@@ -128,6 +131,11 @@ TRADEOFF_DEPTH_MINMAX_REAL = (0, 10)
 TRADEOFF_BATCH_SIZE_REAL = 5
 DELTA_POWER_MINMAX = (0.05, 20)
 
+# H2ALSH TRADEOFF PARAMS
+TRADEOFF_H2ALSH = {"powers_delta": (-10, 0), "c0": (1.01, 3), "c": (1, 0.1), "N0": (101, 500)}
+
+# BUCKET ACTION ELIMINATION TRADEOFF PARAMS
+TRADEOFF_BUCKET_ACTION_ELIMINATION = {"deltas": (0.001, 0.1), "epsilons": (0, 0.3), "bucket_num_samples": (1000, 50)}
 
 # Large Scale params
 LARGE_SIZE_MINMAX = (10, 5 * 10 ** 6)

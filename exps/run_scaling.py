@@ -22,6 +22,7 @@ from utils.constants import (
     LSH_MIPS,
     PCA_MIPS,
     BUCKET_ACTION_ELIMINATION,
+    H2ALSH,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -33,6 +34,10 @@ from utils.constants import (
     SCAlING_SIZE_MINMAX_MOVIE,
     SCALING_DELTA_REAL,
     SCALING_EPSILON_REAL,
+
+    # Independent variables
+    NUMBER_OF_ATOMS,
+    DIMENSION_OF_ATOMS,
 )
 
 
@@ -145,6 +150,7 @@ if __name__ == "__main__":
             size_minmax=(100, 30000),
             num_experiments=SCALING_NUM_EXPERIMENTS,
             num_signals=SCALING_NUM_SIGNALS,
+            independent_var=NUMBER_OF_ATOMS,
             data_type=dataset,
             mips_alg=BUCKET_ACTION_ELIMINATION,
             with_replacement=False,

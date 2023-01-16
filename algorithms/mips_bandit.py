@@ -30,6 +30,7 @@ def mips_bandit(
     verbose: bool = False,
     with_replacement: bool = False,
     batch_size: int = BATCH_SIZE,
+    bucket_num_samples: int = 30,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
@@ -50,6 +51,7 @@ def mips_bandit(
     :param is_experiment: Whether to do worst-case experiment
     :param verbose: Verbosity of function
     :param with_replacement: Whether to sample with replacement
+    :param bucket_num_samples: number of elements in each bucket for bucket action elimination algorithm
     :return: Indices of best atom that have maximum inner product with a signal vector and the budget (total number of
             calculations)
     """
@@ -106,6 +108,7 @@ def mips_bandit(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                num_samples_bucket=bucket_num_samples,
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,

@@ -21,6 +21,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    H2ALSH,
     MAX_SPEEDUP,
     BUCKET_ACTION_ELIMINATION,
     DIMENSION_OF_ATOMS,
@@ -50,6 +51,8 @@ def translate_alg_name(alg_name: str):
         return "PCA-MIPS"
     elif alg_name == BUCKET_ACTION_ELIMINATION:
         return "Bucket_AE"
+    elif alg_name == H2ALSH:
+        return "H2ALSH"
     else:
         raise Exception("Bad algorithm name")
 
@@ -83,7 +86,12 @@ def extract_alg(filename: str):
     """
     Extracts algorithm name from given filename. Used to search for specific algorithms in the log files.
     """
-    if ADAPTIVE_ACTION_ELIMINATION in filename:
+    if (
+        BUCKET_ACTION_ELIMINATION in filename
+    ):  # Order matters as if BUCKET_ACTION_ELIMINATION is in filename,
+        # ACTION_ELIMINATION is also in filename
+        return BUCKET_ACTION_ELIMINATION
+    elif ADAPTIVE_ACTION_ELIMINATION in filename:
         return ADAPTIVE_ACTION_ELIMINATION
     elif ACTION_ELIMINATION in filename:
         return ACTION_ELIMINATION
@@ -95,8 +103,8 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
-    elif BUCKET_ACTION_ELIMINATION in filename:
-        return BUCKET_ACTION_ELIMINATION
+    elif H2ALSH in filename:
+        return H2ALSH
     else:
         raise Exception("No algorithm was able to be extracted from " + filename)
 
@@ -248,6 +256,7 @@ def create_tradeoff_plots(
     top_k: int = 1,
     include_error_bar: bool = False,
     max_speedup: int = None,
+    dir: str = None,
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -258,10 +267,12 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    current_file_directory = os.path.dirname(__file__)
-    path = os.path.join(current_file_directory, "logs")
-    path = os.path.join(path, "precision_speed")
-    csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
+    if dir is None:
+        current_file_directory = os.path.dirname(__file__)
+        path = os.path.join(current_file_directory, "logs")
+        path = os.path.join(path, "precision_speed")
+    else:
+        path = dir
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -269,6 +280,9 @@ def create_tradeoff_plots(
         raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
+        csv_files = glob.glob(
+            os.path.join(path, f"*SPEEDUP_{datatype}*")
+        )
         plt.figure(figsize=(6, 4.5))
         title = (
             f"Precision-Speed Tradeoff Baselines: {translate_dataset_name(datatype)}"
@@ -286,7 +300,7 @@ def create_tradeoff_plots(
                 continue
 
             budget_data = data["budgets"].tolist()
-            x = np.max(budget_data) / budget_data  # speed is inverse budget
+            x = data["naive_budget"] / budget_data  # speed is inverse budget
             y = data["accuracy"].tolist()
             error = data["accuracy_std"].tolist()
             if max_speedup is not None:
@@ -343,6 +357,7 @@ def generate_scaling_plots():
             PCA_MIPS,
             LSH_MIPS,
             BUCKET_ACTION_ELIMINATION,
+            H2ALSH,
         ],
     )
 
@@ -357,6 +372,7 @@ def generate_scaling_plots():
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
+            BUCKET_ACTION_ELIMINATION,
         ],
     )
 
@@ -376,6 +392,8 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            BUCKET_ACTION_ELIMINATION,
+            H2ALSH,
         ],
         top_k=top_k,
         include_error_bar=False,
@@ -389,6 +407,8 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            BUCKET_ACTION_ELIMINATION,
+            H2ALSH,
         ],
         top_k=top_k,
         max_speedup=MAX_SPEEDUP,
