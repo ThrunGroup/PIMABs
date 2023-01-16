@@ -32,7 +32,7 @@ from utils.constants import (
 )
 
 
-def run_high_dim_scaling(run: bool = True, plot: bool = True):
+def song_scaling(run: bool = True, plot: bool = True):
     """
     Run scaling experiments for the toy datasets
     """
@@ -67,4 +67,4 @@ def run_high_dim_scaling(run: bool = True, plot: bool = True):
         )
 
 if __name__ == "__main__":
-    run_high_dim_scaling(run=False, plot=True)
+    song_scaling(run=True, plot=True)

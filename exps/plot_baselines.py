@@ -20,6 +20,7 @@ from utils.constants import (
     NO_CLEAR_LEADER,
     MNIST_T,
     SIMPLE_SONG,
+    SIFT_1M,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -82,6 +83,8 @@ def translate_dataset_name(dataset_name: str):
         return "MNIST Transposed"
     elif dataset_name == SIMPLE_SONG:
         return "Simple Song"
+    elif dataset_name == SIFT_1M:
+        return "SIFT 1M"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 

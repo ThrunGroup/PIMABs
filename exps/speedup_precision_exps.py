@@ -74,21 +74,24 @@ from algorithms.pca_mips import run_pca_mips
 def get_accuracy_array(
     true_candidates: np.ndarray,
     mips_candidates: np.ndarray,
+    num_signals: int = TRADEOFF_NUM_SIGNALS,
+    num_best_atoms: int = TRADEOFF_TOPK,
 ) -> np.ndarray:
     """
     Returns the average accuracy of the candidates across the signals.
     Note that this is equivalent to recall when the topk atoms is fixed.
+    We return an array of accuracies (one for each signal) so that we can compute both the mean and std.
 
     :param true_candidates: the candidates retrieved naively
     :param mip_candidates: the candidates returned by the mips algorithm
     :param returns: an array of accuracies
     """
     accuracy = []
-    for idx in range(TRADEOFF_NUM_SIGNALS):
+    for idx in range(num_signals):
         accuracy.append(len(
             np.intersect1d(true_candidates[idx], mips_candidates[idx])
         ))
-    return np.array(accuracy) / (TRADEOFF_NUM_SIGNALS * TRADEOFF_TOPK)
+    return np.array(accuracy) / (num_signals * num_best_atoms)
 
 
 def speedup_precision_exps(
@@ -216,7 +219,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is ACTION_ELIMINATION:
             epsilons = np.linspace(EPSILON_MINMAX_ACTION[0], EPSILON_MINMAX_ACTION[1], num_experiments // DELTA_BINS_ACTION)
             deltas = np.linspace(DELTA_MINMAX[0], DELTA_MINMAX[1], DELTA_BINS_ACTION)
@@ -247,7 +249,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is MEDIAN_ELIMINATION:
             if data_type in [NETFLIX, MOVIE_LENS]:
                 idx = -1

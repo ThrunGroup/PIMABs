@@ -32,7 +32,7 @@ from utils.constants import (
 )
 
 
-def run_high_dim(run: bool = True, plot: bool = True):
+def mnist_t_scaling(run: bool = True, plot: bool = True):
     """
     Run scaling experiments for the toy datasets
     """
@@ -69,4 +69,4 @@ def run_high_dim(run: bool = True, plot: bool = True):
         )
 
 if __name__ == "__main__":
-    run_high_dim(run=True, plot=True)
+    mnist_t_scaling(run=True, plot=True)

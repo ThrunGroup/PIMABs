@@ -17,12 +17,42 @@ from utils.constants import (
     NO_CLEAR_LEADER,
     MNIST_T,
     SIMPLE_SONG,
+    SIFT_1M,
     SAMPLE_RATE,
     SECONDS_PER_MINUTE,
 )
 from data.custom_data import generate_custom_data
 from data.simple_song import create_song, create_note_waves, create_sin_wave
 from utils.utils import subset_2d
+
+def fvecs_read(filename, c_contiguous=True):
+    fv = np.fromfile(filename, dtype=np.float32)
+    if fv.size == 0:
+        return np.zeros((0, 0))
+    dim = fv.view(np.int32)[0]
+    assert dim > 0
+    fv = fv.reshape(-1, 1 + dim)
+    if not all(fv.view(np.int32)[:, 0] == dim):
+        raise IOError("Non-uniform vector sizes in " + filename)
+    fv = fv[:, 1:]
+    if c_contiguous:
+        fv = fv.copy()
+    return fv
+
+
+def choose_signal_and_atoms(data: np.ndarray):
+    N = len(data)
+    signal_idx = np.random.choice(N)
+    signals = data[signal_idx].reshape(1, -1)
+
+    if signal_idx == 0:
+        atoms = data[signal_idx + 1:]
+    elif signal_idx == N - 1:
+        atoms = data[:signal_idx]
+    else:
+        atoms = np.vstack([data[:signal_idx], data[signal_idx + 1:]])  # TODO: Boundary
+
+    return signals, atoms
 
 
 def get_data(
@@ -74,6 +104,13 @@ def get_data(
             extraneous_note = create_sin_wave(frequency_multiplier=note_freq, sampling_frequency=SAMPLE_RATE, num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE*num_mins)
             atoms = np.vstack([atoms, extraneous_note])
 
+        sample_idcs = rng.choice(signals.shape[1], len_signal, replace=False)
+        return atoms[:, sample_idcs], signals[:, sample_idcs]
+    elif data_type == SIFT_1M:
+        X = fvecs_read("../../data/sift/sift_base.fvecs")
+        data = X.T
+        data = data.astype(np.float64)
+        signals, atoms = choose_signal_and_atoms(data)
         sample_idcs = rng.choice(signals.shape[1], len_signal, replace=False)
         return atoms[:, sample_idcs], signals[:, sample_idcs]
     else:
