@@ -2,6 +2,7 @@ import numpy as np
 import math
 from typing import Tuple
 from exps.scaling_exp import scaling_exp
+from exps.plot_baselines import generate_scaling_plots, create_scaling_plots
 from utils.constants import (
     BATCH_SIZE,
 
@@ -11,6 +12,7 @@ from utils.constants import (
     NORMAL_PAPER,
     NETFLIX,
     MOVIE_LENS,
+    COR_NORMAL_CUSTOM,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
@@ -23,6 +25,7 @@ from utils.constants import (
     LSH_MIPS,
     PCA_MIPS,
     NEQ_MIPS,
+    BUCKET_ACTION_ELIMINATION,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -151,4 +154,3 @@ def run_scaling():
 
 if __name__ == "__main__":
     run_scaling()
-
