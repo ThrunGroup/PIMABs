@@ -1,6 +1,7 @@
 import os
 import glob
 import pandas as pd
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -15,6 +16,13 @@ from utils.constants import (
     NETFLIX_TRANSPOSE,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
+    CLEAR_LEADER_HARD,
+    CLEAR_LEADER_SOFT,
+    NO_CLEAR_LEADER,
+    MNIST_T,
+    SIMPLE_SONG,
+    SIFT_1M,
+
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
@@ -75,6 +83,18 @@ def translate_dataset_name(dataset_name: str):
         return "Movie Lens"
     elif dataset_name == COR_NORMAL_CUSTOM:
         return COR_NORMAL_CUSTOM
+    elif dataset_name == CLEAR_LEADER_HARD:
+        return "Clear Leader (Hard)"
+    elif dataset_name == CLEAR_LEADER_SOFT:
+        return "Clear Leader (Soft)"
+    elif dataset_name == NO_CLEAR_LEADER:
+        return "No Clear Leader"
+    elif dataset_name == MNIST_T:
+        return "MNIST Transposed"
+    elif dataset_name == SIMPLE_SONG:
+        return "Simple Song"
+    elif dataset_name == SIFT_1M:
+        return "SIFT 1M"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -144,6 +164,7 @@ def create_scaling_plots(
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
+
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
@@ -316,6 +337,8 @@ def create_tradeoff_plots(
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
 
+        fig = plt.gcf()
+        fig.set_size_inches(6, 4.5)
         plt.show()
 
 
@@ -397,6 +420,6 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    # generate_scaling_plots()
-    # generate_tradeoff_plots(top_k=20)
+    generate_scaling_plots()
     generate_tradeoff_plots(top_k=5)
+    generate_tradeoff_plots(top_k=20)

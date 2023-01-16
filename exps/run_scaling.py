@@ -13,6 +13,9 @@ from utils.constants import (
     NETFLIX,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
+    CLEAR_LEADER_HARD,
+    CLEAR_LEADER_SOFT,
+    NO_CLEAR_LEADER,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -42,7 +45,7 @@ def run_scaling():
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
+    for data_type in [NETFLIX, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
         if data_type is MOVIE_LENS:
             size_minmax = SCAlING_SIZE_MINMAX_MOVIE
         else:

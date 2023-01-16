@@ -23,6 +23,7 @@ def action_elimination(
     epsilon: float,
     delta: float,
     num_best_atoms: int = 1,
+    abs: bool = False,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
@@ -43,17 +44,19 @@ def action_elimination(
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
-        new_delta = delta * batch_size / (d * D)
+        new_delta = delta / D
         budgets = 0  # Number of calculations
         candidates = np.arange(D)  # arms (atoms)
         lcbs = -np.inf * np.ones(D)  # lower confidence bounds of arm returns
         ucbs = np.inf * np.ones(D)  # upper confidence bounds of arm returns
         means = np.zeros(D)  # estimated means of arm returns
+
         if not with_replacement:
             shuffled_idcs = np.arange(d)
             np.random.shuffle(shuffled_idcs)
         else:
             shuffled_idcs = None
+
         # TODO: Add exact computation if total mnist too big
         # TODO: Maybe need to change this to a >0 and ucbs > lcbs.max below
         # TODO: Don't let old candidates come back?
@@ -76,14 +79,21 @@ def action_elimination(
                         + (candidates_sampled @ signal_sampled)
                     ) / d
                     budgets += (d - (t - 1) * batch_size) * len(candidates)
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
                 break
+
             budgets += batch_size * len(candidates)
 
             if with_replacement:
                 sample_idcs = np.random.choice(np.arange(d), batch_size, replace=False)
             else:
                 sample_idcs = shuffled_idcs[(t - 1) * batch_size : t * batch_size]
+
             signal_sampled = signal[sample_idcs]
             candidates_sampled = subset_2d(atoms, rows=candidates, columns=sample_idcs)
             means[candidates] = (
@@ -108,18 +118,36 @@ def action_elimination(
                     pop_size=d,
                     with_replacement=False,
                 )
+
             if 4 * ci < epsilon:
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
                 break
-            ucbs[candidates] = means[candidates] + ci
-            lcbs[candidates] = means[candidates] - ci
+
+            if abs:
+                ucbs[candidates] = np.abs(means[candidates]) + ci
+                lcbs[candidates] = np.abs(means[candidates]) - ci
+            else:
+                ucbs[candidates] = means[candidates] + ci
+                lcbs[candidates] = means[candidates] - ci
+
+            # TODO(@motiwari): Make sure there are no NaNs here
             new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
 
             if (
                 len(new_cand_idcs) < num_best_atoms
             ):  # Have to return candidates with length num_best_atoms
-                candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
+                if abs:
+                    candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
+                else:
+                    candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
+
                 break
+
             candidates = candidates[new_cand_idcs]
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
