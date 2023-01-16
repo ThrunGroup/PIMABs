@@ -29,8 +29,7 @@ def create_toy_waves(num_atoms, d):
     The query vector is q = 3a + 2b + c.
     """
     amplitude = 2
-    t = np.linspace(0, 2 * np.pi, d)
-
+    t = np.linspace(0, 2 * np.pi * d, d)
     # generate 90 degree offset waves
     a = amplitude * np.sin(t)
     b = amplitude * np.sin(2 * t)
