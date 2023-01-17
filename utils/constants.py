@@ -141,3 +141,4 @@ LARGE_MAXMIN = (0.5, -0.5)
 CACHING_BUDGET = 0.01
 TEMP_SIZE = 1 # this is to make caching compatible with numba
 
+RECON_ERROR_THRESHOLD = 0.06

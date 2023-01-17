@@ -17,7 +17,7 @@ from utils.utils import subset_2d, subset_2d_cached, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
-#@nb.njit
+@nb.njit
 def action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -70,7 +70,7 @@ def action_elimination(
         hits = 0
 
         # Need to initialize cache params otherwise numba throws error...
-        if not use_cache or not with_replacement:
+        if not use_cache:
             permutation = np.arange(d)
             np.random.shuffle(permutation)
             cache = np.empty((D, d))
@@ -113,8 +113,6 @@ def action_elimination(
                 source_array=atoms,  # this changes per OMP iteration
                 rows=candidates,
                 columns=sample_indices,
-
-                # params needed for caching support
                 use_cache=use_cache,
                 cache=cache,
                 cache_tracker=cache_tracker,
@@ -150,16 +148,17 @@ def action_elimination(
                     candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
 
+            # update the candidates' upper and lower bounds
+            u_means = means[candidates]
+            l_means = means[candidates]
             if abs:
-                ucbs[candidates] = np.abs(means[candidates]) + ci
-                lcbs[candidates] = np.abs(means[candidates]) - ci
-                # TODO(@motiwari): Make sure there are no NaNs here
-                new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
-            else:
-                ucbs[candidates] = means[candidates] + ci
-                lcbs[candidates] = means[candidates] - ci
-                new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
+                u_means = np.abs(u_means)
+                l_means = np.abs(l_means)
 
+            # TODO(@motiwari): Make sure there are no NaNs here
+            ucbs[candidates] = u_means + ci
+            lcbs[candidates] = l_means - ci
+            new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
             if (
                 len(new_cand_idcs) < num_best_atoms
             ):  # Have to return candidates with length num_best_atoms
@@ -171,6 +170,5 @@ def action_elimination(
             candidates = candidates[new_cand_idcs]
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
-    #print(f"hits = {hits}")
     return candidates_array, budgets_array, cache, cache_tracker, cache_map
 

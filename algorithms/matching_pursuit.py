@@ -1,6 +1,12 @@
 import numpy as np
 import numba as nb
+from math import sqrt
+from scipy import linalg
+from typing import Tuple
+from collections import defaultdict
+from scipy.linalg.lapack import get_lapack_funcs
 
+from algorithms.mips_bandit import mips_bandit
 from sklearn.linear_model import OrthogonalMatchingPursuit  # for debugging purposes
 from data.get_data import get_data
 from utils.utils import set_seed, get_recon_error
@@ -11,25 +17,18 @@ from utils.constants import (
     NETFLIX,
     ACTION_ELIMINATION,
     DEFAULT_MAXMIN,
+    RECON_ERROR_THRESHOLD
 )
-
-from math import sqrt
-from scipy import linalg
-from typing import Tuple
-from collections import defaultdict
-from scipy.linalg.lapack import get_lapack_funcs
-
-from algorithms.mips_bandit import mips_bandit
 
 
 def matching_pursuit(
-        atoms: np.ndarray,
-        signal: np.ndarray,
-        n_nonzero_coefs: int = 5,
-        min_residual: float = 0.001,
-        bandit_alg: str = "",
-        seed: int = 0,
-        abs: bool = False,
+    atoms: np.ndarray,
+    signal: np.ndarray,
+    n_nonzero_coefs: int = 5,
+    min_residual: float = 0.001,
+    bandit_alg: str = "",
+    seed: int = 0,
+    abs: bool = False,
 ):
     """
     Runs the Matching Pursuit algorithm. Refer to implementation by https://github.com/stonemason11
@@ -237,60 +236,63 @@ def orthogonal_matching_pursuit(
     return indices, gamma, total_budget
 
 
+def main(seed, num_atoms, len_signal, num_signals):
+    np.random.seed(seed)
+    atoms, signals = get_data(
+        num_atoms=num_atoms,
+        len_signal=len_signal,
+        seed=seed,
+        data_type=NETFLIX,
+        num_signals=num_signals,
+    )
+
+    # scikit-learn implementation
+    model1 = OrthogonalMatchingPursuit(normalize=False, n_nonzero_coefs=3, fit_intercept=False, precompute=False)
+    model1.fit(atoms.T, signals[0])
+    sklearn_indices = model1.coef_.nonzero()[0]
+
+    # our naive implementation
+    naive_candidates, gamma, budget = orthogonal_matching_pursuit(
+        atoms=atoms.T,
+        signal=signals[0],
+        n_nonzero_coefs=3,
+        min_residual=0.01,
+        bandit_alg="",
+        abs=True,
+        seed=seed,
+        use_cache=False,
+    )
+    naive_recon = get_recon_error(gamma, atoms[naive_candidates], signals)
+
+    # bandit implmentation
+    bandit_candidates, gamma, budget = orthogonal_matching_pursuit(
+        atoms=atoms.T,
+        signal=signals[0],
+        n_nonzero_coefs=3,
+        min_residual=0.01,
+        bandit_alg=ACTION_ELIMINATION,
+        abs=True,
+        seed=seed,
+        use_cache=False,
+        use_naive=False,
+        cache_multiplier=1,
+    )
+    bandit_recon = get_recon_error(gamma, atoms[bandit_candidates], signals)
+
+    assert len(np.intersect1d(sklearn_indices, naive_candidates)) == len(sklearn_indices), \
+        "The selected indices for our naive implementation and sklearn's OMP model are not identical"
+    assert len(np.intersect1d(naive_candidates, bandit_candidates)) == len(naive_candidates), \
+        "The selected indices for our naive implementation and sklearn's OMP model are not identical"
+    assert naive_recon < RECON_ERROR_THRESHOLD, \
+        f"The reconstruction error is greater than {RECON_ERROR_THRESHOLD}"
+    assert bandit_recon < RECON_ERROR_THRESHOLD, \
+        f"The reconstruction error is greater than {RECON_ERROR_THRESHOLD}"
+    print("passed all tests")
+
+
 if __name__ == "__main__":
-    for seed in range(1):
-        set_seed(seed)
-        print("\nSeed : ", seed)
-        num_atoms = 100
-        len_signal = 1000
-        atoms, signals = get_data(
-            num_atoms=num_atoms,
-            len_signal=len_signal,
-            seed=seed,
-            data_type=NETFLIX,
-            num_signals=1,
-        )
-
-        # scikit-learn
-        model1 = OrthogonalMatchingPursuit(normalize=False, n_nonzero_coefs=3, fit_intercept=False, precompute=False)
-        print(f"-> Atoms dataset size: {atoms.shape}")
-        print("------- running scikit-learn OMP ---------")
-        model1.fit(atoms.T, signals[0])
-        print("these are the coefficient indices (sorted by default)", model1.coef_.nonzero())
-        print("this is the reconstruction error", np.sum(
-                np.abs(signals[0] - np.sum(model1.coef_[:, np.newaxis] * atoms, axis=0))
-            )
-        )
-
-        # naive version
-        print("\n------ running naive OMP ------")
-        candidates, gamma, budget = orthogonal_matching_pursuit(
-            atoms=atoms.T,
-            signal=signals[0],
-            n_nonzero_coefs=3,
-            min_residual=0.01,
-            bandit_alg="",
-            abs=True,
-            seed=seed,
-            use_cache=False,
-        )
-        print("indices: ", candidates, " budget: ", budget)
-        naive_recon = get_recon_error(gamma, atoms[candidates], signals)
-
-        # bandit version
-        print("\n------ running bandit OMP without cache ------")
-        candidates, gamma, budget = orthogonal_matching_pursuit(
-            atoms=atoms.T,
-            signal=signals[0],
-            n_nonzero_coefs=3,
-            min_residual=0.01,
-            bandit_alg=ACTION_ELIMINATION,
-            abs=True,
-            seed=seed,
-            use_cache=False,
-            use_naive=False,
-            cache_multiplier=1,
-        )
-        print("indices: ", candidates, " budget: ", budget[0])
-        bandit_recon = get_recon_error(gamma, atoms[candidates], signals)
-        print(f"==> reconstruction error: {(bandit_recon - naive_recon) / naive_recon}")
+    seed = 0
+    num_atoms = 100
+    len_signal = 10000
+    num_signals = 1
+    main(seed, num_atoms, len_signal, num_signals)

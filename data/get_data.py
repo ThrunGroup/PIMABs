@@ -3,6 +3,8 @@ import numpy as np
 import math
 import os
 
+from utils.utils import subset_2d
+from data.custom_data import generate_custom_data, create_toy_waves
 from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NORMAL_CUSTOM,
@@ -17,9 +19,6 @@ from utils.constants import (
     TOY_SINE,
     TOY_DISCRETE,
 )
-from data.custom_data import generate_custom_data
-from utils.utils import subset_2d
-from tests.MP_test import create_toy_waves
 
 
 def get_data(

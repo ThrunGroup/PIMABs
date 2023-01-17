@@ -59,6 +59,7 @@ def mips_bandit(
     """
     assert len(atoms.shape) == 2, "Invalid size of data atoms" " matrix"
     assert len(signals.shape) == 2, "Invalid size of signal vector"
+    assert with_replacement is False, "It is always advantageous to sample without replacement"
 
     set_seed(seed)
     if with_replacement:
@@ -72,7 +73,7 @@ def mips_bandit(
                 abs=abs,
                 num_best_atoms=num_best_atoms,
                 batch_size=batch_size,
-                seed=seed
+                seed=seed,
             )
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")
@@ -97,14 +98,14 @@ def mips_bandit(
                 delta=delta,
                 abs=abs,
                 num_best_atoms=num_best_atoms,
-                # with_replacement=False,
+                with_replacement=False,
                 seed=seed,
                 batch_size=batch_size,
                 use_cache=use_cache,
                 permutation=shuffled_indices,
                 cache=cache,
                 cache_tracker=cache_tracker,
-                cache_map=cache_map
+                cache_map=cache_map,
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(

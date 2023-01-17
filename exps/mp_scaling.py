@@ -45,7 +45,6 @@ def scaling_exp(
     is_plot: bool = True,
     is_logspace: bool = True,
     dirname: str = None,
-
     use_cache: bool = False,
     use_naive: bool = False,
 ) -> None:
@@ -124,7 +123,7 @@ def scaling_exp(
             runtimes = []
             for signal in signals_subset:   # this is one signal out of num_signals signals of the same size
                 # naive version
-                naive_candidates, naive_gamma, _ = orthogonal_matching_pursuit(
+                naive_candidates, _, _ = orthogonal_matching_pursuit(
                     atoms=atoms_subset.T,
                     signal=signal,
                     bandit_alg="",
@@ -132,7 +131,6 @@ def scaling_exp(
                     use_cache=False,
                     maxmin=maxmin
                 )
-                naive_recon = get_recon_error(naive_gamma, atoms_subset[naive_candidates], signal)
 
                 start_time = time.time()
                 candidates, gamma, total_budget = orthogonal_matching_pursuit(
@@ -153,9 +151,7 @@ def scaling_exp(
                 accuracies.append(
                     len(np.intersect1d(naive_candidates, candidates)) / len(candidates)
                 )
-                recon_error.append(
-                    (bandit_recon - naive_recon) / naive_recon
-                )
+                recon_error.append(bandit_recon)
                 log_info = ""
                 if use_cache:
                     if use_naive:
@@ -229,9 +225,3 @@ if __name__ == "__main__":
         use_naive=False,
         maxmin=(0.2, 0),
     )
-
-    # scaling_exp(
-    #     data_type=NETFLIX,
-    #     use_cache=True,
-    #     use_naive=False,
-    # )

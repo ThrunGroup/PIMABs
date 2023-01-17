@@ -303,7 +303,6 @@ def subset_2d_cached(
     budget = 0
     hits = 0
     subset_array = np.empty((len(rows), len(columns)))
-    #import ipdb; ipdb.set_trace()
     for i in range(len(rows)):
         for j in range(len(columns)):
             atom_idx = rows[i]
@@ -314,10 +313,9 @@ def subset_2d_cached(
                 subset_array[(i, j)] = cache[(atom_idx, cache_map[atom_idx][sample_idx])]
                 budget += CACHING_BUDGET
                 hits += 1
-
             else:
                 # write to cache if space exists
-                source = source_array[(atom_idx, sample_idx)]
+                source = source_array[atom_idx, sample_idx]
                 if use_cache and (cache_tracker[atom_idx] < cache.shape[1]):
                     cache[(atom_idx, cache_tracker[atom_idx])] = source
                     cache_map[atom_idx][sample_idx] = cache_tracker[atom_idx]
@@ -326,6 +324,7 @@ def subset_2d_cached(
 
                 subset_array[(i, j)] = source
                 budget += 1
+
     return subset_array, budget, cache, cache_tracker, cache_map, hits
 
 
@@ -420,40 +419,7 @@ def get_recon_error(
     assert len(coeffs) == candidates.shape[0], "all candidates must have corresponding coefficients"
     return np.sum(
         np.abs(
-            signals - np.sum(coeffs * candidates, axis=0)
+            (signals - np.sum(coeffs * candidates, axis=0))
+            / np.sum(np.abs(signals))
         )
     )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
