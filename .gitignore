@@ -1,4 +1,6 @@
 data/raw_data
+data/sift*
+
 
 .idea/
 *.DS_Store*

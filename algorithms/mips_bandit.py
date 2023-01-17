@@ -7,12 +7,14 @@ from utils.constants import (
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
+    BUCKET_ACTION_ELIMINATION,
     HOEFFDING,
     BATCH_SIZE,
 )
 from algorithms.median_elimination import median_elimination
 from algorithms.action_elimination import action_elimination
 from algorithms.adaptive_action_elimination import adaptive_action_elimination
+from algorithms.bucket_ae import bucket_action_elimination
 
 
 def mips_bandit(
@@ -57,8 +59,9 @@ def mips_bandit(
     :return: Indices of best atom that have maximum inner product with a signal vector and the budget (total number of
             calculations)
     """
-    assert len(atoms.shape) == 2, "Invalid size of data atoms" " matrix"
+    assert len(atoms.shape) == 2, "Invalid size of data atoms matrix"
     assert len(signals.shape) == 2, "Invalid size of signal vector"
+    assert atoms.shape[1] == signals.shape[1], "Dimension of atoms and signals must be equal"
     assert with_replacement is False, "It is always advantageous to sample without replacement"
 
     set_seed(seed)
@@ -117,6 +120,17 @@ def mips_bandit(
                 delta=delta,
                 abs=abs,
                 num_best_atoms=num_best_atoms,
+                batch_size=batch_size
+            )
+        elif bandit_alg is BUCKET_ACTION_ELIMINATION:
+            return bucket_action_elimination(
+                atoms=atoms,
+                signals=signals,
+                var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                epsilon=epsilon,
+                delta=delta,
+                num_best_atoms=num_best_atoms,
+                with_replacement=False,
                 batch_size=batch_size
             )
         else:
