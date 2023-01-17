@@ -173,4 +173,3 @@ def action_elimination(
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
     return candidates_array, budgets_array, cache, cache_tracker, cache_map
-

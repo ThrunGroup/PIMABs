@@ -7,9 +7,9 @@ def hnsw(
         atoms: np.ndarray,
         signals: np.ndarray,
         num_best_atoms: int = 1,
-        ef_construction: int = 200,
-        ef_search: int = 10,
-        num_links_per_node: int = 16,
+        ef_construction: int = 8,
+        ef_search: int = 4,
+        num_links_per_node: int = 8,
         use_norm_adjusted_factors: bool = True
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -48,4 +48,6 @@ def hnsw(
     labels, distances, budget = index.knn_query(signals, k=num_best_atoms)
     labels.sort()
 
-    return labels, budget
+    budgets = np.array([budget]) / len(signals)
+
+    return labels, budgets

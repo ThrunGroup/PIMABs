@@ -94,7 +94,7 @@ SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
 
 # Precision-Speed Tradeoff Experiments
 TRADEOFF_NUM_EXPERIMENTS = 12  # corresponds to the number of points on the plot
-TRADEOFF_NUM_ATOMS = 101
+TRADEOFF_NUM_ATOMS = 1000
 TRADEOFF_DIMENSION = 10000
 TRADEOFF_DIMENSION_MOVIE = 5000  # movie dataset is only 6000 dimensions
 TRADEOFF_NUM_SIGNALS = 3
@@ -134,7 +134,7 @@ GREEDY_ATOM_SIZE = [17, 18, 19]
 GREEDY_QUERY_SIZE = [2, 5, 7]
 
 # Real Data params
-NUM_ATOMS_REAL = 101
+NUM_ATOMS_REAL = 1000
 LEN_SIGNAL_NETFLIX = 1000
 LEN_SIGNAL_MOVIE = 1000
 

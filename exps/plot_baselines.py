@@ -488,9 +488,9 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
-            HNSW_MIPS,
+            # HNSW_MIPS,
             NAPG_MIPS,
-            NEQ_MIPS,
+            # NEQ_MIPS,
         ],
         top_k=top_k,
         include_error_bar=False,
@@ -505,7 +505,7 @@ def generate_tradeoff_plots(top_k: int = 1):
             PCA_MIPS,
             LSH_MIPS,
             NEQ_MIPS,
-            HNSW_MIPS,
+            # HNSW_MIPS,
             NAPG_MIPS,
         ],
         top_k=top_k,
@@ -515,6 +515,7 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    generate_scaling_plots()
-    generate_tradeoff_plots(top_k=5)
-    generate_tradeoff_plots(top_k=20)
+    # generate_scaling_plots()
+    generate_tradeoff_plots()
+    # generate_tradeoff_plots(top_k=5)
+    # generate_tradeoff_plots(top_k=20)

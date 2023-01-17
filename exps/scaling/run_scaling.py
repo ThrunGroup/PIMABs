@@ -39,6 +39,8 @@ from utils.constants import (
     SCAlING_SIZE_MINMAX_MOVIE,
     SCALING_DELTA_REAL,
     SCALING_EPSILON_REAL,
+
+    DIMENSION_OF_ATOMS,
 )
 
 
@@ -61,97 +63,97 @@ def run_scaling():
             epsilon = SCALING_EPSILON_REAL
             delta = SCALING_DELTA_REAL
 
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=ADAPTIVE_ACTION_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=ACTION_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=MEDIAN_ELIMINATION,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=GREEDY_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=PCA_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=LSH_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=HNSW_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=ADAPTIVE_ACTION_ELIMINATION,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=ACTION_ELIMINATION,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=MEDIAN_ELIMINATION,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=GREEDY_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=PCA_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=LSH_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=HNSW_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
         scaling_exp(
             epsilon=epsilon,
             delta=delta,
@@ -164,20 +166,22 @@ def run_scaling():
             with_replacement=False,
             is_normalize=False,
             is_logspace=True,
+            independent_var=DIMENSION_OF_ATOMS,
+            num_seeds=1,
         )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=NEQ_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
+        # scaling_exp(
+        #     epsilon=epsilon,
+        #     delta=delta,
+        #     num_atoms=SCALING_NUM_ATOMS,
+        #     size_minmax=size_minmax,
+        #     num_experiments=SCALING_NUM_EXPERIMENTS,
+        #     num_signals=SCALING_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=NEQ_MIPS,
+        #     with_replacement=False,
+        #     is_normalize=False,
+        #     is_logspace=True,
+        # )
 
 
 if __name__ == "__main__":

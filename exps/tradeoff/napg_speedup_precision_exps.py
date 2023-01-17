@@ -52,7 +52,7 @@ def napg_speedup_precision_exps(
     """
     print(f"=> Tradeoff experiment for NAPG with {data_type} dataset")
 
-    checkpoint_path = os.path.join(os.getcwd(), "logs", "precision_speed", "napg_checkpoints")
+    checkpoint_path = os.path.join(os.getcwd(), "exps", "logs", "precision_speed", "napg_checkpoints")
     os.makedirs(checkpoint_path, exist_ok=True)
     checkpoint_files = glob.glob(os.path.join(checkpoint_path, f"*{data_type}*"))
     previous_seed = len(checkpoint_files)
@@ -80,8 +80,8 @@ def napg_speedup_precision_exps(
         accuracies = []
         accuracies_std = []
 
-        Ms = np.geomspace(4, 64, num_experiments).astype(np.int64)
-        ef_constructions = np.geomspace(4, num_atoms // 2, num_experiments).astype(np.int64)
+        Ms = np.geomspace(4, 32, num_experiments).astype(np.int64)
+        ef_constructions = np.geomspace(2, num_atoms // 2, num_experiments).astype(np.int64)
         ef_searches = np.geomspace(2, num_atoms // 2, num_experiments).astype(np.int64)
 
         for (M, ef_construction, ef_search) in zip(Ms, ef_constructions, ef_searches):
@@ -114,6 +114,7 @@ def napg_speedup_precision_exps(
             "accuracy": np.array(accuracies),
             "accuracy_std": np.array(accuracies_std),
             "runtime": np.array(runtimes),
+            "naive_budget": num_atoms * len_signals,
         }
 
         checkpoint_log_df = pd.DataFrame(checkpoint_log_dict)
@@ -166,9 +167,10 @@ def napg_speedup_precision_exps(
                 "accuracy": avg_accuracy,
                 "accuracy_std": avg_accuracy_std,
                 "runtime": avg_runtime,
+                "naive_budget": num_atoms * len_signals,
             }
             log_df = pd.DataFrame(log_dict)
-            log_dir = os.path.join(os.getcwd(), "logs", "precision_speed") if dirname is None else dirname
+            log_dir = os.path.join(os.getcwd(), "exps", "logs", "precision_speed") if dirname is None else dirname
             filename = os.path.join(
                 log_dir,
                 NAPG_MIPS
