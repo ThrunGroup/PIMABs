@@ -9,6 +9,9 @@ from typing import Tuple, Optional
 from utils.constants import (
     CRYPTO_PAIRS,
 
+    NUMBER_OF_ATOMS,
+    DIMENSION_OF_ATOMS,
+
     NORMAL_CUSTOM,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -16,12 +19,15 @@ from utils.constants import (
     GREEDY_MIPS,
     PCA_MIPS,
     LSH_MIPS,
+    NEQ_MIPS,
+    BUCKET_ACTION_ELIMINATION,
 
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
     DEFAULT_MAXMIN,
     NORMALIZED_MAXMIN,
     DEFAULT_GREEDY_BUDGET,
+    SCALING_SIZE_MINMAX,
 
     SCALING_DELTA,
     SCALING_DEPTH,
@@ -31,12 +37,24 @@ from utils.constants import (
     SCALING_NUM_TABLES,
 )
 
+from neq_mips.constants import (
+    PARTITION,
+    NUM_CODEBOOKS,
+    NUM_CODEWORDS,
+)
+
 from utils.utils import get_sizes_arr
 from data.get_data import get_data
 from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
+from algorithms.bucket_ae import bucket_action_elimination
+
+from algorithms.quantization.norm_pq import NormPQ
+from algorithms.quantization.residual_pq import ResidualPQ
+from algorithms.quantization.base_pq import PQ
+from algorithms.quantization.utils import execute
 
 
 def scaling_exp(
@@ -48,9 +66,11 @@ def scaling_exp(
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
     num_seeds: int = NUM_SEEDS,
     data_generation_seed: int = 0,
-    size_minmax: Tuple[int, int] = (10, 10**6),
+    size_minmax: Tuple[int, int] = SCALING_SIZE_MINMAX,
+    independent_var: str = DIMENSION_OF_ATOMS,
     num_atoms: int = 10**3,
     num_signals: int = 1,
+    signal_dim: int = 10 ** 2,
     num_best_atoms: int = SCALING_TOPK,
     with_replacement: bool = False,
     is_normalize: bool = False,
@@ -70,12 +90,14 @@ def scaling_exp(
     :param maxmin: Maximum and minimum of data
     :param data_type: A name of data generating function
     :param mips_alg: A name of algorithm
-    :param num_experiments: Number of experiments
+    :param num_experiments: Number of experiments, determines the different sizes of d that we run
     :param num_seeds: Number of seeds
     :param data_generation_seed: Random seed for generating data
-    :param size_minmax: Minimum and Maximum of signal vector size
+    :param independent_var: The variable that is not constant (Either N=number of atoms or D=Dimension of atom)
+    :param size_minmax: Minimum and Maximum of independent variable
     :param num_atoms: Number of atoms
     :param num_signals: Number of signals
+    :param signal_dim: Dimension of atom/signal
     :param num_best_atoms: Number of atoms we rank in the descending order of inner product
     :param with_replacement: Whether to sample with replacement
     :param is_normalize: Whether to normalize atoms and signal
@@ -85,43 +107,55 @@ def scaling_exp(
     :param dirname: Directory name to log the results
     :param verbose: Whether to print the number of iterations ran for action elimination
     """
-    global budget_array
-    # num_experiments determines the different sizes of d that we run
-    avg_runtime = np.zeros(num_experiments)
-    avg_budget = np.zeros(num_experiments)
-    avg_budget_std = np.zeros(num_experiments)
-    avg_accuracy = np.zeros(num_experiments)
-    print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
-
+    avg_runtimes = np.zeros((num_experiments, num_seeds))  # Note that the runtime is average over all signals
+    budgets = np.zeros((num_experiments, num_seeds, num_signals))
+    accuracies = np.zeros((num_experiments, num_seeds, num_signals))
     sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
 
-    # If the dataset is a toy dataset, the randomness will include the data generation process
-    # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
-    atoms, signals = get_data(
-        num_atoms=num_atoms,
-        len_signal=sizes_signal[-1],
-        num_signals=num_signals,
-        seed=data_generation_seed,
-        data_type=data_type,
-    )
+    if independent_var == DIMENSION_OF_ATOMS:
+        sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+        # If the dataset is a toy dataset, the randomness will include the data generation process
+        # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
+        atoms, signals = get_data(
+            num_atoms=num_atoms,
+            len_signal=sizes[-1],
+            num_signals=num_signals,
+            seed=data_generation_seed,
+            data_type=data_type,
+        )
+    elif independent_var == NUMBER_OF_ATOMS:
+        sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+        # If the dataset is a toy dataset, the randomness will include the data generation process
+        # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
+        atoms, signals = get_data(
+            num_atoms=sizes[-1],
+            len_signal=signal_dim,
+            num_signals=num_signals,
+            seed=data_generation_seed,
+            data_type=data_type,
+        )
+    else:
+        raise NotImplementedError(f"{independent_var} is not an implemented control variable")
 
-    # average over num_seeds results
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
 
-        budgets = []
-        budgets_std = []
-        accuracy_list = []
-        runtimes = []
-
-        # run the experiment for each signal size
-        for size in sizes_signal:
-            subset_indices = rng.choice(sizes_signal[-1], size, replace=False)
-            atoms_subset, signals_subset = (
-                atoms[:, subset_indices],
-                signals[:, subset_indices],
-            )
+        # run the experiment for the different values of independent variable
+        for size_idx, size in enumerate(sizes):
+            subset_indices = rng.choice(sizes[-1], size, replace=False)
+            if independent_var is DIMENSION_OF_ATOMS:
+                atoms_subset, signals_subset = (
+                    atoms[:, subset_indices],
+                    signals[:, subset_indices],
+                )
+            elif independent_var is NUMBER_OF_ATOMS:
+                atoms_subset, signals_subset = (
+                    atoms[subset_indices, :],
+                    signals,
+                )
+            else:
+                raise NotImplementedError(f"{independent_var} is not an implemented control variable")
 
             if is_normalize:
                 atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
@@ -131,10 +165,19 @@ def scaling_exp(
                 epsilon /= atoms_norm.max() * signal_norm
                 maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given
 
+            # get the ground truth arrays
+            naive_candidates_array = (
+                np.matmul(-atoms_subset, signals_subset.transpose())
+                    .argsort(axis=0)[:num_best_atoms]
+                    .transpose()
+            )
+
             # bandit algorithms
-            if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION]:
+            if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION, BUCKET_ACTION_ELIMINATION]:
                 log_info = (
-                    "epsilon"
+                    "ind_var"
+                    + str(independent_var)
+                    + "_epsilon"
                     + str(epsilon)
                     + "_delta"
                     + str(delta)
@@ -197,48 +240,86 @@ def scaling_exp(
                     num_tables=SCALING_NUM_TABLES
                 )
                 runtime = time.time() - start_time
+            elif mips_alg is NEQ_MIPS:
+                log_info = (
+                        "_codebooks"
+                        + str(NUM_CODEBOOKS)
+                        + "_codewords"
+                        + str(NUM_CODEWORDS)
+                )
+                pqs = [PQ(M=PARTITION, Ks=NUM_CODEWORDS) for _ in range(NUM_CODEBOOKS - 1)]
+                quantizer = ResidualPQ(pqs=pqs)
+                quantizer = NormPQ(n_percentile=NUM_CODEWORDS, quantize=quantizer)
+                start_time = time.time()
+
+                accuracies, budget_array = execute(
+                    seed=seed,
+                    top_k=num_best_atoms,
+                    pq=quantizer,
+                    X=atoms_subset,
+                    Q=signals_subset.astype('float32'),
+                    G=naive_candidates_array,
+                    num_codebooks=NUM_CODEBOOKS,
+                    num_codewords=NUM_CODEWORDS,
+                    train_size=num_atoms
+                )
+                # includes the time finding recall (other baselines don't)
+                runtime = time.time() - start_time
+                accuracy = np.sum(accuracies)
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
             # store runtime, budget, budget_std, and accuracy of the experiment
-            runtimes.append(runtime)
-            budgets.append(np.mean(budget_array))
-            budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
+            avg_runtimes[size_idx, seed] = runtime / num_signals  # Note that the runtimes are averaged over all signals
+
+            assert budget_array.size == num_signals, "budget_array should be the size of the signals"
+            budgets[size_idx, seed, :] = budget_array
+
             naive_candidates_array = (
                 np.matmul(-atoms_subset, signals_subset.transpose())
                 .argsort(axis=0)[:num_best_atoms]
                 .transpose()
             )
 
-            accuracy = 0
-            for idx in range(num_signals):
-                accuracy += len(
-                    np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
-                )
-            accuracy /= num_signals * num_best_atoms
-            accuracy_list.append(accuracy)
+            if mips_alg is not NEQ_MIPS:
+                for signal_idx in range(num_signals):
+                    matches = len(
+                        np.intersect1d(naive_candidates_array[signal_idx], candidates_array[signal_idx])
+                    )
+                    accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
 
-        avg_runtime += np.array(runtimes)
-        avg_budget += np.array(budgets)
-        avg_budget_std += np.array(budgets_std)
-        avg_accuracy += np.array(accuracy_list)
+    avg_runtime = np.mean(avg_runtimes, axis=1)  # Average over seeds because it's already averaged over signals
+    avg_budget = np.mean(budgets, axis=(1, 2))  # Average over seeds and signals
+    avg_budget_std = np.std(budgets, axis=(1, 2))  # Std over seeds and signals for given size
+    avg_accuracy = np.mean(accuracies, axis=(1, 2)) # Average over seeds and signals
 
-    avg_runtime /= num_seeds
-    avg_budget /= num_seeds
-    avg_budget_std /= num_seeds
-    avg_accuracy /= num_seeds
+    assert avg_runtime.size == avg_budget.size == avg_budget_std.size == avg_accuracy.size == num_experiments, "The sizes of the arrays should be the same as num_experiments"
 
     # save to log files
     if is_log:
-        log_dict = {
-            "signal_sizes": sizes_signal,
-            "budgets": avg_budget,
-            "budgets_std": avg_budget_std,
-            "accuracy": avg_accuracy,
-            "runtime": avg_runtime,
-        }
+        if independent_var is DIMENSION_OF_ATOMS:
+            log_dict = {
+                "signal_sizes": sizes,
+                "budgets": avg_budget,
+                "budgets_std": avg_budget_std,
+                "accuracy": avg_accuracy,
+                "runtime": avg_runtime,
+            }
+        elif independent_var is NUMBER_OF_ATOMS:
+            log_dict = {
+                "num_atoms": sizes,
+                "budgets": avg_budget,
+                "budgets_std": avg_budget_std,
+                "accuracy": avg_accuracy,
+                "runtime": avg_runtime,
+            }
+        else:
+            raise NotImplementedError(f"{independent_var} is not an implemented control variable")
+
         log_df = pd.DataFrame(log_dict)
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
         log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
+        log_dir = os.path.join(parent_dir, log_dir)
         filename = os.path.join(
             log_dir,
             mips_alg

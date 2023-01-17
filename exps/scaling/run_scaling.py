@@ -2,6 +2,7 @@ import numpy as np
 import math
 from typing import Tuple
 from exps.scaling_exp import scaling_exp
+from exps.plot_baselines import generate_scaling_plots, create_scaling_plots
 from utils.constants import (
     # datasets
     NORMAL_CUSTOM,
@@ -10,6 +11,7 @@ from utils.constants import (
     NETFLIX,
     MOVIE_LENS,
     CRYPTO_PAIRS,
+    COR_NORMAL_CUSTOM,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
@@ -21,6 +23,8 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    NEQ_MIPS,
+    BUCKET_ACTION_ELIMINATION,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -139,31 +143,4 @@ def run_scaling():
 
 
 if __name__ == "__main__":
-    # scaling_exp(
-    #     epsilon=SCALING_EPSILON,
-    #     delta=SCALING_DELTA,
-    #     num_atoms=SCALING_NUM_ATOMS,
-    #     size_minmax=SCALING_SIZE_MINMAX,
-    #     num_experiments=SCALING_NUM_EXPERIMENTS,
-    #     num_signals=SCALING_NUM_SIGNALS,
-    #     data_type=NORMAL_CUSTOM,
-    #     mips_alg=ACTION_ELIMINATION,
-    #     with_replacement=False,
-    #     is_normalize=False,
-    #     is_logspace=True,
-    # )
-    #
-    # scaling_exp(
-    #     epsilon=SCALING_EPSILON,
-    #     delta=SCALING_DELTA,
-    #     num_atoms=SCALING_NUM_ATOMS,
-    #     size_minmax=SCALING_SIZE_MINMAX,
-    #     num_experiments=SCALING_NUM_EXPERIMENTS,
-    #     num_signals=SCALING_NUM_SIGNALS,
-    #     data_type=ADVERSARIAL_CUSTOM,
-    #     mips_alg=ACTION_ELIMINATION,
-    #     with_replacement=False,
-    #     is_normalize=False,
-    #     is_logspace=True,
-    # )
     run_scaling()

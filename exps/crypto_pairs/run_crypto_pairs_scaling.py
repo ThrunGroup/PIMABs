@@ -6,6 +6,7 @@ from utils.constants import (
     CRYPTO_PAIRS,
 
     # algorithms
+    ADAPTIVE_ACTION_ELIMINATION,
     ACTION_ELIMINATION,
     GREEDY_MIPS,
 
@@ -28,7 +29,7 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
     2. Budgets remain the same (3000) regardless of the signal vector size
     """
     delta = 0.01
-    algorithms = [ACTION_ELIMINATION, GREEDY_MIPS]
+    algorithms = [ADAPTIVE_ACTION_ELIMINATION]  #, ACTION_ELIMINATION, GREEDY_MIPS
 
     if run:
         for algorithm in algorithms:
@@ -57,6 +58,7 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
             data_types=[CRYPTO_PAIRS],
             dirname="crypto_pairs_logs",
             alg_names=[
+                ADAPTIVE_ACTION_ELIMINATION,
                 ACTION_ELIMINATION,
                 GREEDY_MIPS,
             ],
@@ -70,6 +72,7 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
             data_types=[CRYPTO_PAIRS],
             dirname="crypto_pairs_logs",
             alg_names=[
+                ADAPTIVE_ACTION_ELIMINATION,
                 ACTION_ELIMINATION,
                 GREEDY_MIPS,
             ]
@@ -77,4 +80,4 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
 
 
 if __name__ == "__main__":
-    run_crypto_pairs_scaling()
+    run_crypto_pairs_scaling(run=False)
