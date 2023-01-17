@@ -335,7 +335,7 @@ def generate_tradeoff_plots(top_k: int = 1):
     """
     # precision-accuracy tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
-        data_types=[NORMAL_CUSTOM],
+        data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
@@ -369,6 +369,6 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    generate_scaling_plots()
-    generate_tradeoff_plots(top_k=5)
-    generate_tradeoff_plots(top_k=20) 
+    # generate_scaling_plots()
+    generate_tradeoff_plots()
+    # generate_tradeoff_plots(top_k=20)
