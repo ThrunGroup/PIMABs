@@ -81,4 +81,4 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
 
 
 if __name__ == "__main__":
-    run_crypto_pairs_scaling()
+    run_crypto_pairs_scaling(run=False)
