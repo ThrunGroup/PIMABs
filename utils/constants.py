@@ -90,7 +90,7 @@ SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
 
 # Precision-Speed Tradeoff Experiments
 TRADEOFF_NUM_EXPERIMENTS = 12  # corresponds to the number of points on the plot
-TRADEOFF_NUM_ATOMS = 101
+TRADEOFF_NUM_ATOMS = 1000
 TRADEOFF_DIMENSION = 10000
 TRADEOFF_DIMENSION_MOVIE = 5000  # movie dataset is only 6000 dimensions
 TRADEOFF_NUM_SIGNALS = 3
