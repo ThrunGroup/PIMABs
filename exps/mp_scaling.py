@@ -14,6 +14,7 @@ from utils.constants import (
     NETFLIX,
     MOVIE_LENS,
     TOY_SINE,
+    SIMPLE_SONG,
 
     ACTION_ELIMINATION,
     NUM_SEEDS,
@@ -47,6 +48,7 @@ def scaling_exp(
     dirname: str = None,
     use_cache: bool = False,
     use_naive: bool = False,
+    num_seeds: int = NUM_SEEDS,
 ) -> None:
     """
     Run the time complexity of the mp algorithm as the signal size scales and store them in
@@ -70,6 +72,7 @@ def scaling_exp(
     """
     if use_naive:
         assert use_cache == True, "cannot use naive-cache if use_cache isn't specified"
+
     global budget_array
 
     # average over NUM_SEEDS results
@@ -79,9 +82,9 @@ def scaling_exp(
 
     avg_accuracies_ovr_seeds = np.zeros(num_experiments)    # this is in regards to the atom indices
     avg_recon_error_ovr_seeds = np.zeros(num_experiments)   # defined as (bandit_recon - naive_recon) / naive_recon
-    print(f"=> Scaling experiment for MP with  {mips_alg} on {data_type} dataset")
+    print(f"=> Scaling experiment for MP with {mips_alg} on {data_type} dataset")
 
-    for seed in range(NUM_SEEDS):
+    for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
         sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments)
@@ -175,11 +178,11 @@ def scaling_exp(
         avg_accuracies_ovr_seeds += avg_accuracies
         avg_recon_error_ovr_seeds += avg_recon_error
 
-    avg_runtime_ovr_seeds /= NUM_SEEDS
-    avg_budget_ovr_seeds /= NUM_SEEDS
-    avg_budget_std_ovr_seeds /= NUM_SEEDS
-    avg_accuracies_ovr_seeds /= NUM_SEEDS
-    avg_recon_error_ovr_seeds /= NUM_SEEDS
+    avg_runtime_ovr_seeds /= num_seeds
+    avg_budget_ovr_seeds /= num_seeds
+    avg_budget_std_ovr_seeds /= num_seeds
+    avg_accuracies_ovr_seeds /= num_seeds
+    avg_recon_error_ovr_seeds /= num_seeds
 
     # save to log files
     if is_log:
@@ -192,7 +195,7 @@ def scaling_exp(
             "rec_error": avg_recon_error_ovr_seeds,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs/mp_scaling" if dirname is None else dirname
+        log_dir = os.path.join("logs", "mp_scaling") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg
@@ -220,8 +223,11 @@ def scaling_exp(
 
 if __name__ == "__main__":
     scaling_exp(
-        data_type=TOY_SINE,
+        data_type=SIMPLE_SONG,
+        size_minmax=(2*60*44100, 10*60*44100),
+        num_experiments=3,
+        num_atoms=10,
         use_cache=False,
         use_naive=False,
-        maxmin=(0.2, 0),
+        maxmin=(10.0, 0),
     )

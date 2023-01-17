@@ -130,6 +130,7 @@ def get_data(
         return atoms[:, sample_idcs], signals[:, sample_idcs]
     else:
         raise NotImplementedError(f"{data_type} is not implemented")
+
     assert (
         num_atoms + num_signals <= data.shape[0]
     ), "Number of atoms + number of signals given are greater than the number of rows of data"

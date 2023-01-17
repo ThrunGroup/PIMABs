@@ -17,7 +17,8 @@ from utils.constants import (
     NETFLIX,
     ACTION_ELIMINATION,
     DEFAULT_MAXMIN,
-    RECON_ERROR_THRESHOLD
+    RECON_ERROR_THRESHOLD,
+    SIMPLE_SONG,
 )
 
 
@@ -89,7 +90,7 @@ def orthogonal_matching_pursuit(
     seed: int = 0,
     abs: bool = False,
     batch_size: int = 30,
-    maxmin: Tuple[float, float] = (2.0, 0.0),
+    maxmin: Tuple[float, float] = (10.0, 0.0),
 
     # caching params
     use_cache: bool = True,
@@ -151,7 +152,7 @@ def orthogonal_matching_pursuit(
         if len(bandit_alg) > 0:
             # Todo: only supports caching with Action Elimination for now
             iter += 1
-            #print(f"MP iteration {iter}\n => residual is {np.linalg.norm(residual)}\n => maxmin is {maxmin}\n")
+            print(f"MP iteration {iter}\n => residual is {np.linalg.norm(residual)}\n => maxmin is {maxmin}\n")
 
             # naive-caching uses different permutations for each MP iteration.
             # this makes it less likely that we'll get cache hits compared to PI caching.
@@ -165,7 +166,7 @@ def orthogonal_matching_pursuit(
                 bandit_alg=bandit_alg,
                 epsilon=0.0,
                 abs=abs,
-                delta=0.1,
+                delta=0.01,
                 use_cache=use_cache,
                 shuffled_indices=shuffled_indices,
                 cache=cache,
@@ -174,6 +175,7 @@ def orthogonal_matching_pursuit(
                 seed=seed,
             )
             lam = candidate[0][0]
+            #print("Identified frequency", lam)
 
             # update params
             cache = cache
@@ -187,7 +189,6 @@ def orthogonal_matching_pursuit(
             budget = atoms.shape[0] * atoms.shape[1]
 
         total_budget += budget
-
         if lam < n_active or alpha[lam] ** 2 < min_float:
             # atom already selected or inner product too small
             print("=> atom already selected")
@@ -214,9 +215,9 @@ def orthogonal_matching_pursuit(
             L[0, 0] = linalg.norm(atoms[:, lam])
 
         # @Todo need to account for this swapping in caching
-        atoms.T[n_active], atoms.T[lam] = swap(atoms.T[n_active], atoms.T[lam])
-        alpha[n_active], alpha[lam] = alpha[lam], alpha[n_active]
-        indices[n_active], indices[lam] = indices[lam], indices[n_active]
+        atoms.T[n_active], atoms.T[lam] = swap( atoms.T[n_active], atoms.T[lam])
+        alpha[n_active], alpha[lam] = swap(alpha[n_active], alpha[lam])
+        indices[n_active], indices[lam] = swap(indices[n_active], indices[lam])
         n_active += 1
 
         # solves LL'atoms = atoms'signal as a composition of two triangular systems
@@ -225,6 +226,7 @@ def orthogonal_matching_pursuit(
         )
 
         # need to update residual and maxmin since delta (i.e. arm distances) will get smaller
+        # TODO(@motiwari): Right now this is only a heuristic, may be wrong!
         projection = np.dot(atoms[:, :n_active], gamma)
         residual = signal - projection
         decrease_by = np.linalg.norm(residual) / np.linalg.norm(signal)
@@ -242,12 +244,12 @@ def main(seed, num_atoms, len_signal, num_signals):
         num_atoms=num_atoms,
         len_signal=len_signal,
         seed=seed,
-        data_type=NETFLIX,
+        data_type=SIMPLE_SONG,
         num_signals=num_signals,
     )
 
     # scikit-learn implementation
-    model1 = OrthogonalMatchingPursuit(normalize=False, n_nonzero_coefs=3, fit_intercept=False, precompute=False)
+    model1 = OrthogonalMatchingPursuit(normalize=False, n_nonzero_coefs=5, fit_intercept=False, precompute=False)
     model1.fit(atoms.T, signals[0])
     sklearn_indices = model1.coef_.nonzero()[0]
 
@@ -255,20 +257,20 @@ def main(seed, num_atoms, len_signal, num_signals):
     naive_candidates, gamma, budget = orthogonal_matching_pursuit(
         atoms=atoms.T,
         signal=signals[0],
-        n_nonzero_coefs=3,
+        n_nonzero_coefs=5,
         min_residual=0.01,
         bandit_alg="",
         abs=True,
         seed=seed,
         use_cache=False,
     )
-    naive_recon = get_recon_error(gamma, atoms[naive_candidates], signals)
+    naive_recon = get_recon_error(gamma, atoms[naive_candidates], signals[0])
 
     # bandit implmentation
     bandit_candidates, gamma, budget = orthogonal_matching_pursuit(
         atoms=atoms.T,
         signal=signals[0],
-        n_nonzero_coefs=3,
+        n_nonzero_coefs=5,
         min_residual=0.01,
         bandit_alg=ACTION_ELIMINATION,
         abs=True,
@@ -277,7 +279,13 @@ def main(seed, num_atoms, len_signal, num_signals):
         use_naive=False,
         cache_multiplier=1,
     )
-    bandit_recon = get_recon_error(gamma, atoms[bandit_candidates], signals)
+    bandit_recon = get_recon_error(gamma, atoms[bandit_candidates], signals[0])
+
+    print("RECON ERRORS")
+    print("bandit recon error:", bandit_recon)
+    print("naive recon error:", naive_recon)
+    sklearn_recon = get_recon_error(model1.coef_[:4].reshape(-1, 1), atoms[:4], signals[0])
+    print("sklearn recon error WITH ONLY 5 FOURIER COMPONENTS", sklearn_recon)
 
     assert len(np.intersect1d(sklearn_indices, naive_candidates)) == len(sklearn_indices), \
         "The selected indices for our naive implementation and sklearn's OMP model are not identical"
@@ -292,7 +300,7 @@ def main(seed, num_atoms, len_signal, num_signals):
 
 if __name__ == "__main__":
     seed = 0
-    num_atoms = 100
-    len_signal = 10000
+    num_atoms = 10
+    len_signal = int(26e6)
     num_signals = 1
     main(seed, num_atoms, len_signal, num_signals)
