@@ -5,9 +5,9 @@ from scipy import linalg
 from typing import Tuple
 from collections import defaultdict
 from scipy.linalg.lapack import get_lapack_funcs
+from sklearn.linear_model import OrthogonalMatchingPursuit  # for debugging purposes
 
 from algorithms.mips_bandit import mips_bandit
-from sklearn.linear_model import OrthogonalMatchingPursuit  # for debugging purposes
 from data.get_data import get_data
 from utils.utils import set_seed, get_recon_error
 from utils.constants import (

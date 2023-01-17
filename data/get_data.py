@@ -8,7 +8,6 @@ from utils.utils import subset_2d
 from data.custom_data import generate_custom_data, create_toy_waves
 from data.simple_song import create_song, create_note_waves, create_sin_wave
 from utils.utils import subset_2d
-from tests.MP_test import create_toy_waves
 from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NORMAL_CUSTOM,

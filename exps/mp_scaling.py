@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 
 from algorithms.matching_pursuit import orthogonal_matching_pursuit
-from utils.utils import get_sizes_arr, get_recon_error
 from data.get_data import get_data
+from utils.utils import get_sizes_arr, get_recon_error
 from utils.constants import (
     NORMAL_CUSTOM,
     NETFLIX,
