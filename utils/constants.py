@@ -132,10 +132,10 @@ TRADEOFF_BATCH_SIZE_REAL = 5
 DELTA_POWER_MINMAX = (0.05, 20)
 
 # H2ALSH TRADEOFF PARAMS
-TRADEOFF_H2ALSH = {"powers_delta": (-10, 0), "c0": (1.01, 3), "c": (1, 0.1), "N0": (101, 500)}
+TRADEOFF_H2ALSH = {"powers_delta": (-3, 0), "c0": (1.2, 5), "c": (0.9, 0.2), "N0_ratio": (0.001, 0.001)}
 
 # BUCKET ACTION ELIMINATION TRADEOFF PARAMS
-TRADEOFF_BUCKET_ACTION_ELIMINATION = {"deltas": (0.001, 0.1), "epsilons": (0, 0.3), "bucket_num_samples": (1000, 50)}
+TRADEOFF_BUCKET_ACTION_ELIMINATION = {"deltas": (0.0, 0.5), "epsilons": (0, 0.3), "bucket_num_samples": (5000, 50)}
 
 # Large Scale params
 LARGE_SIZE_MINMAX = (10, 5 * 10 ** 6)

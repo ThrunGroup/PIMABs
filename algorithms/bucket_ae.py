@@ -63,6 +63,7 @@ def bucket_action_elimination(
     set_seed(seed)
     N = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms
+    num_samples_bucket = min(N, num_samples_bucket)
     k = min(
         int(N / num_samples_bucket), int(N / num_best_atoms)
     )  # Todo: fix hard-coded

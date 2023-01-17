@@ -42,9 +42,9 @@ def h2alsh_tradeoff_experiment():
     Run speedup_precision tradeoff experiment for H2ALSH algorithm and a few other MIPS algorithms with Normal custom
     dataset
     """
-    num_atoms = 5000
+    num_atoms = 100000
     num_experiments = TRADEOFF_NUM_EXPERIMENTS
-    len_signals = 20000
+    len_signals = 100
     num_signals = 3
     top_k = 3
     num_seeds = 2
@@ -54,11 +54,11 @@ def h2alsh_tradeoff_experiment():
 
     for data_type in datasets:
         for mips_alg in [
-            ADAPTIVE_ACTION_ELIMINATION,
-            ACTION_ELIMINATION,
+            # ADAPTIVE_ACTION_ELIMINATION,
+            # ACTION_ELIMINATION,
             BUCKET_ACTION_ELIMINATION,
             H2ALSH,
-            GREEDY_MIPS,
+            # GREEDY_MIPS,
         ]:
             if data_type is NETFLIX:
                 num_atoms = 1300
@@ -78,14 +78,14 @@ def h2alsh_tradeoff_experiment():
     create_tradeoff_plots(
         data_types=datasets,
         alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
-            ACTION_ELIMINATION,
+            # ADAPTIVE_ACTION_ELIMINATION,
+            # ACTION_ELIMINATION,
             BUCKET_ACTION_ELIMINATION,
             H2ALSH,
-            GREEDY_MIPS,
+            # GREEDY_MIPS,
         ],
         top_k=top_k,
-        max_speedup=1000,
+        # max_speedup=10,
         dir=log_dir,
     )
 
