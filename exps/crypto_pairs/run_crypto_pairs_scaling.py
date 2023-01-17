@@ -16,6 +16,7 @@ from utils.constants import (
     SCALING_NUM_ATOMS_CRYPTO_PAIRS,
     SCALING_EPSILON,
     SCALING_SIZE_MINMAX,
+    SCAlING_SIZE_MINMAX_CRYPTO_PAIRS,
 )
 from exps.plot_baselines import create_scaling_plots
 
@@ -28,8 +29,8 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
     1. Action elimination finds the best atom in the first iteration
     2. Budgets remain the same (3000) regardless of the signal vector size
     """
-    delta = 0.01
-    algorithms = [ADAPTIVE_ACTION_ELIMINATION]  #, ACTION_ELIMINATION, GREEDY_MIPS
+    delta = 0.1
+    algorithms = [ADAPTIVE_ACTION_ELIMINATION]  # , ACTION_ELIMINATION
 
     if run:
         for algorithm in algorithms:
@@ -38,7 +39,7 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
                 epsilon=SCALING_EPSILON,
                 delta=delta,
                 num_atoms=SCALING_NUM_ATOMS_CRYPTO_PAIRS,
-                size_minmax=SCALING_SIZE_MINMAX,
+                size_minmax=SCAlING_SIZE_MINMAX_CRYPTO_PAIRS,
                 maxmin=CRYPTO_PAIRS_MAXMIN,
                 num_experiments=SCALING_NUM_EXPERIMENTS,
                 num_signals=SCALING_NUM_SIGNALS,
@@ -46,21 +47,21 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
                 with_replacement=False,
                 is_normalize=False,
                 is_logspace=True,
-                verbose=True,
-                dirname="crypto_pairs_logs",
+                verbose=False,
+                dir_name="crypto_pairs_logs",
             )
 
     if plot:
         # basic scaling plots
         create_scaling_plots(
             is_fit=False,
-            include_error_bar=True,
+            include_error_bar=False,
+            is_plot_accuracy=True,
             data_types=[CRYPTO_PAIRS],
-            dirname="crypto_pairs_logs",
+            dir_name="crypto_pairs_logs",
             alg_names=[
                 ADAPTIVE_ACTION_ELIMINATION,
                 ACTION_ELIMINATION,
-                GREEDY_MIPS,
             ],
         )
 
@@ -69,15 +70,15 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
             is_fit=True,
             is_logspace=True,
             include_error_bar=True,
+            is_plot_accuracy=True,
             data_types=[CRYPTO_PAIRS],
-            dirname="crypto_pairs_logs",
+            dir_name="crypto_pairs_logs",
             alg_names=[
                 ADAPTIVE_ACTION_ELIMINATION,
                 ACTION_ELIMINATION,
-                GREEDY_MIPS,
             ]
         )
 
 
 if __name__ == "__main__":
-    run_crypto_pairs_scaling(run=False)
+    run_crypto_pairs_scaling()

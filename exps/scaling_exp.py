@@ -77,7 +77,7 @@ def scaling_exp(
     is_log: bool = True,
     is_plot: bool = True,
     is_logspace: bool = False,
-    dirname: str = None,
+    dir_name: str = None,
     verbose: bool = False,
 ) -> float:
     """
@@ -104,7 +104,7 @@ def scaling_exp(
     :param is_log: Whether to log the results
     :param is_plot: Whether to plot the results
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
-    :param dirname: Directory name to log the results
+    :param dir_name: Directory name to log the results
     :param verbose: Whether to print the number of iterations ran for action elimination
     """
     avg_runtimes = np.zeros((num_experiments, num_seeds))  # Note that the runtime is average over all signals
@@ -183,7 +183,7 @@ def scaling_exp(
                     + str(delta)
                 )
                 start_time = time.time()
-                candidates_array, budget_array, _, _, _ = mips_bandit(
+                bandit_results = mips_bandit(
                     atoms=atoms_subset,
                     signals=signals_subset,
                     maxmin=maxmin,
@@ -197,6 +197,7 @@ def scaling_exp(
                     verbose=verbose,
                     var_proxy_override=(data_type==CRYPTO_PAIRS)
                 )
+                candidates_array, budget_array = bandit_results[:2]
                 runtime = time.time() - start_time
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
@@ -318,8 +319,7 @@ def scaling_exp(
 
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
-        log_dir = os.path.join(parent_dir, log_dir)
+        log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
         filename = os.path.join(
             log_dir,
             mips_alg
