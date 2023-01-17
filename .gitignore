@@ -1,6 +1,5 @@
 data/raw_data
-data/netflix/*.txt
-data/mnist/*ubyte
+data/sift*
 
 .idea/
 *.DS_Store*

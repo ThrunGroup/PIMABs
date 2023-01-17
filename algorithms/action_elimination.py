@@ -26,6 +26,7 @@ def action_elimination(
     delta: float,
     abs: bool,
     num_best_atoms: int = 1,
+    abs: bool = False,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
     seed: int = 0,
@@ -134,6 +135,7 @@ def action_elimination(
             ) / (
                 (t + 1) * batch_size
             )  # Update the running means of arm returns # Does this np.dot do implicit broadcasting?
+
             ci = get_ci(
                 delta=new_delta,
                 var_proxy=var_proxy,
@@ -142,7 +144,6 @@ def action_elimination(
                 pop_size=d,
                 with_replacement=False,
             )
-
             if 4 * ci < epsilon:
                 if abs:
                     candidates = candidates[np.argsort(-np.abs(means[candidates]))][:num_best_atoms]
@@ -168,9 +169,9 @@ def action_elimination(
                 else:
                     candidates = candidates[np.argsort(-means[candidates])][:num_best_atoms]
                 break
+
             candidates = candidates[new_cand_idcs]
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
-    #print(f"hits = {hits}")
     return candidates_array, budgets_array, cache, cache_tracker, cache_map
 
