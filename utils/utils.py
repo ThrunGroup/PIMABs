@@ -7,10 +7,12 @@ import matplotlib.pyplot as plt
 from typing import Tuple, List, Any
 from sklearn.linear_model import LinearRegression
 from pandas import read_csv
+from collections import defaultdict
 from utils.constants import (
     COLORS,
     SCALING_SIZE_MINMAX,
-    SCALING_NUM_EXPERIMENTS
+    SCALING_NUM_EXPERIMENTS,
+    CACHING_BUDGET
 )
 
 
@@ -269,7 +271,11 @@ def get_wo_variance(elems: np.ndarray, pop_size: int) -> np.ndarray:
 
 
 @nb.njit
-def subset_2d(source_array: np.ndarray, rows: np.ndarray, columns: np.ndarray):
+def subset_2d(
+    source_array: np.ndarray,
+    rows: np.ndarray,
+    columns: np.ndarray,
+):
     """
     Why to implement this: there's no faster NumPy function that can replace this.
     """
@@ -278,6 +284,48 @@ def subset_2d(source_array: np.ndarray, rows: np.ndarray, columns: np.ndarray):
         for j in range(len(columns)):
             subset_array[(i, j)] = source_array[(rows[i], columns[j])]
     return subset_array
+
+
+@nb.njit
+def subset_2d_cached(
+    source_array: np.ndarray,
+    rows: np.ndarray,
+    columns: np.ndarray,
+    use_cache: bool,
+    cache: np.ndarray,
+    cache_tracker: np.ndarray,
+    cache_map: nb.typed.List,
+):
+    """
+    Implements subset_2d with cache support. Assumes budget to read/write cache is the same.
+    Returns the subset_array, updated cache, cache_tracker, and budget.
+    """
+    budget = 0
+    hits = 0
+    subset_array = np.empty((len(rows), len(columns)))
+    for i in range(len(rows)):
+        for j in range(len(columns)):
+            atom_idx = rows[i]
+            sample_idx = columns[j]
+
+            # Check if sample already exists in cache.
+            if use_cache and cache_map[atom_idx].get(sample_idx, -1) >= 0:
+                subset_array[(i, j)] = cache[(atom_idx, cache_map[atom_idx][sample_idx])]
+                budget += CACHING_BUDGET
+                hits += 1
+            else:
+                # write to cache if space exists
+                source = source_array[atom_idx, sample_idx]
+                if use_cache and (cache_tracker[atom_idx] < cache.shape[1]):
+                    cache[(atom_idx, cache_tracker[atom_idx])] = source
+                    cache_map[atom_idx][sample_idx] = cache_tracker[atom_idx]
+                    cache_tracker[atom_idx] += 1
+                    budget += CACHING_BUDGET
+
+                subset_array[(i, j)] = source
+                budget += 1
+
+    return subset_array, budget, cache, cache_tracker, cache_map, hits
 
 
 def fit_and_plot(
@@ -357,3 +405,21 @@ def get_sizes_arr(
             size_minmax[0], size_minmax[1], num_experiments
         ).astype(np.int64)
     return sizes_signal
+
+
+def get_recon_error(
+    coeffs: np.ndarray,
+    candidates: np.ndarray,
+    signals: np.ndarray,
+ ) -> np.ndarray:
+    """
+    Since the signal is decomposed into a linear combination of the selected indices, we also need to check that the
+    coefficients that OMP finds are accurate. This function computes the reconstruction error to give info on that.
+    """
+    assert len(coeffs) == candidates.shape[0], "all candidates must have corresponding coefficients"
+    return np.sum(
+        np.abs(
+            (signals - np.sum(coeffs * candidates, axis=0))
+            / np.sum(np.abs(signals))
+        )
+    )
