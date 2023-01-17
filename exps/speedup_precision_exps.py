@@ -435,15 +435,27 @@ def speedup_precision_exps(
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
 
         elif mips_alg is H2ALSH:
+            powers_delta1, powers_delta2 = TRADEOFF_H2ALSH["powers_delta"]
+            c0_1, c0_2 = TRADEOFF_H2ALSH["c0"]
+            c1, c2 = TRADEOFF_H2ALSH["c"]
+            N0_1, N0_2 = TRADEOFF_H2ALSH["N0_ratio"]
             powers_delta = np.linspace(
-                start=-10, stop=0, num=num_experiments, endpoint=True
+                start=powers_delta1,
+                stop=powers_delta2,
+                num=num_experiments,
+                endpoint=True,
             )
             deltas = 1 / 2 * 2 ** powers_delta
-            c0_list = np.linspace(start=1.3, stop=3, num=num_experiments, endpoint=True)
-            c_list = np.linspace(
-                start=0.95, stop=0.1, num=num_experiments, endpoint=True
+            c0_list = np.linspace(
+                start=c0_1, stop=c0_2, num=num_experiments, endpoint=True
             )
-            N0s = np.linspace(start=101, stop=500, num=num_experiments, endpoint=True)
+            c_list = np.linspace(start=c1, stop=c2, num=num_experiments, endpoint=True)
+            N0s = np.linspace(
+                start=max(N0_2 * num_atoms, 101),
+                stop=max(N0_2 * num_atoms, 101),
+                num=num_experiments,
+                endpoint=True,
+            )
             for idx in range(num_experiments):
                 delta = deltas[idx]
                 c0 = c0_list[idx]
@@ -461,6 +473,7 @@ def speedup_precision_exps(
                 )
                 accuracies.append(np.sum(accuracy_array) / num_signals)
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+                print(budget_array / (num_atoms * len_signals))
             log_info = "_epsilon" + str(epsilon) + "_delta" + str(delta)
 
         else:
