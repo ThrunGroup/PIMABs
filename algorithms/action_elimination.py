@@ -27,6 +27,7 @@ def action_elimination(
     abs: bool,
     num_best_atoms: int = 1,
     verbose: bool = False,
+    with_replacement: bool = False,
     batch_size: int = BATCH_SIZE,
     seed: int = 0,
 
