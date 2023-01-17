@@ -19,6 +19,7 @@ from utils.constants import (
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
+    TOY_SINE,
     MNIST_T,
     SIMPLE_SONG,
     SIFT_1M,
@@ -97,6 +98,8 @@ def translate_dataset_name(dataset_name: str):
         return "Clear Leader (Soft)"
     elif dataset_name == NO_CLEAR_LEADER:
         return "No Clear Leader"
+    elif dataset_name == TOY_SINE:
+        return "Toy Sine"
     elif dataset_name == MNIST_T:
         return "MNIST Transposed"
     elif dataset_name == SIMPLE_SONG:
@@ -140,8 +143,11 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
+    dir_name: str = "scaling",
+    caching_type: str = "",
     data_types: List[str] = [],
     alg_names: List[str] = [],
+    include_error_bar: bool = True,
     ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     include_error_bar: bool = False,
     is_fit: bool = False,
@@ -152,6 +158,8 @@ def create_scaling_plots(
     """
     Plot the scaling experiments from the data stored in the logs file.
 
+    :param dir_name: either "scaling" or "mp_scaling"
+    :param caching_type: either "", "(naive_cache)", "(PI_cache)"
     :param data_types: the datasets that you want to plot. If empty, warning is triggered.
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
     :param ind_variables: Independent variables (N or D)
@@ -162,15 +170,9 @@ def create_scaling_plots(
     :param dirname: directory name of log files
     """
     # get all csv files
-    if dirname is None:
-        current_file_directory = os.path.dirname(__file__)
-        path = (
-            os.path.join(current_file_directory, "logs", "scaling")
-            if dirname is None
-            else dirname
-        )
-    else:
-        path = dirname
+    path = os.path.join(os.getcwd(), "logs")
+    path = os.path.join(path, dir_name)
+    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -350,6 +352,69 @@ def create_tradeoff_plots(
         fig = plt.gcf()
         fig.set_size_inches(6, 4.5)
         plt.show()
+
+
+def compare_caching_budgets(
+    dir_name="mp_scaling",
+    caching_type="",
+    data_types=[NETFLIX],
+    alg_names=[ACTION_ELIMINATION],
+    include_error_bar=True,
+):
+    """
+    This function is used to plot the budget costs of PI caching and naive caching side-by-side to see that PI
+    caching has better computational costs.
+
+    :param dir_name: the directory name of where the log files are stored
+    :param caching_type: either PI or naive
+    """
+    # get all csv files
+    path = os.path.join(os.getcwd(), "logs")
+    path = os.path.join(path, dir_name)
+    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
+
+    if len(data_types) == 0:
+        raise Exception("At least one dataset must be specified")
+    if len(alg_names) == 0:
+        raise Exception("At least one algorithm must be specified")
+
+    for datatype in data_types:
+        plt.figure(figsize=(6, 4.5))
+        title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+        for f in csv_files:
+            alg_name = extract_alg(f)
+            data = read_csv(f)
+
+            # only get relevant data
+            if f.find(datatype) < 0 or f.find(caching_type) < 0 or alg_name not in alg_names:
+                continue
+
+            x = data["signal_sizes"].tolist()
+            y = data["budgets"].tolist()
+            error = data["budgets_std"].tolist()
+            x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+            plt.scatter(
+                x, y,
+                color=ALG_TO_COLOR[alg_name],
+                label=f"{translate_alg_name(alg_name)}"
+            )
+            plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
+
+            # Sort the legend entries (labels and handles) by labels
+            handles, labels = plt.gca().get_legend_handles_labels()
+            labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+            plt.legend(handles, labels, loc="upper left")
+
+            if include_error_bar:
+                plt.errorbar(x, y, error, fmt=".", color="black")
+            plt.title(title)
+            xlabel = "Signal Vector Size (d)"
+            ylabel = "Sample Complexity"
+            plt.ylabel(ylabel)
+            plt.xlabel(xlabel)
+
+        plt.show()
+
 
 
 def generate_scaling_plots():

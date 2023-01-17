@@ -4,6 +4,10 @@ import math
 import os
 import mnist
 
+from utils.utils import subset_2d
+from data.custom_data import generate_custom_data, create_toy_waves
+from data.simple_song import create_song, create_note_waves, create_sin_wave
+from utils.utils import subset_2d
 from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NORMAL_CUSTOM,
@@ -17,15 +21,15 @@ from utils.constants import (
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
+    TOY_SINE,
+    TOY_DISCRETE,
     MNIST_T,
     SIMPLE_SONG,
     SIFT_1M,
     SAMPLE_RATE,
     SECONDS_PER_MINUTE,
 )
-from data.custom_data import generate_custom_data
-from data.simple_song import create_song, create_note_waves, create_sin_wave
-from utils.utils import subset_2d
+
 
 def fvecs_read(filename, c_contiguous=True):
     fv = np.fromfile(filename, dtype=np.float32)
@@ -90,12 +94,15 @@ def get_data(
             "movie_lens_1m_ratings.npy",
         )
         data = np.load(filename)
-    elif data_type is CRYPTO_PAIRS:
+    elif data_type == CRYPTO_PAIRS:
         filename = os.path.join(
             os.path.join(os.path.dirname(__file__), "crypto_pairs"),
             "crypto_pairs_1m_dimensions.npy",
         )
         data = np.load(filename)
+    elif data_type == TOY_SINE:
+        atoms, signal = create_toy_waves(num_atoms, len_signal)
+        return atoms, np.array([signal])
     elif data_type == MNIST_T:
         mndata = mnist.MNIST(os.path.join(os.path.dirname(__file__), "mnist"))
         images, labels = mndata.load_training()

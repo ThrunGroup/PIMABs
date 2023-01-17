@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import numpy.linalg as la
 from typing import Tuple
 
 from utils.constants import (
@@ -94,3 +95,41 @@ def generate_custom_data(
         raise NotImplementedError(f"{data_type} is not implemented.")
 
     return atoms_array, signal
+
+
+def create_toy_discrete(num_atoms, mul):
+    """
+    This function creates a dictionary of atoms where the first three atoms are unit atoms a, b, c, and the rest of the
+    atoms are zero vectors. The query vector is q = 3a + 2b + c with the objective of MP running three iterations
+    to find the indices 0, 1, 2.
+    """
+    assert mul % 2 == 0 and mul >= 2, "mul must be a multiple of 2 and greater or equal to 2"
+    a = np.array([1, 1, 1] * mul, dtype='float64')
+    b = np.array([-1, 0, 1] * mul, dtype='float64')
+    c = np.concatenate((np.array([1, 0, 1] * (mul//2)), np.array([-1, 0, -1] * (mul//2))), dtype='float64')
+    random_arr = np.random.uniform(low=-1, high=1, size=(num_atoms-3, len(a)))
+    atoms = np.vstack(
+        (a/la.norm(a), b/la.norm(b), c/la.norm(c), random_arr/la.norm(random_arr, axis=1)[:, np.newaxis])
+    )
+    query = 3*a + 2*b + c
+    return atoms, query
+
+
+def create_toy_waves(num_atoms, d):
+    """
+    This function creates a dictionary of atoms of sinusoid waves where the first three sine waves a, b, c are orthogonal
+    to each other with the same amplitude and the rest of the atoms are zero vectors.
+    The query vector is q = 3a + 2b + c.
+    """
+    amplitude = 2
+    t = np.linspace(0, 2 * np.pi * d, d)
+    a = amplitude * np.sin(t)
+    b = amplitude * np.sin(2 * t)
+    c = amplitude * np.sin(3 * t)
+
+    random_arr = np.random.uniform(low=-amplitude, high=amplitude, size=(num_atoms-3, d))
+    atoms = np.vstack(
+        (a/la.norm(a), b/la.norm(b), c/la.norm(c), random_arr/la.norm(random_arr, axis=1)[:, np.newaxis])
+    )
+    query = 3*a + 2*b + c
+    return atoms, query

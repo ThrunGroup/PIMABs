@@ -1,7 +1,7 @@
 import numpy as np
-import math
 from typing import Tuple
 
+from utils.utils import set_seed
 from utils.constants import (
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -27,10 +27,16 @@ def mips_bandit(
     num_best_atoms: int = 1,
     seed: int = 0,
     is_experiment: bool = False,
+    abs: bool = False,
     verbose: bool = False,
     with_replacement: bool = False,
     var_proxy_override: bool = False,
     batch_size: int = BATCH_SIZE,
+    use_cache: bool = False,
+    shuffled_indices: list = None,
+    cache: np.ndarray = None,
+    cache_tracker: np.ndarray = None,
+    cache_map: list = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
@@ -59,7 +65,9 @@ def mips_bandit(
     assert len(atoms.shape) == 2, "Invalid size of data atoms matrix"
     assert len(signals.shape) == 2, "Invalid size of signal vector"
     assert atoms.shape[1] == signals.shape[1], "Dimension of atoms and signals must be equal"
+    assert with_replacement is False, "It is always advantageous to sample without replacement"
 
+    set_seed(seed)
     if with_replacement:
         if bandit_alg is ACTION_ELIMINATION:
             return action_elimination(
@@ -68,8 +76,10 @@ def mips_bandit(
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
                 delta=delta,
+                abs=abs,
                 num_best_atoms=num_best_atoms,
-                batch_size=batch_size
+                batch_size=batch_size,
+                seed=seed,
             )
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")
@@ -94,9 +104,16 @@ def mips_bandit(
                 min=maxmin[1],
                 epsilon=epsilon,
                 delta=delta,
+                abs=abs,
                 num_best_atoms=num_best_atoms,
                 with_replacement=False,
+                seed=seed,
                 batch_size=batch_size,
+                use_cache=use_cache,
+                permutation=shuffled_indices,
+                cache=cache,
+                cache_tracker=cache_tracker,
+                cache_map=cache_map,
                 verbose=verbose
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
@@ -105,6 +122,7 @@ def mips_bandit(
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 epsilon=epsilon,
+                seed=seed,
                 delta=delta,
                 num_best_atoms=num_best_atoms,
                 batch_size=batch_size
