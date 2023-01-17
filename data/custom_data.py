@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import numpy.linalg as la
 from typing import Tuple
 
 from utils.constants import (
@@ -7,6 +8,7 @@ from utils.constants import (
     NORMAL_CUSTOM,
     NORMAL_PAPER,
     UNIFORM_PAPER,
+    COR_NORMAL_CUSTOM,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
@@ -54,6 +56,20 @@ def generate_custom_data(
         for idx in range(num_atoms):
             atoms_array[idx] = rng.normal(loc=means[idx], size=len_signal)
         signal = rng.normal(loc=rng.normal(), size=(num_signals, len_signal))
+    elif (
+            data_type is COR_NORMAL_CUSTOM
+    ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
+        # Unlike other datasets, try to create a signal that is correlated to a few atoms. Correlation coefficient
+        # is drawn from a normal distribution.
+        correlations = rng.normal(size=(num_signals + 1, num_atoms))
+        correlations = np.abs(correlations) / np.sum(np.abs(correlations), axis=0, keepdims=True)
+        atoms_array = np.zeros((num_atoms, len_signal))
+        signal = rng.normal(loc=rng.normal(), size=(num_signals + 1, len_signal))  # To include independent normal rv
+        for idx in range(num_atoms):
+            for cor_idx in range(num_signals):
+                atoms_array[idx] += correlations[cor_idx, idx] * signal[cor_idx]
+        atoms_array += 3 * np.expand_dims(rng.normal(size=num_atoms), axis=1)
+        signal = signal[:-1, :]
     elif data_type == CLEAR_LEADER_HARD:
         signal_strength = 10
         best_atom_idx = np.random.choice(num_atoms)
@@ -65,7 +81,6 @@ def generate_custom_data(
 
         if best_atom_idx < num_atoms - 1:
             atoms_array[best_atom_idx+1:] = np.zeros((num_atoms-best_atom_idx-1, len_signal))
-
     elif data_type == CLEAR_LEADER_SOFT:
         signal_strength = 10
         best_atom_idx = np.random.choice(num_atoms)
@@ -80,3 +95,41 @@ def generate_custom_data(
         raise NotImplementedError(f"{data_type} is not implemented.")
 
     return atoms_array, signal
+
+
+def create_toy_discrete(num_atoms, mul):
+    """
+    This function creates a dictionary of atoms where the first three atoms are unit atoms a, b, c, and the rest of the
+    atoms are zero vectors. The query vector is q = 3a + 2b + c with the objective of MP running three iterations
+    to find the indices 0, 1, 2.
+    """
+    assert mul % 2 == 0 and mul >= 2, "mul must be a multiple of 2 and greater or equal to 2"
+    a = np.array([1, 1, 1] * mul, dtype='float64')
+    b = np.array([-1, 0, 1] * mul, dtype='float64')
+    c = np.concatenate((np.array([1, 0, 1] * (mul//2)), np.array([-1, 0, -1] * (mul//2))), dtype='float64')
+    random_arr = np.random.uniform(low=-1, high=1, size=(num_atoms-3, len(a)))
+    atoms = np.vstack(
+        (a/la.norm(a), b/la.norm(b), c/la.norm(c), random_arr/la.norm(random_arr, axis=1)[:, np.newaxis])
+    )
+    query = 3*a + 2*b + c
+    return atoms, query
+
+
+def create_toy_waves(num_atoms, d):
+    """
+    This function creates a dictionary of atoms of sinusoid waves where the first three sine waves a, b, c are orthogonal
+    to each other with the same amplitude and the rest of the atoms are zero vectors.
+    The query vector is q = 3a + 2b + c.
+    """
+    amplitude = 2
+    t = np.linspace(0, 2 * np.pi * d, d)
+    a = amplitude * np.sin(t)
+    b = amplitude * np.sin(2 * t)
+    c = amplitude * np.sin(3 * t)
+
+    random_arr = np.random.uniform(low=-amplitude, high=amplitude, size=(num_atoms-3, d))
+    atoms = np.vstack(
+        (a/la.norm(a), b/la.norm(b), c/la.norm(c), random_arr/la.norm(random_arr, axis=1)[:, np.newaxis])
+    )
+    query = 3*a + 2*b + c
+    return atoms, query

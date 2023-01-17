@@ -23,7 +23,7 @@ from utils.constants import (
 
 from utils.utils import get_sizes_arr
 from data.get_data import get_data
-from algorithms.hnsw import hnsw
+from algorithms.napg import hnsw
 
 
 def napg_scaling_exp(

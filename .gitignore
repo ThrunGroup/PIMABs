@@ -1,5 +1,7 @@
 data/raw_data
-.idea
+data/sift*
+
+.idea/
 *.DS_Store*
 .DS_Store
 
@@ -135,3 +137,7 @@ dmypy.json
 
 # real datasets
 *.npy
+
+# NAPG Checkpoints
+logs/scaling/napg_checkpoints
+logs/precision_speed/napg_checkpoints

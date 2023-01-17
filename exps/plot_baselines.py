@@ -6,18 +6,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pandas import read_csv
-from typing import List
+from typing import List, Any
 from utils.constants import (
     COLORS,
     ALG_TO_COLOR,
-
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NETFLIX,
+    NETFLIX_TRANSPOSE,
     MOVIE_LENS,
+    COR_NORMAL_CUSTOM,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
+    TOY_SINE,
+    MNIST_T,
+    SIMPLE_SONG,
+    SIFT_1M,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -29,6 +34,14 @@ from utils.constants import (
     NAPG_MIPS,
 
     MAX_SPEEDUP,
+    NEQ_MIPS,
+
+    MAX_SPEEDUP,
+    TRADEOFF_TOPK,
+    MAX_SPEEDUP,
+    BUCKET_ACTION_ELIMINATION,
+    DIMENSION_OF_ATOMS,
+    NUMBER_OF_ATOMS,
 )
 from utils.utils import fit_and_plot
 
@@ -56,6 +69,10 @@ def translate_alg_name(alg_name: str):
         return "HNSW-MIPS"
     elif alg_name == NAPG_MIPS:
         return "NAPG-MIPS"
+    elif alg_name == NEQ_MIPS:
+        return "NEQ_MIPS"
+    elif alg_name == BUCKET_ACTION_ELIMINATION:
+        return "Bucket_AE"
     else:
         raise Exception("Bad algorithm name")
 
@@ -75,14 +92,26 @@ def translate_dataset_name(dataset_name: str):
         return NORMAL_CUSTOM
     elif dataset_name == NETFLIX:
         return "Netflix"
+    elif dataset_name == NETFLIX_TRANSPOSE:
+        return "Netflix_transposed"
     elif dataset_name == MOVIE_LENS:
         return "Movie Lens"
+    elif dataset_name == COR_NORMAL_CUSTOM:
+        return COR_NORMAL_CUSTOM
     elif dataset_name == CLEAR_LEADER_HARD:
         return "Clear Leader (Hard)"
     elif dataset_name == CLEAR_LEADER_SOFT:
         return "Clear Leader (Soft)"
     elif dataset_name == NO_CLEAR_LEADER:
         return "No Clear Leader"
+    elif dataset_name == TOY_SINE:
+        return "Toy Sine"
+    elif dataset_name == MNIST_T:
+        return "MNIST Transposed"
+    elif dataset_name == SIMPLE_SONG:
+        return "Simple Song"
+    elif dataset_name == SIFT_1M:
+        return "SIFT 1M"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -107,6 +136,10 @@ def extract_alg(filename: str):
         return NAPG_MIPS
     elif HNSW_MIPS in filename:
         return HNSW_MIPS
+    elif NEQ_MIPS in filename:
+        return NEQ_MIPS
+    elif BUCKET_ACTION_ELIMINATION in filename:
+        return BUCKET_ACTION_ELIMINATION
     else:
         raise Exception("No algorithm was able to be extracted from " + filename)
 
@@ -120,19 +153,25 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
-        data_types: List[str] = [],
-        alg_names: List[str] = [],
-        include_error_bar: bool = False,
-        is_fit: bool = False,
-        is_logspace: bool = False,
-        is_plot_accuracy: bool = False,
-        dirname: str = None,
+    dir_name: str = "scaling",
+    caching_type: str = "",
+    data_types: List[str] = [],
+    alg_names: List[str] = [],
+    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
+    include_error_bar: bool = False,
+    is_fit: bool = False,
+    is_logspace: bool = False,
+    is_plot_accuracy: bool = False,
+    dirname: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
 
+    :param dir_name: either "scaling" or "mp_scaling"
+    :param caching_type: either "", "(naive_cache)", "(PI_cache)"
     :param data_types: the datasets that you want to plot. If empty, warning is triggered.
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
+    :param ind_variables: Independent variables (N or D)
     :param include_error_bar: shows the standard deviation
     :param is_fit: whether to fit the plots or not
     :param is_logspace: whether to plot in logspace or not
@@ -140,90 +179,117 @@ def create_scaling_plots(
     :param dirname: directory name of log files
     """
     # get all csv files
-    path = os.path.join(os.getcwd(), "logs", "scaling") if dirname is None else dirname
+    path = os.path.join(os.getcwd(), "logs")
+    path = os.path.join(path, dir_name)
     csv_files = glob.glob(os.path.join(path, "*SCALING*"))
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
+
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
-    for datatype in data_types:
-        title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+    for ind_variable in ind_variables:
+        for datatype in data_types:
+            csv_files = glob.glob(
+                os.path.join(path, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+            )
+            plt.figure(figsize=(6, 4.5))
+            title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+            for f in csv_files:
+                alg_name = extract_alg(f)
+                data = read_csv(f)
+                independent_var = (
+                    "signal_sizes" if "signal_sizes" in data.keys() else "num_atoms"
+                )
 
-        for f in csv_files:
-            alg_name = extract_alg(f)
-            data = read_csv(f)
+                # only get relevant data
+                if f.find(datatype) < 0 or alg_name not in alg_names:
+                    continue
 
-            # only get relevant data
-            if f.find(datatype) < 0 or alg_name not in alg_names:
-                continue
+                x = data[independent_var].tolist()
+                y = data["budgets"].tolist()
+                error = data["budgets_std"].tolist()
+                x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+                if is_fit:
+                    title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
+                    if is_logspace:
+                        functions = [np.array, power10_sqrt, power10]
+                        function_names = [
+                            "$y \propto log x$",
+                            "$y \propto x^{1/2}$",
+                            "$y \propto x$",
+                        ]
+                        x = np.log10(x)
+                    else:
+                        functions = [np.array, np.sqrt, np.log]
+                        function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
 
-            x = data["signal_sizes"].tolist()
-            y = data["budgets"].tolist()
-            error = data["budgets_std"].tolist()
-            x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
-            if is_fit:
-                title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
-                if is_logspace:
-                    functions = [np.array, power10_sqrt, power10]
-                    function_names = [
-                        "$y \propto log x$",
-                        "$y \propto x^{1/2}$",
-                        "$y \propto x$",
-                    ]
-                    x = np.log10(x)
+                    fit_and_plot(
+                        xs=x,
+                        ys=y,
+                        function_list=functions,
+                        function_name_list=function_names,
+                        ys_std=error,
+                        is_logspace=is_logspace,
+                    )
+                    plt.title(title)
+                    xlabel = (
+                        "Signal Vector Size (d)"
+                        if independent_var == "signal_sizes"
+                        else "Number of atoms (N)"
+                    )
+                    ylabel = "Sample Complexity"
+                    plt.ylabel(ylabel)
+                    plt.xlabel(xlabel)
+
                 else:
-                    functions = [np.array, np.sqrt, np.log]
-                    function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
-                fit_and_plot(
-                    xs=x,
-                    ys=y,
-                    function_list=functions,
-                    function_name_list=function_names,
-                    ys_std=error,
-                    is_logspace=is_logspace,
-                )
-                plt.title(title)
-                xlabel = "Signal Vector Size (d)"
-                ylabel = "Sample Complexity"
-                plt.ylabel(ylabel)
-                plt.xlabel(xlabel)
+                    plt.scatter(
+                        x,
+                        y,
+                        color=ALG_TO_COLOR[alg_name],
+                        label=f"{translate_alg_name(alg_name)}",
+                    )
+                    plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
-            else:
-                plt.scatter(
-                    x, y,
-                    color=ALG_TO_COLOR[alg_name],
-                    label=f"{translate_alg_name(alg_name)}"
-                )
-                plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
+                    # Sort the legend entries (labels and handles) by labels
+                    handles, labels = plt.gca().get_legend_handles_labels()
+                    labels, handles = zip(
+                        *sorted(zip(labels, handles), key=lambda t: t[0])
+                    )
+                    plt.legend(handles, labels, loc="upper left")
 
-                # Sort the legend entries (labels and handles) by labels
-                handles, labels = plt.gca().get_legend_handles_labels()
-                labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
-                plt.legend(handles, labels, loc="upper left")
+                    if include_error_bar:
+                        plt.errorbar(x, y, error, fmt=".", color="black")
+                    plt.title(title)
+                    xlabel = (
+                        "Signal Vector Size (d)"
+                        if independent_var == "signal_sizes"
+                        else "Number of atoms (N)"
+                    )
+                    ylabel = "Sample Complexity"
+                    plt.ylabel(ylabel)
+                    plt.xlabel(xlabel)
 
-                if include_error_bar:
-                    plt.errorbar(x, y, error, fmt=".", color="black")
-                plt.title(title)
-                xlabel = "Signal Vector Size (d)"
-                ylabel = "Sample Complexity"
-                plt.ylabel(ylabel)
-                plt.xlabel(xlabel)
+                if is_plot_accuracy:
+                    avg_accuracy = np.mean(data["accuracy"])
+                    plt.text(
+                        x[-1],
+                        y[-1],
+                        f"Accuracy: {avg_accuracy}",
+                        ha="right",
+                        va="bottom",
+                    )
 
-            if is_plot_accuracy:
-                avg_accuracy = np.mean(data["accuracy"])
-                plt.text(x[-1], y[0], f"Accuracy: {avg_accuracy}", ha='right', va='bottom')
-
-        plt.show()
+            plt.show()
 
 
 def create_tradeoff_plots(
-        data_types: List[str] = [],
-        alg_names: List[str] = [],
-        top_k: int = 1,
-        include_error_bar: bool = False,
-        max_speedup: int = None
+    data_types: List[str] = [],
+    alg_names: List[str] = [],
+    top_k: int = 1,
+    include_error_bar: bool = False,
+    max_speedup: int = None,
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -234,9 +300,9 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    path = os.path.join(os.getcwd(), "logs")
+    current_file_directory = os.path.dirname(__file__)
+    path = os.path.join(current_file_directory, "logs")
     path = os.path.join(path, "precision_speed")
-
     csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
 
     if len(data_types) == 0:
@@ -246,17 +312,23 @@ def create_tradeoff_plots(
 
     for datatype in data_types:
         plt.figure(figsize=(6, 4.5))
-        title = f"Precision-Speed Tradeoff Baselines: {translate_dataset_name(datatype)}"
+        title = (
+            f"Precision-Speed Tradeoff Baselines: {translate_dataset_name(datatype)}"
+        )
         for f in csv_files:
             alg_name = extract_alg(f)
             data = read_csv(f)
 
             # only get relevant data
-            if f.find(datatype) < 0 or alg_name not in alg_names or f.find(str("topk") + str(top_k)) < 0:
+            if (
+                f.find(datatype) < 0
+                or alg_name not in alg_names
+                or f.find(str("topk") + str(top_k)) < 0
+            ):
                 continue
 
             budget_data = data["budgets"].tolist()
-            x = np.max(budget_data) / budget_data  # speed is inverse budget
+            x = data["naive_budget"] / budget_data  # speed is inverse budget
             y = data["accuracy"].tolist()
             error = data["accuracy_std"].tolist()
             if max_speedup is not None:
@@ -265,9 +337,10 @@ def create_tradeoff_plots(
 
             # plot the datapoints
             plt.scatter(
-                x, y,
+                x,
+                y,
                 color=ALG_TO_COLOR[alg_name],
-                label=f"{translate_alg_name(alg_name)}"
+                label=f"{translate_alg_name(alg_name)}",
             )
             plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
@@ -290,6 +363,69 @@ def create_tradeoff_plots(
         plt.show()
 
 
+def compare_caching_budgets(
+    dir_name="mp_scaling",
+    caching_type="",
+    data_types=[NETFLIX],
+    alg_names=[ACTION_ELIMINATION],
+    include_error_bar=True,
+):
+    """
+    This function is used to plot the budget costs of PI caching and naive caching side-by-side to see that PI
+    caching has better computational costs.
+
+    :param dir_name: the directory name of where the log files are stored
+    :param caching_type: either PI or naive
+    """
+    # get all csv files
+    path = os.path.join(os.getcwd(), "logs")
+    path = os.path.join(path, dir_name)
+    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
+
+    if len(data_types) == 0:
+        raise Exception("At least one dataset must be specified")
+    if len(alg_names) == 0:
+        raise Exception("At least one algorithm must be specified")
+
+    for datatype in data_types:
+        plt.figure(figsize=(6, 4.5))
+        title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+        for f in csv_files:
+            alg_name = extract_alg(f)
+            data = read_csv(f)
+
+            # only get relevant data
+            if f.find(datatype) < 0 or f.find(caching_type) < 0 or alg_name not in alg_names:
+                continue
+
+            x = data["signal_sizes"].tolist()
+            y = data["budgets"].tolist()
+            error = data["budgets_std"].tolist()
+            x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+            plt.scatter(
+                x, y,
+                color=ALG_TO_COLOR[alg_name],
+                label=f"{translate_alg_name(alg_name)}"
+            )
+            plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
+
+            # Sort the legend entries (labels and handles) by labels
+            handles, labels = plt.gca().get_legend_handles_labels()
+            labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+            plt.legend(handles, labels, loc="upper left")
+
+            if include_error_bar:
+                plt.errorbar(x, y, error, fmt=".", color="black")
+            plt.title(title)
+            xlabel = "Signal Vector Size (d)"
+            ylabel = "Sample Complexity"
+            plt.ylabel(ylabel)
+            plt.xlabel(xlabel)
+
+        plt.show()
+
+
+
 def generate_scaling_plots():
     """
     Generate scaling plots for the two synthetic datasets (normal custom, adversarial custom) and
@@ -299,7 +435,13 @@ def generate_scaling_plots():
     create_scaling_plots(
         is_fit=False,
         include_error_bar=True,
-        data_types=[NETFLIX, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS],
+        data_types=[
+            NORMAL_CUSTOM,
+            ADVERSARIAL_CUSTOM,
+            NETFLIX,
+            MOVIE_LENS,
+            COR_NORMAL_CUSTOM,
+        ],
         alg_names=[
             HNSW_MIPS,
             ADAPTIVE_ACTION_ELIMINATION,
@@ -309,7 +451,10 @@ def generate_scaling_plots():
             PCA_MIPS,
             LSH_MIPS,
             NAPG_MIPS,
-        ]
+            LSH_MIPS,
+            NEQ_MIPS,
+            BUCKET_ACTION_ELIMINATION,
+        ],
     )
 
     # fit the bandit algorithms, NAPG, and greedy-mips for better comparison
@@ -324,7 +469,7 @@ def generate_scaling_plots():
             MEDIAN_ELIMINATION,
             GREEDY_MIPS,
             NAPG_MIPS,
-        ]
+        ],
     )
 
 
@@ -345,11 +490,11 @@ def generate_tradeoff_plots(top_k: int = 1):
             LSH_MIPS,
             HNSW_MIPS,
             NAPG_MIPS,
+            NEQ_MIPS,
         ],
         top_k=top_k,
-        include_error_bar=False
+        include_error_bar=False,
     )
-
     create_tradeoff_plots(
         data_types=[ADVERSARIAL_CUSTOM],
         alg_names=[
@@ -359,16 +504,17 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            NEQ_MIPS,
             HNSW_MIPS,
             NAPG_MIPS,
         ],
         top_k=top_k,
         max_speedup=MAX_SPEEDUP,
-        include_error_bar=False
+        include_error_bar=False,
     )
 
 
 if __name__ == "__main__":
-    # generate_scaling_plots()
-    generate_tradeoff_plots()
-    # generate_tradeoff_plots(top_k=20)
+    generate_scaling_plots()
+    generate_tradeoff_plots(top_k=5)
+    generate_tradeoff_plots(top_k=20)

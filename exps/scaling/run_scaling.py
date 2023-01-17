@@ -1,10 +1,21 @@
+import numpy as np
+import math
+from typing import Tuple
 from exps.scaling_exp import scaling_exp
+from exps.plot_baselines import generate_scaling_plots, create_scaling_plots
 from utils.constants import (
+    BATCH_SIZE,
+
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
+    NORMAL_PAPER,
     NETFLIX,
     MOVIE_LENS,
+    COR_NORMAL_CUSTOM,
+    CLEAR_LEADER_HARD,
+    CLEAR_LEADER_SOFT,
+    NO_CLEAR_LEADER,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -15,6 +26,8 @@ from utils.constants import (
     PCA_MIPS,
     HNSW_MIPS,
     NAPG_MIPS,
+    NEQ_MIPS,
+    BUCKET_ACTION_ELIMINATION,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -148,6 +161,19 @@ def run_scaling():
             num_signals=SCALING_NUM_SIGNALS,
             data_type=data_type,
             mips_alg=NAPG_MIPS,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=True,
+        )
+        scaling_exp(
+            epsilon=epsilon,
+            delta=delta,
+            num_atoms=SCALING_NUM_ATOMS,
+            size_minmax=size_minmax,
+            num_experiments=SCALING_NUM_EXPERIMENTS,
+            num_signals=SCALING_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=NEQ_MIPS,
             with_replacement=False,
             is_normalize=False,
             is_logspace=True,

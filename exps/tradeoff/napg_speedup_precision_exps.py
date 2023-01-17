@@ -19,7 +19,7 @@ from utils.constants import (
     TRADEOFF_TOPK,
 )
 from data.get_data import get_data
-from algorithms.hnsw import hnsw
+from algorithms.napg import hnsw
 from exps.speedup_precision_exps import get_accuracy_array
 
 
