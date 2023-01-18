@@ -30,7 +30,7 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
     2. Budgets remain the same (3000) regardless of the signal vector size
     """
     delta = 0.1
-    algorithms = [ADAPTIVE_ACTION_ELIMINATION]  # , ACTION_ELIMINATION
+    algorithms = [ADAPTIVE_ACTION_ELIMINATION, ACTION_ELIMINATION]
 
     if run:
         for algorithm in algorithms:
@@ -81,4 +81,4 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
 
 
 if __name__ == "__main__":
-    run_crypto_pairs_scaling(run=False)
+    run_crypto_pairs_scaling()

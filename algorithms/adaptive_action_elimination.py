@@ -23,8 +23,7 @@ def adaptive_action_elimination(
     epsilon: float,
     delta: float,
     var_proxy_override: bool = False,
-    max: float = 0.0,
-    minn: float = 0.0,
+    maxmin: list = [],
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
@@ -53,7 +52,7 @@ def adaptive_action_elimination(
 
         if var_proxy_override:
             signal_median = np.median(signal)
-            var_proxy = 1 / 4 * ((max - minn) * signal_median) ** 2
+            var_proxy = 1 / 4 * ((maxmin[0] - maxmin[1]) * signal_median) ** 2
 
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
