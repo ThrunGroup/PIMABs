@@ -23,19 +23,16 @@ def run_napg_tradeoff():
     the two real-world datasets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NETFLIX, MOVIE_LENS]:  # NORMAL_CUSTOM
+    for data_type in [NETFLIX, MOVIE_LENS]:  # NORMAL_CUSTOM,
         if data_type is NETFLIX:
-            num_atoms = NUM_ATOMS_REAL
             len_signals = LEN_SIGNAL_NETFLIX
         elif data_type is MOVIE_LENS:
-            num_atoms = NUM_ATOMS_REAL
             len_signals = LEN_SIGNAL_MOVIE
         else:
-            num_atoms = TRADEOFF_NUM_ATOMS
             len_signals = TRADEOFF_DIMENSION
 
         napg_speedup_precision_exps(
-            num_atoms=num_atoms,
+            num_atoms=TRADEOFF_NUM_ATOMS,
             num_experiments=TRADEOFF_NUM_EXPERIMENTS,
             len_signals=len_signals,
             num_signals=TRADEOFF_NUM_SIGNALS,

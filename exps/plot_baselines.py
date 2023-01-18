@@ -153,7 +153,6 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
-    dir_name: str = "scaling",
     caching_type: str = "",
     data_types: List[str] = [],
     alg_names: List[str] = [],
@@ -162,12 +161,11 @@ def create_scaling_plots(
     is_fit: bool = False,
     is_logspace: bool = False,
     is_plot_accuracy: bool = False,
-    dirname: str = None,
+    dir_name: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
 
-    :param dir_name: either "scaling" or "mp_scaling"
     :param caching_type: either "", "(naive_cache)", "(PI_cache)"
     :param data_types: the datasets that you want to plot. If empty, warning is triggered.
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
@@ -176,12 +174,12 @@ def create_scaling_plots(
     :param is_fit: whether to fit the plots or not
     :param is_logspace: whether to plot in logspace or not
     :param is_plot_accuracy: whether to annotate accuracy in the graph
-    :param dirname: directory name of log files
+    :param dir_name: directory name of log files
     """
     # get all csv files
-    path = os.path.join(os.getcwd(), "logs")
-    path = os.path.join(path, dir_name)
-    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.join("scaling", "logs") if dir_name is None else dir_name
+    log_dir = os.path.join(parent_dir, log_dir)
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -192,7 +190,7 @@ def create_scaling_plots(
     for ind_variable in ind_variables:
         for datatype in data_types:
             csv_files = glob.glob(
-                os.path.join(path, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+                os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
             )
             plt.figure(figsize=(6, 4.5))
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
@@ -242,7 +240,6 @@ def create_scaling_plots(
                     ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
-
                 else:
                     plt.scatter(
                         x,
@@ -300,10 +297,11 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    current_file_directory = os.path.dirname(__file__)
-    path = os.path.join(current_file_directory, "logs")
-    path = os.path.join(path, "precision_speed")
-    csv_files = glob.glob(os.path.join(path, "*SPEEDUP*"))
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.join("tradeoff", "logs")
+    log_dir = os.path.join(parent_dir, log_dir)
+
+    csv_files = glob.glob(os.path.join(log_dir, "*SPEEDUP*"))
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -440,16 +438,16 @@ def generate_scaling_plots():
             ADVERSARIAL_CUSTOM,
             NETFLIX,
             MOVIE_LENS,
-            COR_NORMAL_CUSTOM,
+            # COR_NORMAL_CUSTOM,
         ],
         alg_names=[
-            HNSW_MIPS,
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
+            # GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            HNSW_MIPS,
             NAPG_MIPS,
             LSH_MIPS,
             NEQ_MIPS,
@@ -457,23 +455,22 @@ def generate_scaling_plots():
         ],
     )
 
-    # fit the bandit algorithms, NAPG, and greedy-mips for better comparison
-    create_scaling_plots(
-        is_fit=True,
-        is_logspace=True,
-        include_error_bar=True,
-        data_types=[NETFLIX, MOVIE_LENS],
-        alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
-            ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            NAPG_MIPS,
-        ],
-    )
+    # # fit the bandit algorithms, and greedy-mips for better comparison
+    # create_scaling_plots(
+    #     is_fit=True,
+    #     is_logspace=True,
+    #     include_error_bar=True,
+    #     data_types=[NETFLIX, MOVIE_LENS],
+    #     alg_names=[
+    #         ADAPTIVE_ACTION_ELIMINATION,
+    #         ACTION_ELIMINATION,
+    #         MEDIAN_ELIMINATION,
+    #         GREEDY_MIPS,
+    #     ],
+    # )
 
 
-def generate_tradeoff_plots(top_k: int = 1):
+def generate_tradeoff_plots(top_k: int = 10):
     """
     Generate tradeoff plots for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
@@ -488,9 +485,9 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
-            # HNSW_MIPS,
+            HNSW_MIPS,
             NAPG_MIPS,
-            # NEQ_MIPS,
+            NEQ_MIPS,
         ],
         top_k=top_k,
         include_error_bar=False,
@@ -505,7 +502,7 @@ def generate_tradeoff_plots(top_k: int = 1):
             PCA_MIPS,
             LSH_MIPS,
             NEQ_MIPS,
-            # HNSW_MIPS,
+            HNSW_MIPS,
             NAPG_MIPS,
         ],
         top_k=top_k,
@@ -515,7 +512,7 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    # generate_scaling_plots()
+    generate_scaling_plots()
     generate_tradeoff_plots()
     # generate_tradeoff_plots(top_k=5)
     # generate_tradeoff_plots(top_k=20)

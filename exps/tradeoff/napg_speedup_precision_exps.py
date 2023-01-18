@@ -52,14 +52,15 @@ def napg_speedup_precision_exps(
     """
     print(f"=> Tradeoff experiment for NAPG with {data_type} dataset")
 
-    checkpoint_path = os.path.join(os.getcwd(), "exps", "logs", "precision_speed", "napg_checkpoints")
+    log_dir = "logs" if dirname is None else dirname
+    checkpoint_path = os.path.join(log_dir, "napg_checkpoints")
+
     os.makedirs(checkpoint_path, exist_ok=True)
-    checkpoint_files = glob.glob(os.path.join(checkpoint_path, f"*{data_type}*"))
+    checkpoint_files = glob.glob(os.path.join(checkpoint_path, f"*{data_type}*topk{num_best_atoms}*"))
     previous_seed = len(checkpoint_files)
 
     for seed in range(previous_seed, NUM_SEEDS):
         print(f"... running seed {seed}")
-        rng = np.random.default_rng(seed)
         atoms, signals = get_data(
             num_atoms=num_atoms,
             len_signal=len_signals,
@@ -126,6 +127,8 @@ def napg_speedup_precision_exps(
             + "_"
             + "seed"
             + str(seed)
+            + "topk"
+            + str(num_best_atoms)
             + ".csv",
         )
         checkpoint_log_df.to_csv(filename, index=False)
@@ -170,7 +173,7 @@ def napg_speedup_precision_exps(
                 "naive_budget": num_atoms * len_signals,
             }
             log_df = pd.DataFrame(log_dict)
-            log_dir = os.path.join(os.getcwd(), "exps", "logs", "precision_speed") if dirname is None else dirname
+
             filename = os.path.join(
                 log_dir,
                 NAPG_MIPS

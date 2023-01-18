@@ -24,7 +24,7 @@ def run_napg_scaling():
     results for plotting by saving the checkpoints for each seed.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
+    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:  # NETFLIX, MOVIE_LENS
         if data_type is MOVIE_LENS:
             size_minmax = SCAlING_SIZE_MINMAX_MOVIE
         else:

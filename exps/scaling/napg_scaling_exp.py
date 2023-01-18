@@ -9,6 +9,8 @@ from pandas import read_csv
 import glob
 
 from utils.constants import (
+    DIMENSION_OF_ATOMS,
+
     # Dataset
     NORMAL_CUSTOM,
 
@@ -74,10 +76,16 @@ def napg_scaling_exp(
         data_type=data_type,
     )
 
-    checkpoint_path = os.path.join(os.getcwd(), "logs", "scaling", "napg_checkpoints")
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.join(parent_dir, "logs") if dirname is None else dirname
+    checkpoint_path = os.path.join(log_dir, "napg_checkpoints")
     os.makedirs(checkpoint_path, exist_ok=True)
     checkpoint_files = glob.glob(os.path.join(checkpoint_path, f"*{data_type}*"))
     previous_seed = len(checkpoint_files)
+
+    if previous_seed == num_seeds:
+        print(f"Experiments for {data_type} are already done")
+        return
 
     # average over num_seeds results
     for seed in range(previous_seed, num_seeds):
@@ -192,7 +200,6 @@ def napg_scaling_exp(
                 "runtime": avg_runtime,
             }
             log_df = pd.DataFrame(log_dict)
-            log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
             filename = os.path.join(
                 log_dir,
                 NAPG_MIPS
@@ -202,6 +209,9 @@ def napg_scaling_exp(
                 + "_"
                 + "atoms"
                 + str(num_atoms)
+                + "_"
+                + "ind_var"
+                + DIMENSION_OF_ATOMS
                 + ".csv",
             )
             os.makedirs(log_dir, exist_ok=True)

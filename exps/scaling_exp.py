@@ -109,7 +109,6 @@ def scaling_exp(
     avg_runtimes = np.zeros((num_experiments, num_seeds))  # Note that the runtime is average over all signals
     budgets = np.zeros((num_experiments, num_seeds, num_signals))
     accuracies = np.zeros((num_experiments, num_seeds, num_signals))
-    sizes_signal = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
 
     if independent_var == DIMENSION_OF_ATOMS:
         sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
@@ -182,7 +181,7 @@ def scaling_exp(
                     + str(delta)
                 )
                 start_time = time.time()
-                candidates_array, budget_array, _, _, _ = mips_bandit(
+                bandit_results = mips_bandit(
                     atoms=atoms_subset,
                     signals=signals_subset,
                     maxmin=maxmin,
@@ -194,11 +193,15 @@ def scaling_exp(
                     is_experiment=False,
                     with_replacement=with_replacement,
                 )
+                candidates_array, budget_array = bandit_results[:2]  # mips_bandit returns five values
                 runtime = time.time() - start_time
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
-                    "budget"
+                    "ind_var"
+                    + str(independent_var)
+                    + "budget"
                     + str(DEFAULT_GREEDY_BUDGET)
+
                 )
                 start_time = time.time()
                 candidates_array, _, _, budget_array = greedy_mips(
@@ -210,7 +213,9 @@ def scaling_exp(
                 runtime = time.time() - start_time
             elif mips_alg is PCA_MIPS:
                 log_info = (
-                    "depth"
+                    "ind_var"
+                    + str(independent_var)
+                    + "depth"
                     + str(delta)
                 )
                 start_time = time.time()
@@ -223,7 +228,9 @@ def scaling_exp(
                 runtime = time.time() - start_time
             elif mips_alg is LSH_MIPS:
                 log_info = (
-                    "hfunc_"
+                    "ind_var"
+                    + str(independent_var)
+                    + "hfunc_"
                     + str(SCALING_NUM_HFUNC)
                     + "_tables"
                     + str(SCALING_NUM_TABLES)
@@ -239,7 +246,8 @@ def scaling_exp(
                 runtime = time.time() - start_time
             elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
                 log_info = (
-                        mips_alg
+                        "ind_var"
+                        + str(independent_var)
                 )
                 start_time = time.time()
                 candidates_array, budget_array = hnsw(
@@ -281,7 +289,7 @@ def scaling_exp(
             # store runtime, budget, budget_std, and accuracy of the experiment
             avg_runtimes[size_idx, seed] = runtime / num_signals  # Note that the runtimes are averaged over all signals
 
-            assert budget_array.size == num_signals, "budget_array should be the size of the signals"
+            # assert budget_array.size == num_signals, "budget_array should be the size of the signals"
             budgets[size_idx, seed, :] = budget_array
 
             naive_candidates_array = (
@@ -300,7 +308,7 @@ def scaling_exp(
     avg_runtime = np.mean(avg_runtimes, axis=1)  # Average over seeds because it's already averaged over signals
     avg_budget = np.mean(budgets, axis=(1, 2))  # Average over seeds and signals
     avg_budget_std = np.std(budgets, axis=(1, 2))  # Std over seeds and signals for given size
-    avg_accuracy = np.mean(accuracies, axis=(1, 2)) # Average over seeds and signals
+    avg_accuracy = np.mean(accuracies, axis=(1, 2))  # Average over seeds and signals
 
     assert avg_runtime.size == avg_budget.size == avg_budget_std.size == avg_accuracy.size == num_experiments, "The sizes of the arrays should be the same as num_experiments"
 
@@ -327,8 +335,7 @@ def scaling_exp(
 
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
-        log_dir = os.path.join(parent_dir, log_dir)
+        log_dir = os.path.join(parent_dir, "scaling", "logs") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg

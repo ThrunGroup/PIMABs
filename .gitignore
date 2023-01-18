@@ -1,5 +1,7 @@
 data/raw_data
 data/sift*
+exps/tradeoff/logs/napg_checkpoints
+exps/scaling/logs/napg_checkpoints
 
 .idea/
 *.DS_Store*

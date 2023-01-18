@@ -85,7 +85,7 @@ SCALING_TOPK = 5
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
 SCALING_SIZE_MINMAX = (
-    450, 10 ** 4,
+    450, 2 * 10 ** 4,
 )
 
 SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
@@ -94,7 +94,7 @@ SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
 
 # Precision-Speed Tradeoff Experiments
 TRADEOFF_NUM_EXPERIMENTS = 12  # corresponds to the number of points on the plot
-TRADEOFF_NUM_ATOMS = 1000
+TRADEOFF_NUM_ATOMS = 100
 TRADEOFF_DIMENSION = 10000
 TRADEOFF_DIMENSION_MOVIE = 5000  # movie dataset is only 6000 dimensions
 TRADEOFF_NUM_SIGNALS = 3
@@ -144,7 +144,7 @@ TRADEOFF_MAXMIN_REAL = (0.3, -0.3)
 TRADEOFF_VAR_REAL = 2
 TRADEOFF_DEPTH_MINMAX_REAL = (0, 10)
 TRADEOFF_BATCH_SIZE_REAL = 5
-DELTA_POWER_MINMAX = (0.05, 20)
+DELTA_POWER_MINMAX = (0.05, 15)
 
 # Large Scale params
 LARGE_SIZE_MINMAX = (10, 5 * 10 ** 6)

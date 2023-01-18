@@ -79,7 +79,7 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips, generate_conditer
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
-# from algorithms.quantization import PQ, ResidualPQ, NormPQ, execute
+from algorithms.quantization import PQ, ResidualPQ, NormPQ, execute
 from algorithms.napg import hnsw
 
 
@@ -213,7 +213,7 @@ def speedup_precision_exps(
                         + str(delta)
                     )
                     start_time = time.time()
-                    mips_results = mips_bandit(
+                    bandit_results = mips_bandit(
                         atoms=atoms,
                         signals=signals,
                         maxmin=new_maxmin,
@@ -226,11 +226,7 @@ def speedup_precision_exps(
                         with_replacement=with_replacement,
                         batch_size=tradeoff_batch_size,
                     )
-
-                    if len(mips_results) == 2:
-                        candidates_array, budget_array = mips_results
-                    else:
-                        candidates_array, budget_array, _, _, _ = mips_results
+                    candidates_array, budget_array = bandit_results[:2]  # mips_bandit returns five values
 
                     runtimes.append(time.time() - start_time)
                     budgets.append(np.mean(budget_array))
@@ -250,7 +246,7 @@ def speedup_precision_exps(
                             + str(delta)
                     )
                     start_time = time.time()
-                    mips_results = mips_bandit(
+                    bandit_results = mips_bandit(
                         atoms=atoms,
                         signals=signals,
                         maxmin=NORMALIZED_MAXMIN,
@@ -262,10 +258,7 @@ def speedup_precision_exps(
                         is_experiment=False,
                         with_replacement=with_replacement,
                     )
-                    if len(mips_results) == 2:
-                        candidates_array, budget_array = mips_results
-                    else:
-                        candidates_array, budget_array, _, _, _ = mips_results
+                    candidates_array, budget_array = bandit_results[:2]  # mips_bandit returns five values
 
                     runtimes.append(time.time() - start_time)
                     budgets.append(np.mean(budget_array))
@@ -278,7 +271,7 @@ def speedup_precision_exps(
                 delta_powers = np.linspace(DELTA_POWER_MINMAX[0], DELTA_POWER_MINMAX[1], num_experiments)
                 for delta_power in delta_powers:
                     idx += 1
-                    epsilon = 2 + 7 * idx / num_experiments
+                    epsilon = min(2 + 7 * idx / num_experiments, 8)
                     log_info = (
                         "epsilon"
                         + str(epsilon)
@@ -292,7 +285,7 @@ def speedup_precision_exps(
                         maxmin=tradeoff_maxmin,
                         bandit_alg=mips_alg,
                         epsilon=epsilon,
-                        delta=1 - 10 ** (-delta_power),
+                        delta=1-10 ** (-delta_power),
                         num_best_atoms=num_best_atoms,
                         seed=seed,
                         is_experiment=False,
@@ -303,6 +296,9 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+                    print(f"delta_power: {delta_power}, delta: {1 - 10 ** (-delta_power)}, "
+                          f"epsilon: {epsilon}, "
+                          f"accuracy: {np.sum(accuracy_array)}")
             else:
                 epsilons = np.linspace(EPSILON_MINMAX_MEDIAN[0], EPSILON_MINMAX_MEDIAN[1], num_experiments)
                 for epsilon in epsilons:
@@ -404,8 +400,8 @@ def speedup_precision_exps(
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
         elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
-            Ms = np.geomspace(4, 64, num_experiments).astype(np.int64)
-            ef_constructions = np.geomspace(4, num_atoms//2, num_experiments).astype(np.int64)
+            Ms = np.geomspace(4, 32, num_experiments).astype(np.int64)
+            ef_constructions = np.geomspace(2, num_atoms//2, num_experiments).astype(np.int64)
             ef_searches = np.geomspace(2, num_atoms//2, num_experiments).astype(np.int64)
 
             for (M, ef_construction, ef_search) in zip(Ms, ef_constructions, ef_searches):
@@ -430,46 +426,46 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-        # elif mips_alg is NEQ_MIPS:
-        #     diff = TRADEOFF_CODEBOOK_MINMAX[1] - TRADEOFF_CODEBOOK_MINMAX[0] + 1
-        #     num_codewords = np.linspace(
-        #         TRADEOFF_CODEWORD_MINMAX[0], TRADEOFF_CODEWORD_MINMAX[1], num_experiments // diff
-        #     ).astype(np.int64)
-        #     num_codebooks = np.linspace(
-        #         TRADEOFF_CODEBOOK_MINMAX[0], TRADEOFF_CODEBOOK_MINMAX[1], diff
-        #     ).astype(np.int64)
-        #     assert len(num_codewords) * len(num_codebooks) == num_experiments
-        #
-        #     for num_codebook in num_codebooks:
-        #         for num_codeword in num_codewords:
-        #             log_info = (
-        #                     "_codebook"
-        #                     + str(num_codebook)
-        #                     + "_codeword"
-        #                     + str(num_codeword)
-        #             )
-        #             pqs = [PQ(M=PARTITION, Ks=num_codeword) for _ in range(num_codebook)]
-        #             quantizer = ResidualPQ(pqs=pqs)
-        #             quantizer = NormPQ(n_percentile=num_codeword, quantize=quantizer)
-        #
-        #             start_time = time.time()
-        #             accuracy_array, budget_array = execute(
-        #                 top_k=num_best_atoms,
-        #                 pq=quantizer,
-        #                 X=atoms,
-        #                 Q=signals.astype('float32'),
-        #                 G=naive_candidates_array,
-        #                 num_codebooks=num_codebook,
-        #                 num_codewords=num_codeword,
-        #                 train_size=num_atoms
-        #             )
-        #
-        #             # includes the time finding recall (other baselines don't)
-        #             runtime = time.time() - start_time
-        #             runtimes.append(time.time() - start_time)
-        #             budgets.append(np.mean(budget_array))
-        #             accuracies.append(np.sum(accuracy_array))
-        #             accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+        elif mips_alg is NEQ_MIPS:
+            diff = TRADEOFF_CODEBOOK_MINMAX[1] - TRADEOFF_CODEBOOK_MINMAX[0] + 1
+            num_codewords = np.linspace(
+                TRADEOFF_CODEWORD_MINMAX[0], TRADEOFF_CODEWORD_MINMAX[1], num_experiments // diff
+            ).astype(np.int64)
+            num_codebooks = np.linspace(
+                TRADEOFF_CODEBOOK_MINMAX[0], TRADEOFF_CODEBOOK_MINMAX[1], diff
+            ).astype(np.int64)
+            assert len(num_codewords) * len(num_codebooks) == num_experiments
+
+            for num_codebook in num_codebooks:
+                for num_codeword in num_codewords:
+                    log_info = (
+                            "_codebook"
+                            + str(num_codebook)
+                            + "_codeword"
+                            + str(num_codeword)
+                    )
+                    pqs = [PQ(M=PARTITION, Ks=num_codeword) for _ in range(num_codebook)]
+                    quantizer = ResidualPQ(pqs=pqs)
+                    quantizer = NormPQ(n_percentile=num_codeword, quantize=quantizer)
+
+                    start_time = time.time()
+                    accuracy_array, budget_array = execute(
+                        top_k=num_best_atoms,
+                        pq=quantizer,
+                        X=atoms,
+                        Q=signals.astype('float32'),
+                        G=naive_candidates_array,
+                        num_codebooks=num_codebook,
+                        num_codewords=num_codeword,
+                        train_size=num_atoms
+                    )
+
+                    # includes the time finding recall (other baselines don't)
+                    runtime = time.time() - start_time
+                    runtimes.append(time.time() - start_time)
+                    budgets.append(np.mean(budget_array))
+                    accuracies.append(np.sum(accuracy_array))
+                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 
@@ -496,7 +492,8 @@ def speedup_precision_exps(
             "naive_budget": num_atoms * len_signals,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = os.path.join(os.getcwd(), "logs", "precision_speed") if dirname is None else dirname
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join(parent_dir, "tradeoff", "logs") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg
