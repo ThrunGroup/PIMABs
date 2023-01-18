@@ -118,7 +118,7 @@ def speedup_precision_exps(
     with_replacement: bool = False,
     is_log: bool = True,
     is_plot: bool = False,
-    dirname: str = None,
+    dir_name: str = None,
     lsh_type: str = ASYMMETRIC,
 ):
     """
@@ -138,7 +138,7 @@ def speedup_precision_exps(
     :param with_replacement: Whether to sample with replacement
     :param is_log: Whether to log the results
     :param is_plot: Whether to plot the results
-    :param dirname: Directory name to log the results
+    :param dir_name: Directory name to log the results
     """
     avg_runtime = np.zeros(num_experiments)
     avg_budget = np.zeros(num_experiments)
@@ -465,8 +465,8 @@ def speedup_precision_exps(
             "naive_budget": num_atoms * len_signals,
         }
         log_df = pd.DataFrame(log_dict)
-        current_file_directory = os.path.dirname(__file__)
-        log_dir = os.path.join(current_file_directory, "logs/precision_speed") if dirname is None else dirname
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join(parent_dir, "tradeoff", "logs") if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg
