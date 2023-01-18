@@ -139,7 +139,3 @@ dmypy.json
 
 # real datasets
 *.npy
-
-# NAPG Checkpoints
-logs/scaling/napg_checkpoints
-logs/precision_speed/napg_checkpoints
