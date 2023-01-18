@@ -178,7 +178,7 @@ def create_scaling_plots(
     """
     # get all csv files
     parent_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.join("scaling", "logs") if dir_name is None else dir_name
+    log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
     log_dir = os.path.join(parent_dir, log_dir)
 
     if len(data_types) == 0:

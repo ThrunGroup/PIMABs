@@ -19,7 +19,7 @@ from utils.constants import (
     ACTION_ELIMINATION,
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
-    DEFAULT_MAXMIN,
+    DIMENSION_OF_ATOMS,
     NORMALIZED_MAXMIN,
     SCALING_DELTA,
     SCALING_EPSILON,
@@ -195,7 +195,7 @@ def scaling_exp(
             "rec_error": avg_recon_error_ovr_seeds,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = os.path.join("logs", "mp_scaling") if dirname is None else dirname
+        log_dir = "logs" if dirname is None else dirname
         filename = os.path.join(
             log_dir,
             mips_alg
@@ -212,6 +212,9 @@ def scaling_exp(
             + "delta"
             + str(delta)
             + log_info
+            + "_"
+            + "ind_var"
+            + DIMENSION_OF_ATOMS
             + ".csv",
         )
         os.makedirs(log_dir, exist_ok=True)
@@ -225,7 +228,6 @@ if __name__ == "__main__":
     scaling_exp(
         data_type=SIMPLE_SONG,
         size_minmax=(2*60*44100, 10*60*44100),
-        num_experiments=3,
         num_atoms=10,
         use_cache=False,
         use_naive=False,
