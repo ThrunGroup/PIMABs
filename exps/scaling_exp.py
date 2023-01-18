@@ -195,7 +195,7 @@ def scaling_exp(
                     is_experiment=False,
                     with_replacement=with_replacement,
                     verbose=verbose,
-                    var_proxy_override=(data_type==CRYPTO_PAIRS)
+                    var_proxy_override=(data_type==CRYPTO_PAIRS),
                 )
                 candidates_array, budget_array = bandit_results[:2]
                 runtime = time.time() - start_time
@@ -238,7 +238,7 @@ def scaling_exp(
                     signals=signals_subset,
                     num_best_atoms=num_best_atoms,
                     num_hfunc=SCALING_NUM_HFUNC,
-                    num_tables=SCALING_NUM_TABLES
+                    num_tables=SCALING_NUM_TABLES,
                 )
                 runtime = time.time() - start_time
             elif mips_alg is NEQ_MIPS:
@@ -262,7 +262,7 @@ def scaling_exp(
                     G=naive_candidates_array,
                     num_codebooks=NUM_CODEBOOKS,
                     num_codewords=NUM_CODEWORDS,
-                    train_size=num_atoms
+                    train_size=num_atoms,
                 )
                 # includes the time finding recall (other baselines don't)
                 runtime = time.time() - start_time

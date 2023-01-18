@@ -113,7 +113,7 @@ def mips_bandit(
                 cache=cache,
                 cache_tracker=cache_tracker,
                 cache_map=cache_map,
-                verbose=verbose
+                verbose=verbose,
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
@@ -125,7 +125,7 @@ def mips_bandit(
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,
-                batch_size=batch_size
+                batch_size=batch_size,
             )
         elif bandit_alg is BUCKET_ACTION_ELIMINATION:
             return bucket_action_elimination(
@@ -136,7 +136,7 @@ def mips_bandit(
                 delta=delta,
                 num_best_atoms=num_best_atoms,
                 with_replacement=False,
-                batch_size=batch_size
+                batch_size=batch_size,
             )
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")

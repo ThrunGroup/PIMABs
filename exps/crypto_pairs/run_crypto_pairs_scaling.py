@@ -56,7 +56,7 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
         create_scaling_plots(
             is_fit=False,
             include_error_bar=False,
-            is_plot_accuracy=True,
+            is_plot_accuracy=False,
             data_types=[CRYPTO_PAIRS],
             dir_name="crypto_pairs_logs",
             alg_names=[
@@ -76,9 +76,9 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
             alg_names=[
                 ADAPTIVE_ACTION_ELIMINATION,
                 ACTION_ELIMINATION,
-            ]
+            ],
         )
 
 
 if __name__ == "__main__":
-    run_crypto_pairs_scaling()
+    run_crypto_pairs_scaling(run=False)

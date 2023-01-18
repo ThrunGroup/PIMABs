@@ -128,7 +128,7 @@ def action_elimination(
                 use_cache=use_cache,
                 cache=cache,
                 cache_tracker=cache_tracker,
-                cache_map=cache_map
+                cache_map=cache_map,
             )
             # update params
             budgets += budget
