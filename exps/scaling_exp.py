@@ -393,7 +393,7 @@ def scaling_exp(
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
         log_dir = (
-            os.path.join(parent_dir, "scaling", "logs")
+            os.path.join(parent_dir, "core_scaling", "logs")
             if dir_name is None
             else dir_name
         )
