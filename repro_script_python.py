@@ -15,7 +15,7 @@ def main():
         print("=> Scaling log files already exist")
     else:
         print("=> Creating Scaling log files")
-    run_scaling()
+        run_scaling()
 
     # precision-speed speedup_accuracy_tradeoff experiments
     tradeoff_path = os.path.join(exp_path, "speedup_accuracy_tradeoff", "logs")
@@ -23,14 +23,14 @@ def main():
         print("=> Precision-Speed speedup_accuracy_tradeoff log files already exist")
     else:
         print("=> Creating Precision-Speed log files")
-    run_tradeoff()
+        run_tradeoff()
 
     print("=> Generating scaling plots")
     generate_scaling_plots()
     print("=> Generating speedup_accuracy_tradeoff plots")
     generate_tradeoff_plots()
     print("=> Doing large scaling experiments")
-    large_scaling_exps()
+    # large_scaling_exps()
 
 
 if __name__ == "__main__":

@@ -155,15 +155,15 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
-    caching_type: str = "",
-    data_types: List[str] = [],
-    alg_names: List[str] = [],
-    include_error_bar: bool = False,
-    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
-    is_fit: bool = False,
-    is_logspace: bool = False,
-    is_plot_accuracy: bool = False,
-    dir_name: str = None,
+        caching_type: str = "",
+        data_types: List[str] = [],
+        alg_names: List[str] = [],
+        include_error_bar: bool = False,
+        ind_variables: List[str] = [DIMENSION_OF_ATOMS],
+        is_fit: bool = False,
+        is_logspace: bool = False,
+        is_plot_accuracy: bool = False,
+        dir_name: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
@@ -181,7 +181,6 @@ def create_scaling_plots(
     # get all csv files
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
-    log_dir = os.path.join(parent_dir, log_dir)  # TODO(@lukeleeai): Is this correct?
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -285,11 +284,11 @@ def create_scaling_plots(
 
 
 def create_tradeoff_plots(
-    data_types: List[str] = [],
-    alg_names: List[str] = [],
-    top_k: int = 1,
-    include_error_bar: bool = False,
-    max_speedup: int = None,
+        data_types: List[str] = [],
+        alg_names: List[str] = [],
+        top_k: int = 1,
+        include_error_bar: bool = False,
+        max_speedup: int = None,
 ):
     """
     Plot the speedup_accuracy_tradeoff experiments from the data stored in the logs file.
@@ -322,9 +321,9 @@ def create_tradeoff_plots(
 
             # only get relevant data
             if (
-                f.find(datatype) < 0
-                or alg_name not in alg_names
-                or f.find(str("topk") + str(top_k)) < 0
+                    f.find(datatype) < 0
+                    or alg_name not in alg_names
+                    or f.find(str("topk") + str(top_k)) < 0
             ):
                 continue
 
@@ -365,11 +364,11 @@ def create_tradeoff_plots(
 
 
 def compare_caching_budgets(
-    dir_name="mp_scaling",
-    caching_type="",
-    data_types=[NETFLIX],
-    alg_names=[ACTION_ELIMINATION],
-    include_error_bar=True,
+        dir_name="mp_scaling",
+        caching_type="",
+        data_types=[NETFLIX],
+        alg_names=[ACTION_ELIMINATION],
+        include_error_bar=True,
 ):
     """
     This function is used to plot the budget costs of PI caching and naive caching side-by-side to see that PI
@@ -424,7 +423,6 @@ def compare_caching_budgets(
             plt.xlabel(xlabel)
 
         plt.show()
-
 
 
 def generate_scaling_plots():
