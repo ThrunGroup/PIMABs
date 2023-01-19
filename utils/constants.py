@@ -72,7 +72,11 @@ SIMPLE_SONG = "SIMPLE_SONG"
 HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
-NUM_SEEDS = 10
+
+
+# NUM_SEEDS = 10    TODO: uncomment this
+NUM_SEEDS = 1
+
 DEFAULT_MAXMIN = (5, 0)
 CRYPTO_PAIRS_MAXMIN = (10 ** 5, 0)
 DEFAULT_MAXMIN = (2, 0)
@@ -80,7 +84,11 @@ NORMALIZED_MAXMIN = (1, -1)
 DEFAULT_GREEDY_BUDGET = 50
 SCALING_NUM_EXPERIMENTS = 10  # corresponds to the number of points on the plot
 SCALING_NUM_ATOMS_CRYPTO_PAIRS = 100
+
+
 SCALING_NUM_ATOMS = 100
+
+
 SCALING_NUM_SIGNALS = 3  # this is to get the confidence intervals
 SCALING_DELTA = 0.3
 SCALING_EPSILON = 0.0
@@ -90,10 +98,18 @@ SCALING_DEPTH = 2
 SCALING_TOPK = 5
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
+
+
+# SCALING_SIZE_MINMAX = (
+#     10 ** 4, 10 ** 6,
+# ) Todo: uncomment this
+
 SCALING_SIZE_MINMAX = (
-    10 ** 4, 10 ** 6,
+    100, 10000,
 )
-SCALING_SIZE_MINMAX = (
+
+
+SCALING_SIZE_MINMAX_MOVIE = (
     450, 2 * 10 ** 4,
 )
 SCALING_H2ALSH_DELTA = 0.1

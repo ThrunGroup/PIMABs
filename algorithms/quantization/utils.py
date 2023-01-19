@@ -60,7 +60,7 @@ def execute(
     np.random.seed(seed)
     pq.fit(X[:train_size].astype(dtype=np.float32), iter=TRAINING_ITERATION)
     compressed = chunk_compress(pq, X)
-    precisions, budgets = BatchSorter(
+    candidates, budgets = BatchSorter(
         compressed=compressed,
         Q=Q,
         G=G,
@@ -68,5 +68,5 @@ def execute(
         num_codebooks=num_codebooks,
         num_codewords=num_codewords,
         batch_size=BATCH_SIZE
-    ).precision()
-    return precisions, budgets
+    ).candidate()
+    return candidates, budgets

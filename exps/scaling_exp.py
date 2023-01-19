@@ -66,6 +66,7 @@ from algorithms.quantization.utils import execute
 
 from algorithms.napg import hnsw
 
+
 def scaling_exp(
     epsilon: Optional[float] = SCALING_EPSILON,
     delta: Optional[float] = SCALING_DELTA,
@@ -287,7 +288,7 @@ def scaling_exp(
                 quantizer = NormPQ(n_percentile=NUM_CODEWORDS, quantize=quantizer)
                 start_time = time.time()
 
-                accuracies, budget_array = execute(
+                candidates_array, budget_array = execute(
                     seed=seed,
                     top_k=num_best_atoms,
                     pq=quantizer,
@@ -300,7 +301,6 @@ def scaling_exp(
                 )
                 # includes the time finding recall (other baselines don't)
                 runtime = time.time() - start_time
-                accuracy = np.sum(accuracies)
             elif mips_alg is H2ALSH:
                 log_info = (
                     "_delta"
@@ -341,16 +341,14 @@ def scaling_exp(
                 .argsort(axis=0)[:num_best_atoms]
                 .transpose()
             )
-
-            if mips_alg is not NEQ_MIPS:
-                for signal_idx in range(num_signals):
-                    matches = len(
-                        np.intersect1d(
-                            naive_candidates_array[signal_idx],
-                            candidates_array[signal_idx],
-                        )
+            for signal_idx in range(num_signals):
+                matches = len(
+                    np.intersect1d(
+                        naive_candidates_array[signal_idx],
+                        candidates_array[signal_idx],
                     )
-                    accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
+                )
+                accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
 
     avg_runtime = np.mean(
         avg_runtimes, axis=1

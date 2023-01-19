@@ -33,7 +33,7 @@ class NormPQ(object):
         assert vecs.dtype == np.float32
         assert vecs.ndim == 2
         N, D = vecs.shape
-        assert self.n_percentile < N, "the number of norm intervals should be more than Ks"
+        assert self.n_percentile <= N, "the number of norm intervals should not be less than Ks"
 
         norms, normalized_vecs = normalize(vecs)  # get the true norm
         self.quantize.fit(normalized_vecs, iter)  # fit on direction vector (i.e. x' in paper)
