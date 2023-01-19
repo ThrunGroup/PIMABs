@@ -456,19 +456,19 @@ def generate_scaling_plots():
         ],
     )
 
-    # # fit the bandit algorithms, and greedy-mips for better comparison
-    # create_scaling_plots(
-    #     is_fit=True,
-    #     is_logspace=True,
-    #     include_error_bar=True,
-    #     data_types=[NETFLIX, MOVIE_LENS],
-    #     alg_names=[
-    #         ADAPTIVE_ACTION_ELIMINATION,
-    #         ACTION_ELIMINATION,
-    #         MEDIAN_ELIMINATION,
-    #         GREEDY_MIPS,
-    #     ],
-    # )
+    # fit the bandit algorithms, and greedy-mips for better comparison
+    create_scaling_plots(
+        is_fit=True,
+        is_logspace=True,
+        include_error_bar=True,
+        data_types=[NETFLIX, MOVIE_LENS],
+        alg_names=[
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS,
+        ],
+    )
 
 
 def generate_tradeoff_plots(top_k: int = 10):
