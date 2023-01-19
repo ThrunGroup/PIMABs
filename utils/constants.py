@@ -70,7 +70,7 @@ DEFAULT_MAXMIN = (2, 0)
 NORMALIZED_MAXMIN = (1, -1)
 DEFAULT_GREEDY_BUDGET = 50
 SCALING_NUM_EXPERIMENTS = 10  # corresponds to the number of points on the plot
-SCALING_NUM_ATOMS = 100
+SCALING_NUM_ATOMS = 10 #Todo change to 100
 SCALING_NUM_SIGNALS = 3  # this is to get the confidence intervals
 SCALING_DELTA = 0.3
 SCALING_EPSILON = 0.2
@@ -80,9 +80,13 @@ SCALING_DEPTH = 2
 SCALING_TOPK = 5
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
+# SCALING_SIZE_MINMAX = (
+#     10 ** 4, 10 ** 6,
+# ) #Todo uncomment
 SCALING_SIZE_MINMAX = (
-    10 ** 4, 10 ** 6,
+    10, 10 ** 3,
 )
+
 
 SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
     450, 5000,
