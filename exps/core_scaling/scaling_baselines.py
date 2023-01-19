@@ -69,14 +69,14 @@ def get_params(data_type):
     return epsilon, delta, size_minmax
 
 
-def run_scaling():
+def scaling_baselines():
     """
-    Run scaling experiment for the two synthetic datasets (normal custom, adversarial custom) and
-    the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
+    Run scaling experiments for the 5 datasets (2 synthetic, 3 real) on 9 baseline MIPS algorithms.
+    This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (not the high-dimensional datasets)
     for data_type in [NORMAL_CUSTOM, UNIFORM_PAPER, CLEAR_LEADER_HARD, NETFLIX, MOVIE_LENS]:
-        for baseline in [
+        for algorithm in [
             GREEDY_MIPS,  # greedy approach
             LSH_MIPS, H2ALSH,  # mapping to higher dimensions
             PCA_MIPS, NEQ_MIPS, NAPG_MIPS,  # mapping to lower dimensions
@@ -92,7 +92,7 @@ def run_scaling():
                 num_experiments=SCALING_NUM_EXPERIMENTS,
                 num_signals=SCALING_NUM_SIGNALS,
                 data_type=data_type,
-                mips_alg=baseline,
+                mips_alg=algorithm,
                 with_replacement=False,
                 is_normalize=False,
                 is_logspace=True,
@@ -100,4 +100,4 @@ def run_scaling():
 
 
 if __name__ == "__main__":
-    run_scaling()
+    scaling_baselines()
