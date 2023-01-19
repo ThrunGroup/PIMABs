@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 
 from utils.constants import (
+    CRYPTO_PAIRS,
+
     NUMBER_OF_ATOMS,
     DIMENSION_OF_ATOMS,
     NORMAL_CUSTOM,
@@ -16,6 +18,10 @@ from utils.constants import (
     GREEDY_MIPS,
     PCA_MIPS,
     LSH_MIPS,
+    HNSW_MIPS,
+    NAPG_MIPS,
+    NEQ_MIPS,
+    H2ALSH,
     BUCKET_ACTION_ELIMINATION,
     H2ALSH,
     NUM_SEEDS,
@@ -23,6 +29,8 @@ from utils.constants import (
     DEFAULT_MAXMIN,
     NORMALIZED_MAXMIN,
     DEFAULT_GREEDY_BUDGET,
+    SCALING_SIZE_MINMAX,
+
     SCALING_DELTA,
     SCALING_DEPTH,
     SCALING_TOPK,
@@ -30,6 +38,16 @@ from utils.constants import (
     SCALING_NUM_HFUNC,
     SCALING_NUM_TABLES,
     SCALING_H2ALSH_PARAMS,
+    SCALING_H2ALSH_DELTA,
+    SCALING_H2ALSH_C0,
+    SCALING_H2ALSH_C,
+    SCALING_H2ALSH_N0,
+)
+
+from neq_mips.constants import (
+    PARTITION,
+    NUM_CODEBOOKS,
+    NUM_CODEWORDS,
 )
 
 from utils.utils import get_sizes_arr
@@ -41,6 +59,12 @@ from algorithms.pca_mips import run_pca_mips
 from algorithms.bucket_ae import bucket_action_elimination
 from algorithms.h2alsh_mips import H2ALSH_MIPS
 
+from algorithms.quantization.norm_pq import NormPQ
+from algorithms.quantization.residual_pq import ResidualPQ
+from algorithms.quantization.base_pq import PQ
+from algorithms.quantization.utils import execute
+
+from algorithms.napg import hnsw
 
 def scaling_exp(
     epsilon: Optional[float] = SCALING_EPSILON,
@@ -51,9 +75,11 @@ def scaling_exp(
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
     num_seeds: int = NUM_SEEDS,
     data_generation_seed: int = 0,
+    size_minmax: Tuple[int, int] = SCALING_SIZE_MINMAX,
     independent_var: str = DIMENSION_OF_ATOMS,
     size_minmax: Tuple[int, int] = (10, 10 ** 6),
     num_atoms: int = 10 ** 3,
+    num_atoms: int = 10**3,
     num_signals: int = 1,
     signal_dim: int = 10 ** 2,
     num_best_atoms: int = SCALING_TOPK,
@@ -62,8 +88,9 @@ def scaling_exp(
     is_log: bool = True,
     is_plot: bool = True,
     is_logspace: bool = False,
-    dirname: str = None,
-) -> None:
+    dir_name: str = None,
+    verbose: bool = False,
+) -> float:
     """
     Run the time complexity of the bandit and baseline algorithms as the signal size scales and store them in
     the appropriate log files. MEDIAN_ELIMINATION algorithm should satisfy this scaling according to Corollary 3 in
@@ -74,7 +101,7 @@ def scaling_exp(
     :param maxmin: Maximum and minimum of data
     :param data_type: A name of data generating function
     :param mips_alg: A name of algorithm
-    :param num_experiments: Number of experiments
+    :param num_experiments: Number of experiments, determines the different sizes of d that we run
     :param num_seeds: Number of seeds
     :param data_generation_seed: Random seed for generating data
     :param independent_var: The variable that is not constant (Either N=number of atoms or D=Dimension of atom)
@@ -88,17 +115,19 @@ def scaling_exp(
     :param is_log: Whether to log the results
     :param is_plot: Whether to plot the results
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
-    :param dirname: Directory name to log the results
+    :param dir_name: Directory name to log the results
+    :param verbose: Whether to print the number of iterations ran for action elimination
     """
+    avg_runtimes = np.zeros(
+        (num_experiments, num_seeds)
+    )  # Note that the runtime is average over all signals
+    budgets = np.zeros((num_experiments, num_seeds, num_signals))
+    accuracies = np.zeros((num_experiments, num_seeds, num_signals))
 
-    # average over NUM_SEEDS results
-    avg_runtime = np.zeros(num_experiments)
-    avg_budget = np.zeros(num_experiments)
-    avg_budget_std = np.zeros(num_experiments)
-    avg_accuracy = np.zeros(num_experiments)
-    print(f"=> Scaling experiment for {mips_alg} with {data_type} dataset")
     if independent_var == DIMENSION_OF_ATOMS:
         sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+        # If the dataset is a toy dataset, the randomness will include the data generation process
+        # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
         atoms, signals = get_data(
             num_atoms=num_atoms,
             len_signal=sizes[-1],
@@ -108,6 +137,8 @@ def scaling_exp(
         )
     elif independent_var == NUMBER_OF_ATOMS:
         sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
+        # If the dataset is a toy dataset, the randomness will include the data generation process
+        # If the dataset is a real dataset, the randomness will only include which vector is chosen as signal
         atoms, signals = get_data(
             num_atoms=sizes[-1],
             len_signal=signal_dim,
@@ -123,13 +154,9 @@ def scaling_exp(
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
         rng = np.random.default_rng(seed)
-        budgets = []
-        budgets_std = []
-        accuracy_list = []
-        runtimes = []
 
         # run the experiment for the different values of independent variable
-        for size in sizes:
+        for size_idx, size in enumerate(sizes):
             subset_indices = rng.choice(sizes[-1], size, replace=False)
             if independent_var is DIMENSION_OF_ATOMS:
                 atoms_subset, signals_subset = (
@@ -152,7 +179,14 @@ def scaling_exp(
                 atoms_subset /= atoms_norm
                 signals_subset /= signal_norm
                 epsilon /= atoms_norm.max() * signal_norm
-                maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given.
+                maxmin = NORMALIZED_MAXMIN  # Assume that the information on element-wise product is not given
+
+            # get the ground truth arrays
+            naive_candidates_array = (
+                np.matmul(-atoms_subset, signals_subset.transpose())
+                .argsort(axis=0)[:num_best_atoms]
+                .transpose()
+            )
 
             # bandit algorithms
             if mips_alg in [
@@ -170,7 +204,7 @@ def scaling_exp(
                     + str(delta)
                 )
                 start_time = time.time()
-                candidates_array, budget_array = mips_bandit(
+                bandit_results = mips_bandit(
                     atoms=atoms_subset,
                     signals=signals_subset,
                     maxmin=maxmin,
@@ -181,10 +215,13 @@ def scaling_exp(
                     seed=seed,
                     is_experiment=False,
                     with_replacement=with_replacement,
+                    verbose=verbose,
+                    var_proxy_override=(data_type == CRYPTO_PAIRS),
                 )
+                candidates_array, budget_array = bandit_results[
+                    :2
+                ]  # mips_bandit returns five values
                 runtime = time.time() - start_time
-
-            # baseline algorithms
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
                     "ind_var"
@@ -200,7 +237,6 @@ def scaling_exp(
                     num_best_atoms=num_best_atoms,
                 )
                 runtime = time.time() - start_time
-
             elif mips_alg is PCA_MIPS:
                 log_info = "ind_var" + str(independent_var) + "depth" + str(delta)
                 start_time = time.time()
@@ -211,7 +247,6 @@ def scaling_exp(
                     delta=SCALING_DEPTH,
                 )
                 runtime = time.time() - start_time
-
             elif mips_alg is LSH_MIPS:
                 log_info = (
                     "ind_var"
@@ -227,6 +262,7 @@ def scaling_exp(
                     signals=signals_subset,
                     num_best_atoms=num_best_atoms,
                     num_hfunc=SCALING_NUM_HFUNC,
+                    num_tables=SCALING_NUM_TABLES,
                     num_tables=SCALING_NUM_TABLES,
                 )
                 runtime = time.time() - start_time
@@ -251,36 +287,111 @@ def scaling_exp(
                     queries=signals_subset, top_k=num_best_atoms
                 )
                 runtime = time.time() - start_time
+            elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
+                log_info = "ind_var" + str(independent_var)
+                start_time = time.time()
+                candidates_array, budget_array = hnsw(
+                    atoms=atoms_subset,
+                    signals=signals_subset,
+                    num_best_atoms=num_best_atoms,
+                    use_norm_adjusted_factors=(mips_alg == NAPG_MIPS),
+                )
+                runtime = time.time() - start_time
+            elif mips_alg is NEQ_MIPS:
+                log_info = (
+                    "_codebooks"
+                    + str(NUM_CODEBOOKS)
+                    + "_codewords"
+                    + str(NUM_CODEWORDS)
+                )
+                pqs = [
+                    PQ(M=PARTITION, Ks=NUM_CODEWORDS) for _ in range(NUM_CODEBOOKS - 1)
+                ]
+                quantizer = ResidualPQ(pqs=pqs)
+                quantizer = NormPQ(n_percentile=NUM_CODEWORDS, quantize=quantizer)
+                start_time = time.time()
+
+                accuracies, budget_array = execute(
+                    seed=seed,
+                    top_k=num_best_atoms,
+                    pq=quantizer,
+                    X=atoms_subset,
+                    Q=signals_subset.astype("float32"),
+                    G=naive_candidates_array,
+                    num_codebooks=NUM_CODEBOOKS,
+                    num_codewords=NUM_CODEWORDS,
+                    train_size=num_atoms,
+                )
+                # includes the time finding recall (other baselines don't)
+                runtime = time.time() - start_time
+                accuracy = np.sum(accuracies)
+            elif mips_alg is H2ALSH:
+                log_info = (
+                    "_delta"
+                    + str(SCALING_H2ALSH_DELTA)
+                    + "_c0"
+                    + str(SCALING_H2ALSH_C0)
+                    + "_c"
+                    + str(SCALING_H2ALSH_C)
+                    + "_N0"
+                    + str(SCALING_H2ALSH_N0)
+                )
+                h2alsh = H2ALSH_MIPS(
+                    atoms=atoms_subset,
+                    delta=SCALING_H2ALSH_DELTA,
+                    c0=SCALING_H2ALSH_C0,
+                    c=SCALING_H2ALSH_C,
+                    N0=SCALING_H2ALSH_N0,
+                )
+                start_time = time.time()
+                candidates_array, budget_array = h2alsh.mip_search_queries(
+                    queries=signals_subset, top_k=num_best_atoms
+                )
+                runtime = time.time() - start_time
+
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
             # store runtime, budget, budget_std, and accuracy of the experiment
-            runtimes.append(runtime)
-            budgets.append(np.mean(budget_array))
-            budgets_std.append(np.std(budget_array) / np.sqrt(num_signals))
+            avg_runtimes[size_idx, seed] = (
+                runtime / num_signals
+            )  # Note that the runtimes are averaged over all signals
+
+            # assert budget_array.size == num_signals, "budget_array should be the size of the signals"
+            budgets[size_idx, seed, :] = budget_array
+
             naive_candidates_array = (
                 np.matmul(-atoms_subset, signals_subset.transpose())
                 .argsort(axis=0)[:num_best_atoms]
                 .transpose()
             )
 
-            accuracy = 0
-            for idx in range(num_signals):
-                accuracy += len(
-                    np.intersect1d(naive_candidates_array[idx], candidates_array[idx])
-                )
-            accuracy /= num_signals * num_best_atoms
-            accuracy_list.append(accuracy)
+            if mips_alg is not NEQ_MIPS:
+                for signal_idx in range(num_signals):
+                    matches = len(
+                        np.intersect1d(
+                            naive_candidates_array[signal_idx],
+                            candidates_array[signal_idx],
+                        )
+                    )
+                    accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
 
-        avg_runtime += np.array(runtimes)
-        avg_budget += np.array(budgets)
-        avg_budget_std += np.array(budgets_std)
-        avg_accuracy += np.array(accuracy_list)
+    avg_runtime = np.mean(
+        avg_runtimes, axis=1
+    )  # Average over seeds because it's already averaged over signals
+    avg_budget = np.mean(budgets, axis=(1, 2))  # Average over seeds and signals
+    avg_budget_std = np.std(
+        budgets, axis=(1, 2)
+    )  # Std over seeds and signals for given size
+    avg_accuracy = np.mean(accuracies, axis=(1, 2))  # Average over seeds and signals
 
-    avg_runtime /= num_seeds
-    avg_budget /= num_seeds
-    avg_budget_std /= num_seeds
-    avg_accuracy /= num_seeds
+    assert (
+        avg_runtime.size
+        == avg_budget.size
+        == avg_budget_std.size
+        == avg_accuracy.size
+        == num_experiments
+    ), "The sizes of the arrays should be the same as num_experiments"
 
     # save to log files
     if is_log:
@@ -307,13 +418,16 @@ def scaling_exp(
 
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join("logs", "scaling") if dirname is None else dirname
-        log_dir = os.path.join(parent_dir, log_dir)
+        log_dir = (
+            os.path.join(parent_dir, "scaling", "logs")
+            if dir_name is None
+            else dir_name
+        )
         filename = os.path.join(
             log_dir,
             mips_alg
             + "_"
-            "SCALING_"
+            + "SCALING_"
             + data_type
             + "_"
             + "atoms"
@@ -324,4 +438,6 @@ def scaling_exp(
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
+
     print(f"Mean accuracy of {mips_alg} for {data_type}: {np.mean(avg_accuracy)} \n")
+    return np.mean(avg_accuracy)

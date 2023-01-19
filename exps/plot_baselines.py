@@ -15,6 +15,15 @@ from utils.constants import (
     NETFLIX_TRANSPOSE,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
+    CRYPTO_PAIRS,
+    CLEAR_LEADER_HARD,
+    CLEAR_LEADER_SOFT,
+    NO_CLEAR_LEADER,
+    TOY_SINE,
+    MNIST_T,
+    SIMPLE_SONG,
+    SIFT_1M,
+
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,
@@ -22,6 +31,14 @@ from utils.constants import (
     LSH_MIPS,
     PCA_MIPS,
     H2ALSH,
+    HNSW_MIPS,
+    NAPG_MIPS,
+
+    MAX_SPEEDUP,
+    NEQ_MIPS,
+
+    MAX_SPEEDUP,
+    TRADEOFF_TOPK,
     MAX_SPEEDUP,
     BUCKET_ACTION_ELIMINATION,
     DIMENSION_OF_ATOMS,
@@ -49,6 +66,12 @@ def translate_alg_name(alg_name: str):
         return "LSH-MIPS"
     elif alg_name == PCA_MIPS:
         return "PCA-MIPS"
+    elif alg_name == HNSW_MIPS:
+        return "HNSW-MIPS"
+    elif alg_name == NAPG_MIPS:
+        return "NAPG-MIPS"
+    elif alg_name == NEQ_MIPS:
+        return "NEQ_MIPS"
     elif alg_name == BUCKET_ACTION_ELIMINATION:
         return "Bucket_AE"
     elif alg_name == H2ALSH:
@@ -78,6 +101,22 @@ def translate_dataset_name(dataset_name: str):
         return "Movie Lens"
     elif dataset_name == COR_NORMAL_CUSTOM:
         return COR_NORMAL_CUSTOM
+    elif dataset_name == CRYPTO_PAIRS:
+        return "Crypto Pairs"
+    elif dataset_name == CLEAR_LEADER_HARD:
+        return "Clear Leader (Hard)"
+    elif dataset_name == CLEAR_LEADER_SOFT:
+        return "Clear Leader (Soft)"
+    elif dataset_name == NO_CLEAR_LEADER:
+        return "No Clear Leader"
+    elif dataset_name == TOY_SINE:
+        return "Toy Sine"
+    elif dataset_name == MNIST_T:
+        return "MNIST Transposed"
+    elif dataset_name == SIMPLE_SONG:
+        return "Simple Song"
+    elif dataset_name == SIFT_1M:
+        return "SIFT 1M"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -103,6 +142,14 @@ def extract_alg(filename: str):
         return LSH_MIPS
     elif PCA_MIPS in filename:
         return PCA_MIPS
+    elif NAPG_MIPS in filename:
+        return NAPG_MIPS
+    elif HNSW_MIPS in filename:
+        return HNSW_MIPS
+    elif NEQ_MIPS in filename:
+        return NEQ_MIPS
+    elif BUCKET_ACTION_ELIMINATION in filename:
+        return BUCKET_ACTION_ELIMINATION
     elif H2ALSH in filename:
         return H2ALSH
     else:
@@ -118,18 +165,20 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
+    caching_type: str = "",
     data_types: List[str] = [],
     alg_names: List[str] = [],
-    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     include_error_bar: bool = False,
+    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     is_fit: bool = False,
     is_logspace: bool = False,
     is_plot_accuracy: bool = False,
-    dirname: str = None,
+    dir_name: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
 
+    :param caching_type: either "", "(naive_cache)", "(PI_cache)"
     :param data_types: the datasets that you want to plot. If empty, warning is triggered.
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
     :param ind_variables: Independent variables (N or D)
@@ -137,28 +186,25 @@ def create_scaling_plots(
     :param is_fit: whether to fit the plots or not
     :param is_logspace: whether to plot in logspace or not
     :param is_plot_accuracy: whether to annotate accuracy in the graph
-    :param dirname: directory name of log files
+    :param dir_name: directory name of log files
     """
     # get all csv files
-    if dirname is None:
-        current_file_directory = os.path.dirname(__file__)
-        path = (
-            os.path.join(current_file_directory, "logs", "scaling")
-            if dirname is None
-            else dirname
-        )
+    if dirname is None
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
+        log_dir = os.path.join(parent_dir, log_dir)  # TODO(@lukeleeai): Is this correct?
     else:
-        path = dirname
-
+        log_dir = dir_name
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
+
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
     for ind_variable in ind_variables:
         for datatype in data_types:
             csv_files = glob.glob(
-                os.path.join(path, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+                os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
             )
             plt.figure(figsize=(6, 4.5))
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
@@ -177,6 +223,7 @@ def create_scaling_plots(
                 y = data["budgets"].tolist()
                 error = data["budgets_std"].tolist()
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+
                 if is_fit:
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
                     if is_logspace:
@@ -208,7 +255,6 @@ def create_scaling_plots(
                     ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
-
                 else:
                     plt.scatter(
                         x,
@@ -256,7 +302,7 @@ def create_tradeoff_plots(
     top_k: int = 1,
     include_error_bar: bool = False,
     max_speedup: int = None,
-    dir: str = None,
+    log_dir: str = None,
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -267,12 +313,10 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    if dir is None:
-        current_file_directory = os.path.dirname(__file__)
-        path = os.path.join(current_file_directory, "logs")
-        path = os.path.join(path, "precision_speed")
-    else:
-        path = dir
+    if log_dir is None:
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join("tradeoff", "logs")
+        log_dir = os.path.join(parent_dir, log_dir)
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -330,7 +374,72 @@ def create_tradeoff_plots(
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
 
+        fig = plt.gcf()
+        fig.set_size_inches(6, 4.5)
         plt.show()
+
+
+def compare_caching_budgets(
+    dir_name="mp_scaling",
+    caching_type="",
+    data_types=[NETFLIX],
+    alg_names=[ACTION_ELIMINATION],
+    include_error_bar=True,
+):
+    """
+    This function is used to plot the budget costs of PI caching and naive caching side-by-side to see that PI
+    caching has better computational costs.
+
+    :param dir_name: the directory name of where the log files are stored
+    :param caching_type: either PI or naive
+    """
+    # get all csv files
+    path = os.path.join(os.getcwd(), "logs")
+    path = os.path.join(path, dir_name)
+    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
+
+    if len(data_types) == 0:
+        raise Exception("At least one dataset must be specified")
+    if len(alg_names) == 0:
+        raise Exception("At least one algorithm must be specified")
+
+    for datatype in data_types:
+        plt.figure(figsize=(6, 4.5))
+        title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
+        for f in csv_files:
+            alg_name = extract_alg(f)
+            data = read_csv(f)
+
+            # only get relevant data
+            if f.find(datatype) < 0 or f.find(caching_type) < 0 or alg_name not in alg_names:
+                continue
+
+            x = data["signal_sizes"].tolist()
+            y = data["budgets"].tolist()
+            error = data["budgets_std"].tolist()
+            x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+            plt.scatter(
+                x, y,
+                color=ALG_TO_COLOR[alg_name],
+                label=f"{translate_alg_name(alg_name)}"
+            )
+            plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
+
+            # Sort the legend entries (labels and handles) by labels
+            handles, labels = plt.gca().get_legend_handles_labels()
+            labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+            plt.legend(handles, labels, loc="upper left")
+
+            if include_error_bar:
+                plt.errorbar(x, y, error, fmt=".", color="black")
+            plt.title(title)
+            xlabel = "Signal Vector Size (d)"
+            ylabel = "Sample Complexity"
+            plt.ylabel(ylabel)
+            plt.xlabel(xlabel)
+
+        plt.show()
+
 
 
 def generate_scaling_plots():
@@ -347,37 +456,40 @@ def generate_scaling_plots():
             ADVERSARIAL_CUSTOM,
             NETFLIX,
             MOVIE_LENS,
-            COR_NORMAL_CUSTOM,
+            # COR_NORMAL_CUSTOM,
         ],
         alg_names=[
             ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
             MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
+            # GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            HNSW_MIPS,
+            NAPG_MIPS,
+            LSH_MIPS,
+            NEQ_MIPS,
             BUCKET_ACTION_ELIMINATION,
             H2ALSH,
         ],
     )
 
-    # fit the bandit algorithms and greedy-mips for better comparison
-    create_scaling_plots(
-        is_fit=True,
-        is_logspace=True,
-        include_error_bar=True,
-        data_types=[NETFLIX, MOVIE_LENS],
-        alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
-            ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
-            GREEDY_MIPS,
-            BUCKET_ACTION_ELIMINATION,
-        ],
-    )
+    # # fit the bandit algorithms, and greedy-mips for better comparison
+    # create_scaling_plots(
+    #     is_fit=True,
+    #     is_logspace=True,
+    #     include_error_bar=True,
+    #     data_types=[NETFLIX, MOVIE_LENS],
+    #     alg_names=[
+    #         ADAPTIVE_ACTION_ELIMINATION,
+    #         ACTION_ELIMINATION,
+    #         MEDIAN_ELIMINATION,
+    #         GREEDY_MIPS,
+    #     ],
+    # )
 
 
-def generate_tradeoff_plots(top_k: int = 1):
+def generate_tradeoff_plots(top_k: int = 10):
     """
     Generate tradeoff plots for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
@@ -392,6 +504,9 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            HNSW_MIPS,
+            NAPG_MIPS,
+            NEQ_MIPS,
             BUCKET_ACTION_ELIMINATION,
             H2ALSH,
         ],
@@ -407,6 +522,9 @@ def generate_tradeoff_plots(top_k: int = 1):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            NEQ_MIPS,
+            HNSW_MIPS,
+            NAPG_MIPS,
             BUCKET_ACTION_ELIMINATION,
             H2ALSH,
         ],
@@ -417,6 +535,7 @@ def generate_tradeoff_plots(top_k: int = 1):
 
 
 if __name__ == "__main__":
-    # generate_scaling_plots()
+    generate_scaling_plots()
+    generate_tradeoff_plots()
+    # generate_tradeoff_plots(top_k=5)
     # generate_tradeoff_plots(top_k=20)
-    generate_tradeoff_plots(top_k=5)
