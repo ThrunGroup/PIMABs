@@ -19,7 +19,7 @@ from utils.constants import (
 
 def run_napg_tradeoff():
     """
-    Run speedup_precision tradeoff experiment for the two synthetic datasets (normal custom, adversarial custom) and
+    Run speedup_precision speedup_accuracy_tradeoff experiment for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datasets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)

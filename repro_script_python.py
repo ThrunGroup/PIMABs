@@ -7,27 +7,27 @@ from exps.large_scaling.large_scaling_exps import large_scaling_exps
 
 
 def main():
-    path = os.path.join(os.getcwd(), "logs")
-    scaling_path = os.path.join(path, "scaling")
-    tradeoff_path = os.path.join(path, "precision_speed")
+    exp_path = "exps"
 
     # scaling experiments
+    scaling_path = os.path.join(exp_path, "scaling", "logs")
     if os.path.exists(scaling_path):
         print("=> Scaling log files already exist")
     else:
         print("=> Creating Scaling log files")
-        run_scaling()
+    run_scaling()
 
-    # precision-speed tradeoff experiments
+    # precision-speed speedup_accuracy_tradeoff experiments
+    tradeoff_path = os.path.join(exp_path, "speedup_accuracy_tradeoff", "logs")
     if os.path.exists(tradeoff_path):
-        print("=> Precision-Speed tradeoff log files already exist")
+        print("=> Precision-Speed speedup_accuracy_tradeoff log files already exist")
     else:
         print("=> Creating Precision-Speed log files")
-        run_tradeoff()
+    run_tradeoff()
 
     print("=> Generating scaling plots")
     generate_scaling_plots()
-    print("=> Generating tradeoff plots")
+    print("=> Generating speedup_accuracy_tradeoff plots")
     generate_tradeoff_plots()
     print("=> Doing large scaling experiments")
     large_scaling_exps()

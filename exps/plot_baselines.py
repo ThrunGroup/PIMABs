@@ -292,7 +292,7 @@ def create_tradeoff_plots(
     max_speedup: int = None,
 ):
     """
-    Plot the tradeoff experiments from the data stored in the logs file.
+    Plot the speedup_accuracy_tradeoff experiments from the data stored in the logs file.
 
     :data_types: the datasets that you want to plot. If empty, warning is triggered.
     :alg_names: the algorithms that you want to plot. If empty, warning is triggered.
@@ -301,7 +301,7 @@ def create_tradeoff_plots(
     """
     # get all csv files
     parent_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.join("tradeoff", "logs")
+    log_dir = os.path.join("speedup_accuracy_tradeoff", "logs")
     log_dir = os.path.join(parent_dir, log_dir)
 
     csv_files = glob.glob(os.path.join(log_dir, "*SPEEDUP*"))
@@ -475,10 +475,10 @@ def generate_scaling_plots():
 
 def generate_tradeoff_plots(top_k: int = 10):
     """
-    Generate tradeoff plots for the two synthetic datasets (normal custom, adversarial custom) and
+    Generate speedup_accuracy_tradeoff plots for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
-    # precision-accuracy tradeoff experiments (synthetic and real datasets)
+    # precision-accuracy speedup_accuracy_tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
         data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
         alg_names=[

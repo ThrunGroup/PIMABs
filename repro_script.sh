@@ -1,6 +1,6 @@
 #!/bin/bash
 
-git submodule update --remote
-pip install -e .
-pip install algorithms/hnswlib
+#git submodule update --remote
+#pip install -e .
+#pip install algorithms/napg
 python repro_script_python.py

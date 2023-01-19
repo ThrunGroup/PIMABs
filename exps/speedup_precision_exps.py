@@ -81,8 +81,12 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips, generate_conditer
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
-from algorithms.quantization import PQ, ResidualPQ, NormPQ, execute
 from algorithms.napg import hnsw
+
+from algorithms.quantization.norm_pq import NormPQ
+from algorithms.quantization.residual_pq import ResidualPQ
+from algorithms.quantization.base_pq import PQ
+from algorithms.quantization.utils import execute
 
 
 def get_accuracy_array(
@@ -125,7 +129,7 @@ def speedup_precision_exps(
     lsh_type: str = ASYMMETRIC,
 ):
     """
-    Run the precision-speed tradeoff of the bandit and baseline algorithms and store them in the appropriate
+    Run the precision-speed speedup_accuracy_tradeoff of the bandit and baseline algorithms and store them in the appropriate
     log files. Note that what we're tuning "delta" for the bandit algorithms, "budget" for greedy-mips, "depth"
     of the pca-tree for pca-mips, "(num_hfunc, num_tables)" for lsh-mips, and "(num_codebook, num_codewords)" for
     vector quantization.
@@ -306,9 +310,6 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-                    print(f"delta_power: {delta_power}, delta: {1 - 10 ** (-delta_power)}, "
-                          f"epsilon: {epsilon}, "
-                          f"accuracy: {np.sum(accuracy_array)}")
             else:
                 epsilons = np.linspace(EPSILON_MINMAX_MEDIAN[0], EPSILON_MINMAX_MEDIAN[1], num_experiments)
                 for epsilon in epsilons:
@@ -467,7 +468,8 @@ def speedup_precision_exps(
                         G=naive_candidates_array,
                         num_codebooks=num_codebook,
                         num_codewords=num_codeword,
-                        train_size=num_atoms
+                        train_size=num_atoms,
+                        seed=seed,
                     )
 
                     # includes the time finding recall (other baselines don't)
@@ -480,7 +482,7 @@ def speedup_precision_exps(
             raise NotImplementedError(f"{mips_alg} is not implemented")
 
         # Add all the quantities to take their means later by dividing by the number of seeds. This is valid for all
-        # quantities except accuracy_std. Going to leave for now since we don't plot errors bars in tradeoff experiments
+        # quantities except accuracy_std. Going to leave for now since we don't plot errors bars in speedup_accuracy_tradeoff experiments
         # TODO(@motiwari): Fix this. See #83
         avg_budget += np.array(budgets)
         avg_accuracy += np.array(accuracies)
@@ -503,7 +505,7 @@ def speedup_precision_exps(
         }
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(parent_dir, "tradeoff", "logs") if dir_name is None else dir_name
+        log_dir = os.path.join(parent_dir, "speedup_accuracy_tradeoff", "logs") if dir_name is None else dir_name
         filename = os.path.join(
             log_dir,
             mips_alg +
