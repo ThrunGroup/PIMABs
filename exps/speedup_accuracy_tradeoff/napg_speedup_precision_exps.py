@@ -35,7 +35,7 @@ def napg_speedup_precision_exps(
         dirname: str = None,
 ):
     """
-    Run the precision-speed tradeoff of the bandit and baseline algorithms and store them in the appropriate
+    Run the precision-speed speedup_accuracy_tradeoff of the bandit and baseline algorithms and store them in the appropriate
     log files. Note that what we're tuning "delta" for the bandit algorithms, "budget" for greedy-mips, "depth"
     of the pca-tree for pca-mips, and "num_hfunc and num_tables" for lsh-mips.
 

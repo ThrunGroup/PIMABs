@@ -37,10 +37,11 @@ def large_scaling_exps():
                 maxmin=LARGE_MAXMIN,
                 delta=LARGE_DELTA,
                 epsilon=LARGE_EPSILON,
-                dirname=log_dir,
+                dir_name=log_dir,
             )
     else:
         print("=> Large Scaling experiments log files already exist.")
+
     print("=> Generating large scale experiments plots")
     create_scaling_plots(
         alg_names=[ACTION_ELIMINATION],
@@ -49,7 +50,7 @@ def large_scaling_exps():
         is_fit=True,
         is_plot_accuracy=True,
         include_error_bar=True,
-        dirname=log_dir,
+        dir_name=log_dir,
     )
     create_scaling_plots(
         alg_names=[ADAPTIVE_ACTION_ELIMINATION],
@@ -58,7 +59,7 @@ def large_scaling_exps():
         is_fit=True,
         is_plot_accuracy=True,
         include_error_bar=True,
-        dirname=log_dir,
+        dir_name=log_dir,
     )
 
 

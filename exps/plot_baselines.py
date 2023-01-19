@@ -155,15 +155,15 @@ def power10_sqrt(array):
 
 
 def create_scaling_plots(
-    caching_type: str = "",
-    data_types: List[str] = [],
-    alg_names: List[str] = [],
-    include_error_bar: bool = False,
-    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
-    is_fit: bool = False,
-    is_logspace: bool = False,
-    is_plot_accuracy: bool = False,
-    dir_name: str = None,
+        caching_type: str = "",
+        data_types: List[str] = [],
+        alg_names: List[str] = [],
+        include_error_bar: bool = False,
+        ind_variables: List[str] = [DIMENSION_OF_ATOMS],
+        is_fit: bool = False,
+        is_logspace: bool = False,
+        is_plot_accuracy: bool = False,
+        dir_name: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
@@ -181,7 +181,6 @@ def create_scaling_plots(
     # get all csv files
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
-    log_dir = os.path.join(parent_dir, log_dir)  # TODO(@lukeleeai): Is this correct?
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -285,14 +284,14 @@ def create_scaling_plots(
 
 
 def create_tradeoff_plots(
-    data_types: List[str] = [],
-    alg_names: List[str] = [],
-    top_k: int = 1,
-    include_error_bar: bool = False,
-    max_speedup: int = None,
+        data_types: List[str] = [],
+        alg_names: List[str] = [],
+        top_k: int = 1,
+        include_error_bar: bool = False,
+        max_speedup: int = None,
 ):
     """
-    Plot the tradeoff experiments from the data stored in the logs file.
+    Plot the speedup_accuracy_tradeoff experiments from the data stored in the logs file.
 
     :data_types: the datasets that you want to plot. If empty, warning is triggered.
     :alg_names: the algorithms that you want to plot. If empty, warning is triggered.
@@ -301,7 +300,7 @@ def create_tradeoff_plots(
     """
     # get all csv files
     parent_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.join("tradeoff", "logs")
+    log_dir = os.path.join("speedup_accuracy_tradeoff", "logs")
     log_dir = os.path.join(parent_dir, log_dir)
 
     csv_files = glob.glob(os.path.join(log_dir, "*SPEEDUP*"))
@@ -322,9 +321,9 @@ def create_tradeoff_plots(
 
             # only get relevant data
             if (
-                f.find(datatype) < 0
-                or alg_name not in alg_names
-                or f.find(str("topk") + str(top_k)) < 0
+                    f.find(datatype) < 0
+                    or alg_name not in alg_names
+                    or f.find(str("topk") + str(top_k)) < 0
             ):
                 continue
 
@@ -365,11 +364,11 @@ def create_tradeoff_plots(
 
 
 def compare_caching_budgets(
-    dir_name="mp_scaling",
-    caching_type="",
-    data_types=[NETFLIX],
-    alg_names=[ACTION_ELIMINATION],
-    include_error_bar=True,
+        dir_name="mp_scaling",
+        caching_type="",
+        data_types=[NETFLIX],
+        alg_names=[ACTION_ELIMINATION],
+        include_error_bar=True,
 ):
     """
     This function is used to plot the budget costs of PI caching and naive caching side-by-side to see that PI
@@ -426,7 +425,6 @@ def compare_caching_budgets(
         plt.show()
 
 
-
 def generate_scaling_plots():
     """
     Generate scaling plots for the two synthetic datasets (normal custom, adversarial custom) and
@@ -458,27 +456,27 @@ def generate_scaling_plots():
         ],
     )
 
-    # # fit the bandit algorithms, and greedy-mips for better comparison
-    # create_scaling_plots(
-    #     is_fit=True,
-    #     is_logspace=True,
-    #     include_error_bar=True,
-    #     data_types=[NETFLIX, MOVIE_LENS],
-    #     alg_names=[
-    #         ADAPTIVE_ACTION_ELIMINATION,
-    #         ACTION_ELIMINATION,
-    #         MEDIAN_ELIMINATION,
-    #         GREEDY_MIPS,
-    #     ],
-    # )
+    # fit the bandit algorithms, and greedy-mips for better comparison
+    create_scaling_plots(
+        is_fit=True,
+        is_logspace=True,
+        include_error_bar=True,
+        data_types=[NETFLIX, MOVIE_LENS],
+        alg_names=[
+            ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            MEDIAN_ELIMINATION,
+            GREEDY_MIPS,
+        ],
+    )
 
 
 def generate_tradeoff_plots(top_k: int = 10):
     """
-    Generate tradeoff plots for the two synthetic datasets (normal custom, adversarial custom) and
+    Generate speedup_accuracy_tradeoff plots for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
-    # precision-accuracy tradeoff experiments (synthetic and real datasets)
+    # precision-accuracy speedup_accuracy_tradeoff experiments (synthetic and real datasets)
     create_tradeoff_plots(
         data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
         alg_names=[
