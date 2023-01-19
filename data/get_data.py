@@ -13,9 +13,9 @@ from utils.constants import (
     NORMAL_CUSTOM,
     NORMAL_PAPER,
     UNIFORM_PAPER,
-    YAHOO,
     NETFLIX,
     MOVIE_LENS,
+    CRYPTO_PAIRS,
     COR_NORMAL_CUSTOM,
     NETFLIX_TRANSPOSE,
     CLEAR_LEADER_HARD,
@@ -82,7 +82,7 @@ def get_data(
             os.path.join(os.path.dirname(__file__), "netflix"), "Movie_ratings.npy"
         )
         data = np.load(filename)
-    elif data_type is NETFLIX_TRANSPOSE:
+    elif data_type == NETFLIX_TRANSPOSE:
         filename = os.path.join(
             os.path.join(os.path.dirname(__file__), "netflix"), "Movie_ratings.npy"
         )
@@ -94,7 +94,13 @@ def get_data(
             "movie_lens_1m_ratings.npy",
         )
         data = np.load(filename)
-    elif data_type is TOY_SINE:
+    elif data_type == CRYPTO_PAIRS:
+        filename = os.path.join(
+            os.path.join(os.path.dirname(__file__), "crypto_pairs"),
+            "crypto_pairs_1m_dimensions.npy",
+        )
+        data = np.load(filename)
+    elif data_type == TOY_SINE:
         atoms, signal = create_toy_waves(num_atoms, len_signal)
         return atoms, np.array([signal])
     elif data_type == MNIST_T:

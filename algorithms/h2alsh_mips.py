@@ -1,6 +1,6 @@
 import numpy as np
 from math import sqrt, log
-from qalsh import QALSH
+from algorithms.qalsh import QALSH
 from typing import Tuple
 
 class H2ALSH_MIPS:
