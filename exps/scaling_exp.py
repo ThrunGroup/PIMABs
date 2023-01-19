@@ -22,6 +22,7 @@ from utils.constants import (
     HNSW_MIPS,
     NAPG_MIPS,
     NEQ_MIPS,
+    H2ALSH,
     BUCKET_ACTION_ELIMINATION,
 
     NUM_SEEDS,
@@ -37,6 +38,10 @@ from utils.constants import (
     SCALING_EPSILON,
     SCALING_NUM_HFUNC,
     SCALING_NUM_TABLES,
+    SCALING_H2ALSH_DELTA,
+    SCALING_H2ALSH_C0,
+    SCALING_H2ALSH_C,
+    SCALING_H2ALSH_N0,
 )
 
 from neq_mips.constants import (
@@ -52,6 +57,7 @@ from algorithms.greedy_mips import greedy_mips
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
 from algorithms.bucket_ae import bucket_action_elimination
+from algorithms.h2alsh_mips import H2ALSH_MIPS
 
 from algorithms.quantization.norm_pq import NormPQ
 from algorithms.quantization.residual_pq import ResidualPQ
@@ -110,7 +116,9 @@ def scaling_exp(
     :param dir_name: Directory name to log the results
     :param verbose: Whether to print the number of iterations ran for action elimination
     """
-    avg_runtimes = np.zeros((num_experiments, num_seeds))  # Note that the runtime is average over all signals
+    avg_runtimes = np.zeros(
+        (num_experiments, num_seeds)
+    )  # Note that the runtime is average over all signals
     budgets = np.zeros((num_experiments, num_seeds, num_signals))
     accuracies = np.zeros((num_experiments, num_seeds, num_signals))
 
@@ -137,7 +145,9 @@ def scaling_exp(
             data_type=data_type,
         )
     else:
-        raise NotImplementedError(f"{independent_var} is not an implemented control variable")
+        raise NotImplementedError(
+            f"{independent_var} is not an implemented control variable"
+        )
 
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
@@ -157,7 +167,9 @@ def scaling_exp(
                     signals,
                 )
             else:
-                raise NotImplementedError(f"{independent_var} is not an implemented control variable")
+                raise NotImplementedError(
+                    f"{independent_var} is not an implemented control variable"
+                )
 
             if is_normalize:
                 atoms_norm = np.linalg.norm(atoms_subset, axis=1, keepdims=True)
@@ -170,12 +182,17 @@ def scaling_exp(
             # get the ground truth arrays
             naive_candidates_array = (
                 np.matmul(-atoms_subset, signals_subset.transpose())
-                    .argsort(axis=0)[:num_best_atoms]
-                    .transpose()
+                .argsort(axis=0)[:num_best_atoms]
+                .transpose()
             )
 
             # bandit algorithms
-            if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, MEDIAN_ELIMINATION, BUCKET_ACTION_ELIMINATION]:
+            if mips_alg in [
+                ACTION_ELIMINATION,
+                ADAPTIVE_ACTION_ELIMINATION,
+                MEDIAN_ELIMINATION,
+                BUCKET_ACTION_ELIMINATION,
+            ]:
                 log_info = (
                     "ind_var"
                     + str(independent_var)
@@ -197,9 +214,11 @@ def scaling_exp(
                     is_experiment=False,
                     with_replacement=with_replacement,
                     verbose=verbose,
-                    var_proxy_override=(data_type==CRYPTO_PAIRS),
+                    var_proxy_override=(data_type == CRYPTO_PAIRS),
                 )
-                candidates_array, budget_array = bandit_results[:2]  # mips_bandit returns five values
+                candidates_array, budget_array = bandit_results[
+                    :2
+                ]  # mips_bandit returns five values
                 runtime = time.time() - start_time
             elif mips_alg is GREEDY_MIPS:
                 log_info = (
@@ -207,7 +226,6 @@ def scaling_exp(
                     + str(independent_var)
                     + "budget"
                     + str(DEFAULT_GREEDY_BUDGET)
-
                 )
                 start_time = time.time()
                 candidates_array, _, _, budget_array = greedy_mips(
@@ -218,12 +236,7 @@ def scaling_exp(
                 )
                 runtime = time.time() - start_time
             elif mips_alg is PCA_MIPS:
-                log_info = (
-                    "ind_var"
-                    + str(independent_var)
-                    + "depth"
-                    + str(delta)
-                )
+                log_info = "ind_var" + str(independent_var) + "depth" + str(delta)
                 start_time = time.time()
                 candidates_array, budget_array = run_pca_mips(
                     atoms=atoms_subset,
@@ -251,26 +264,25 @@ def scaling_exp(
                 )
                 runtime = time.time() - start_time
             elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
-                log_info = (
-                        "ind_var"
-                        + str(independent_var)
-                )
+                log_info = "ind_var" + str(independent_var)
                 start_time = time.time()
                 candidates_array, budget_array = hnsw(
                     atoms=atoms_subset,
                     signals=signals_subset,
                     num_best_atoms=num_best_atoms,
-                    use_norm_adjusted_factors=(mips_alg==NAPG_MIPS)
+                    use_norm_adjusted_factors=(mips_alg == NAPG_MIPS),
                 )
                 runtime = time.time() - start_time
             elif mips_alg is NEQ_MIPS:
                 log_info = (
-                        "_codebooks"
-                        + str(NUM_CODEBOOKS)
-                        + "_codewords"
-                        + str(NUM_CODEWORDS)
+                    "_codebooks"
+                    + str(NUM_CODEBOOKS)
+                    + "_codewords"
+                    + str(NUM_CODEWORDS)
                 )
-                pqs = [PQ(M=PARTITION, Ks=NUM_CODEWORDS) for _ in range(NUM_CODEBOOKS - 1)]
+                pqs = [
+                    PQ(M=PARTITION, Ks=NUM_CODEWORDS) for _ in range(NUM_CODEBOOKS - 1)
+                ]
                 quantizer = ResidualPQ(pqs=pqs)
                 quantizer = NormPQ(n_percentile=NUM_CODEWORDS, quantize=quantizer)
                 start_time = time.time()
@@ -280,7 +292,7 @@ def scaling_exp(
                     top_k=num_best_atoms,
                     pq=quantizer,
                     X=atoms_subset,
-                    Q=signals_subset.astype('float32'),
+                    Q=signals_subset.astype("float32"),
                     G=naive_candidates_array,
                     num_codebooks=NUM_CODEBOOKS,
                     num_codewords=NUM_CODEWORDS,
@@ -289,11 +301,37 @@ def scaling_exp(
                 # includes the time finding recall (other baselines don't)
                 runtime = time.time() - start_time
                 accuracy = np.sum(accuracies)
+            elif mips_alg is H2ALSH:
+                log_info = (
+                    "_delta"
+                    + str(SCALING_H2ALSH_DELTA)
+                    + "_c0"
+                    + str(SCALING_H2ALSH_C0)
+                    + "_c"
+                    + str(SCALING_H2ALSH_C)
+                    + "_N0"
+                    + str(SCALING_H2ALSH_N0)
+                )
+                h2alsh = H2ALSH_MIPS(
+                    atoms=atoms_subset,
+                    delta=SCALING_H2ALSH_DELTA,
+                    c0=SCALING_H2ALSH_C0,
+                    c=SCALING_H2ALSH_C,
+                    N0=SCALING_H2ALSH_N0,
+                )
+                start_time = time.time()
+                candidates_array, budget_array = h2alsh.mip_search_queries(
+                    queries=signals_subset, top_k=num_best_atoms
+                )
+                runtime = time.time() - start_time
+
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
             # store runtime, budget, budget_std, and accuracy of the experiment
-            avg_runtimes[size_idx, seed] = runtime / num_signals  # Note that the runtimes are averaged over all signals
+            avg_runtimes[size_idx, seed] = (
+                runtime / num_signals
+            )  # Note that the runtimes are averaged over all signals
 
             # assert budget_array.size == num_signals, "budget_array should be the size of the signals"
             budgets[size_idx, seed, :] = budget_array
@@ -307,16 +345,29 @@ def scaling_exp(
             if mips_alg is not NEQ_MIPS:
                 for signal_idx in range(num_signals):
                     matches = len(
-                        np.intersect1d(naive_candidates_array[signal_idx], candidates_array[signal_idx])
+                        np.intersect1d(
+                            naive_candidates_array[signal_idx],
+                            candidates_array[signal_idx],
+                        )
                     )
                     accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
 
-    avg_runtime = np.mean(avg_runtimes, axis=1)  # Average over seeds because it's already averaged over signals
+    avg_runtime = np.mean(
+        avg_runtimes, axis=1
+    )  # Average over seeds because it's already averaged over signals
     avg_budget = np.mean(budgets, axis=(1, 2))  # Average over seeds and signals
-    avg_budget_std = np.std(budgets, axis=(1, 2))  # Std over seeds and signals for given size
+    avg_budget_std = np.std(
+        budgets, axis=(1, 2)
+    )  # Std over seeds and signals for given size
     avg_accuracy = np.mean(accuracies, axis=(1, 2))  # Average over seeds and signals
 
-    assert avg_runtime.size == avg_budget.size == avg_budget_std.size == avg_accuracy.size == num_experiments, "The sizes of the arrays should be the same as num_experiments"
+    assert (
+        avg_runtime.size
+        == avg_budget.size
+        == avg_budget_std.size
+        == avg_accuracy.size
+        == num_experiments
+    ), "The sizes of the arrays should be the same as num_experiments"
 
     # save to log files
     if is_log:
@@ -337,11 +388,17 @@ def scaling_exp(
                 "runtime": avg_runtime,
             }
         else:
-            raise NotImplementedError(f"{independent_var} is not an implemented control variable")
+            raise NotImplementedError(
+                f"{independent_var} is not an implemented control variable"
+            )
 
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
+        log_dir = (
+            os.path.join(parent_dir, "scaling", "logs")
+            if dir_name is None
+            else dir_name
+        )
         filename = os.path.join(
             log_dir,
             mips_alg

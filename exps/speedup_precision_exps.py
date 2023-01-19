@@ -503,10 +503,10 @@ def speedup_precision_exps(
         }
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(parent_dir, "tradeoff", "logs") if dirname is None else dirname
+        log_dir = os.path.join(parent_dir, "tradeoff", "logs") if dir_name is None else dir_name
         filename = os.path.join(
             log_dir,
-            mips_alg
+            mips_alg +
             "_SPEEDUP_"
             + data_type
             + "_"
@@ -519,7 +519,7 @@ def speedup_precision_exps(
             + str(num_best_atoms)
             + "_"
             + log_info
-            + ".csv",
+            + ".csv"
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)

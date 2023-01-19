@@ -29,6 +29,7 @@ from utils.constants import (
     NAPG_MIPS,
     NEQ_MIPS,
     BUCKET_ACTION_ELIMINATION,
+    H2ALSH,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
