@@ -1,4 +1,5 @@
 from exps.scaling_exp import scaling_exp
+from exps.plot_baselines import create_scaling_plots
 from utils.constants import (
     CRYPTO_PAIRS_MAXMIN,
 
@@ -18,7 +19,6 @@ from utils.constants import (
     SCALING_SIZE_MINMAX,
     SCAlING_SIZE_MINMAX_CRYPTO_PAIRS,
 )
-from exps.plot_baselines import create_scaling_plots
 
 
 def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):

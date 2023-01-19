@@ -50,6 +50,9 @@ def adaptive_action_elimination(
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
 
+        # Some signals of a crypto pairs dataset can be small (most of the values around 0.001, for example),
+        # making it hard to eliminate bad atoms.
+        # Adjust maxmin according to the median value of the signal (There can be a more sophisticated way)
         if var_proxy_override:
             signal_median = np.median(signal)
             var_proxy = 1 / 4 * ((maxmin[0] - maxmin[1]) * signal_median) ** 2
