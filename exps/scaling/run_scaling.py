@@ -4,6 +4,8 @@ from typing import Tuple
 from exps.scaling_exp import scaling_exp
 from exps.plot_baselines import generate_scaling_plots, create_scaling_plots
 from utils.constants import (
+    BATCH_SIZE,
+
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
@@ -23,6 +25,8 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    HNSW_MIPS,
+    NAPG_MIPS,
     NEQ_MIPS,
     BUCKET_ACTION_ELIMINATION,
 
@@ -37,6 +41,7 @@ from utils.constants import (
     SCAlING_SIZE_MINMAX_MOVIE,
     SCALING_DELTA_REAL,
     SCALING_EPSILON_REAL,
+    DIMENSION_OF_ATOMS,
 )
 
 
@@ -122,20 +127,7 @@ def run_scaling():
             num_experiments=SCALING_NUM_EXPERIMENTS,
             num_signals=SCALING_NUM_SIGNALS,
             data_type=data_type,
-            mips_alg=PCA_MIPS,
-            with_replacement=False,
-            is_normalize=False,
-            is_logspace=True,
-        )
-        scaling_exp(
-            epsilon=epsilon,
-            delta=delta,
-            num_atoms=SCALING_NUM_ATOMS,
-            size_minmax=size_minmax,
-            num_experiments=SCALING_NUM_EXPERIMENTS,
-            num_signals=SCALING_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=LSH_MIPS,
+            mips_alg=HNSW_MIPS,
             with_replacement=False,
             is_normalize=False,
             is_logspace=True,

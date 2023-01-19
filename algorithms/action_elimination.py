@@ -188,4 +188,3 @@ def action_elimination(
             print(f"Num iterations: {t}")
 
     return candidates_array, budgets_array, cache, cache_tracker, cache_map
-

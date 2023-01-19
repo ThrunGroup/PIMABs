@@ -1,14 +1,9 @@
 import numpy as np
 import numba as nb
-import math
 from typing import Tuple
 
 from utils.constants import (
     BATCH_SIZE,
-    ADVERSARIAL_CUSTOM,
-    NORMAL_CUSTOM,
-    MEDIAN_ELIMINATION,
-    ACTION_ELIMINATION,
     HOEFFDING,
 )
 from utils.utils import subset_2d, fit_and_plot
