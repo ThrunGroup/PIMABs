@@ -4,14 +4,13 @@ from typing import Tuple
 from exps.scaling_exp import scaling_exp
 from exps.plot_baselines import generate_scaling_plots, create_scaling_plots
 from utils.constants import (
-    BATCH_SIZE,
-
     # datasets
     NORMAL_CUSTOM,
     ADVERSARIAL_CUSTOM,
     NORMAL_PAPER,
     NETFLIX,
     MOVIE_LENS,
+    CRYPTO_PAIRS,
     COR_NORMAL_CUSTOM,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
@@ -29,8 +28,9 @@ from utils.constants import (
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
-    SCALING_NUM_ATOMS,
     SCALING_NUM_SIGNALS,
+    SCALING_NUM_ATOMS,
+    SCALING_NUM_ATOMS_CRYPTO_PAIRS,
     SCALING_EPSILON,
     SCALING_DELTA,
     SCALING_SIZE_MINMAX,
@@ -55,6 +55,9 @@ def run_scaling():
         if data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:
             epsilon = SCALING_EPSILON
             delta = SCALING_DELTA
+        elif data_type is CRYPTO_PAIRS:
+            epsilon = SCALING_EPSILON
+            delta = 0.01
         else:  # real datasets
             epsilon = SCALING_EPSILON_REAL
             delta = SCALING_DELTA_REAL
@@ -111,32 +114,6 @@ def run_scaling():
             is_normalize=False,
             is_logspace=True,
         )
-        # scaling_exp(
-        #     epsilon=epsilon,
-        #     delta=delta,
-        #     num_atoms=SCALING_NUM_ATOMS,
-        #     size_minmax=size_minmax,
-        #     num_experiments=SCALING_NUM_EXPERIMENTS,
-        #     num_signals=SCALING_NUM_SIGNALS,
-        #     data_type=data_type,
-        #     mips_alg=PCA_MIPS,
-        #     with_replacement=False,
-        #     is_normalize=False,
-        #     is_logspace=True,
-        # )
-        # scaling_exp(
-        #     epsilon=epsilon,
-        #     delta=delta,
-        #     num_atoms=SCALING_NUM_ATOMS,
-        #     size_minmax=size_minmax,
-        #     num_experiments=SCALING_NUM_EXPERIMENTS,
-        #     num_signals=SCALING_NUM_SIGNALS,
-        #     data_type=data_type,
-        #     mips_alg=LSH_MIPS,
-        #     with_replacement=False,
-        #     is_normalize=False,
-        #     is_logspace=True,
-        # )
         scaling_exp(
             epsilon=epsilon,
             delta=delta,
@@ -145,7 +122,20 @@ def run_scaling():
             num_experiments=SCALING_NUM_EXPERIMENTS,
             num_signals=SCALING_NUM_SIGNALS,
             data_type=data_type,
-            mips_alg=NEQ_MIPS,
+            mips_alg=PCA_MIPS,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=True,
+        )
+        scaling_exp(
+            epsilon=epsilon,
+            delta=delta,
+            num_atoms=SCALING_NUM_ATOMS,
+            size_minmax=size_minmax,
+            num_experiments=SCALING_NUM_EXPERIMENTS,
+            num_signals=SCALING_NUM_SIGNALS,
+            data_type=data_type,
+            mips_alg=LSH_MIPS,
             with_replacement=False,
             is_normalize=False,
             is_logspace=True,

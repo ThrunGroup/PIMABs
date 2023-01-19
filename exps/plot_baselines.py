@@ -1,7 +1,6 @@
 import os
 import glob
 import pandas as pd
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -16,6 +15,7 @@ from utils.constants import (
     NETFLIX_TRANSPOSE,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
+    CRYPTO_PAIRS,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
@@ -33,7 +33,7 @@ from utils.constants import (
     NEQ_MIPS,
 
     MAX_SPEEDUP,
-    TRADEOFF_TOPK
+    TRADEOFF_TOPK,
     MAX_SPEEDUP,
     BUCKET_ACTION_ELIMINATION,
     DIMENSION_OF_ATOMS,
@@ -90,6 +90,8 @@ def translate_dataset_name(dataset_name: str):
         return "Movie Lens"
     elif dataset_name == COR_NORMAL_CUSTOM:
         return COR_NORMAL_CUSTOM
+    elif dataset_name == CRYPTO_PAIRS:
+        return "Crypto Pairs"
     elif dataset_name == CLEAR_LEADER_HARD:
         return "Clear Leader (Hard)"
     elif dataset_name == CLEAR_LEADER_SOFT:
@@ -145,13 +147,11 @@ def create_scaling_plots(
     caching_type: str = "",
     data_types: List[str] = [],
     alg_names: List[str] = [],
-    include_error_bar: bool = True,
-    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     include_error_bar: bool = False,
+    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     is_fit: bool = False,
     is_logspace: bool = False,
     is_plot_accuracy: bool = False,
-    dirname: str = None,
 ):
     """
     Plot the scaling experiments from the data stored in the logs file.
@@ -168,9 +168,8 @@ def create_scaling_plots(
     :param dirname: directory name of log files
     """
     # get all csv files
-    path = os.path.join(os.getcwd(), "logs")
-    path = os.path.join(path, dir_name)
-    csv_files = glob.glob(os.path.join(path, "*SCALING*"))
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -181,7 +180,7 @@ def create_scaling_plots(
     for ind_variable in ind_variables:
         for datatype in data_types:
             csv_files = glob.glob(
-                os.path.join(path, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+                os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
             )
             plt.figure(figsize=(6, 4.5))
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
@@ -200,6 +199,7 @@ def create_scaling_plots(
                 y = data["budgets"].tolist()
                 error = data["budgets_std"].tolist()
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+
                 if is_fit:
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
                     if is_logspace:
@@ -231,7 +231,6 @@ def create_scaling_plots(
                     ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
-
                 else:
                     plt.scatter(
                         x,

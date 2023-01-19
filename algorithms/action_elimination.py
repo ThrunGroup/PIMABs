@@ -24,8 +24,10 @@ def action_elimination(
     var_proxy: np.ndarray,
     epsilon: float,
     delta: float,
-    abs: bool = False,
+    var_proxy_override: bool = False,
+    maxmin : list = [],
     num_best_atoms: int = 1,
+    abs: bool = False,
     verbose: bool = False,
     with_replacement: bool = False,
     batch_size: int = BATCH_SIZE,
@@ -47,6 +49,7 @@ def action_elimination(
     :params permutation: the sequence of indices used for PI caching (default None i.e. naive caching)
     :params cache: the cache of size (N, max_cache_size)
     :params cache_tracker: array of size N that tracks each atom and how much is cached (< max_cache_size).
+    :params maxmin : Array of max and min values that the data can have
 
     :return: Returns the k(num_best_atoms) best arms with error epsilon and probability 1 - delta.
     """
@@ -57,6 +60,14 @@ def action_elimination(
     # run AE for all signals (this is the to find the confidence intervals over multiple experiments)
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
+
+        # Some signals of a crypto pairs dataset can be small (most of the values around 0.001, for example),
+        # making it hard to eliminate bad atoms.
+        # Adjust maxmin according to the median value of the signal (There can be a more sophisticated way)
+        if var_proxy_override:
+            signal_median = np.median(signal)
+            var_proxy = 1 / 4 * ((maxmin[0] - maxmin[1]) * signal_median) ** 2
+
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step
@@ -117,7 +128,7 @@ def action_elimination(
                 use_cache=use_cache,
                 cache=cache,
                 cache_tracker=cache_tracker,
-                cache_map=cache_map
+                cache_map=cache_map,
             )
             # update params
             budgets += budget
@@ -172,5 +183,9 @@ def action_elimination(
             candidates = candidates[new_cand_idcs]
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
+
+        if verbose:
+            print(f"Num iterations: {t}")
+
     return candidates_array, budgets_array, cache, cache_tracker, cache_map
 

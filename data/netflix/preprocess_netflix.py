@@ -99,7 +99,7 @@ def main1():
     print("end fitting")
 
 
-def main2():
+def main2(filename: str = "Movie_ratings"):
     cur_dir = os.path.dirname(__file__)
     movie_factors = np.load(os.path.join(cur_dir, "Movie_factors_15_new.npy"))
     customer_factors = np.load(os.path.join(cur_dir, "Customer_factors_15_new.npy"))
@@ -112,11 +112,11 @@ def main2():
     data += + np.expand_dims(customer_biases, axis=0)
     data += global_mean
 
-    filename = os.path.join(cur_dir, "Movie_ratings.npy")
+    filename = os.path.join(cur_dir, f"{filename}.npy")
     np.save(filename, data)
     print("Store Movie ratings matrix.")
 
 
 if __name__ == "__main__":
-    # main1()
+    main1()
     main2()
