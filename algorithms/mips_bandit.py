@@ -30,6 +30,7 @@ def mips_bandit(
     abs: bool = False,
     verbose: bool = False,
     with_replacement: bool = False,
+    var_proxy_override: bool = False,
     batch_size: int = BATCH_SIZE,
     use_cache: bool = False,
     shuffled_indices: list = None,
@@ -50,12 +51,14 @@ def mips_bandit(
                     bandit algorithm
     :param delta: A probability that the difference between the reward of the true best arm and the identified
                   best arm is beyond epsilon
-    :param num_best_atoms
-    : Number of atoms that bandit algorithm identify as top/best arms.
+    :param num_best_atoms: Number of atoms that bandit algorithm identify as top/best arms.
     :param seed: A random seed
     :param is_experiment: Whether to do worst-case experiment
     :param verbose: Verbosity of function
     :param with_replacement: Whether to sample with replacement
+    :param var_proxy_override: Whether to override the given var proxy (Used for adjusting the var proxy according to
+                                the median value of a signal for a crypto pairs dataset)
+    :param batch_size: Number of coordinates of an atom to sample at each iteration
     :return: Indices of best atom that have maximum inner product with a signal vector and the budget (total number of
             calculations)
     """
@@ -96,6 +99,8 @@ def mips_bandit(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                var_proxy_override=var_proxy_override,
+                maxmin=list(maxmin),
                 epsilon=epsilon,
                 delta=delta,
                 abs=abs,
@@ -108,16 +113,19 @@ def mips_bandit(
                 cache=cache,
                 cache_tracker=cache_tracker,
                 cache_map=cache_map,
+                verbose=verbose,
             )
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                var_proxy_override=var_proxy_override,
+                maxmin=list(maxmin),
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,
-                batch_size=batch_size
+                batch_size=batch_size,
             )
         elif bandit_alg is BUCKET_ACTION_ELIMINATION:
             return bucket_action_elimination(
@@ -128,7 +136,7 @@ def mips_bandit(
                 delta=delta,
                 num_best_atoms=num_best_atoms,
                 with_replacement=False,
-                batch_size=batch_size
+                batch_size=batch_size,
             )
         else:
             raise NotImplementedError(f"{bandit_alg} is not implemented.")

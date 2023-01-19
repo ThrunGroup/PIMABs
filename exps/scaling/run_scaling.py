@@ -12,6 +12,7 @@ from utils.constants import (
     NORMAL_PAPER,
     NETFLIX,
     MOVIE_LENS,
+    CRYPTO_PAIRS,
     COR_NORMAL_CUSTOM,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
@@ -31,15 +32,15 @@ from utils.constants import (
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
-    SCALING_NUM_ATOMS,
     SCALING_NUM_SIGNALS,
+    SCALING_NUM_ATOMS,
+    SCALING_NUM_ATOMS_CRYPTO_PAIRS,
     SCALING_EPSILON,
     SCALING_DELTA,
     SCALING_SIZE_MINMAX,
     SCAlING_SIZE_MINMAX_MOVIE,
     SCALING_DELTA_REAL,
     SCALING_EPSILON_REAL,
-
     DIMENSION_OF_ATOMS,
 )
 
@@ -47,10 +48,10 @@ from utils.constants import (
 def run_scaling():
     """
     Run scaling experiment for the two synthetic datasets (normal custom, adversarial custom) and
-    the two real-world datasets (netflix and movie lens). This function is called by repro_script_python.py.
+    the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    for data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:  # NETFLIX, MOVIE_LENS
+    for data_type in [NETFLIX, NORMAL_CUSTOM, ADVERSARIAL_CUSTOM, NETFLIX, MOVIE_LENS]:
         if data_type is MOVIE_LENS:
             size_minmax = SCAlING_SIZE_MINMAX_MOVIE
         else:
@@ -59,7 +60,9 @@ def run_scaling():
         if data_type in [NORMAL_CUSTOM, ADVERSARIAL_CUSTOM]:
             epsilon = SCALING_EPSILON
             delta = SCALING_DELTA
-
+        elif data_type is CRYPTO_PAIRS:
+            epsilon = SCALING_EPSILON
+            delta = 0.01
         else:  # real datasets
             epsilon = SCALING_EPSILON_REAL
             delta = SCALING_DELTA_REAL
@@ -116,32 +119,6 @@ def run_scaling():
             is_normalize=False,
             is_logspace=True,
         )
-        # scaling_exp(
-        #     epsilon=epsilon,
-        #     delta=delta,
-        #     num_atoms=SCALING_NUM_ATOMS,
-        #     size_minmax=size_minmax,
-        #     num_experiments=SCALING_NUM_EXPERIMENTS,
-        #     num_signals=SCALING_NUM_SIGNALS,
-        #     data_type=data_type,
-        #     mips_alg=PCA_MIPS,
-        #     with_replacement=False,
-        #     is_normalize=False,
-        #     is_logspace=True,
-        # )
-        # scaling_exp(
-        #     epsilon=epsilon,
-        #     delta=delta,
-        #     num_atoms=SCALING_NUM_ATOMS,
-        #     size_minmax=size_minmax,
-        #     num_experiments=SCALING_NUM_EXPERIMENTS,
-        #     num_signals=SCALING_NUM_SIGNALS,
-        #     data_type=data_type,
-        #     mips_alg=LSH_MIPS,
-        #     with_replacement=False,
-        #     is_normalize=False,
-        #     is_logspace=True,
-        # )
         scaling_exp(
             epsilon=epsilon,
             delta=delta,
@@ -155,34 +132,6 @@ def run_scaling():
             is_normalize=False,
             is_logspace=True,
         )
-        # scaling_exp(
-        #     epsilon=epsilon,
-        #     delta=delta,
-        #     num_atoms=SCALING_NUM_ATOMS,
-        #     size_minmax=size_minmax,
-        #     num_experiments=SCALING_NUM_EXPERIMENTS,
-        #     num_signals=SCALING_NUM_SIGNALS,
-        #     data_type=data_type,
-        #     mips_alg=NAPG_MIPS,
-        #     with_replacement=False,
-        #     is_normalize=False,
-        #     is_logspace=True,
-        #     independent_var=DIMENSION_OF_ATOMS,
-        #     num_seeds=3,
-        # )
-        # scaling_exp(
-        #     epsilon=epsilon,
-        #     delta=delta,
-        #     num_atoms=SCALING_NUM_ATOMS,
-        #     size_minmax=size_minmax,
-        #     num_experiments=SCALING_NUM_EXPERIMENTS,
-        #     num_signals=SCALING_NUM_SIGNALS,
-        #     data_type=data_type,
-        #     mips_alg=NEQ_MIPS,
-        #     with_replacement=False,
-        #     is_normalize=False,
-        #     is_logspace=True,
-        # )
 
 
 if __name__ == "__main__":

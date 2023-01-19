@@ -17,6 +17,8 @@ def adaptive_action_elimination(
     var_proxy: np.ndarray,
     epsilon: float,
     delta: float,
+    var_proxy_override: bool = False,
+    maxmin: list = [],
     num_best_atoms: int = 1,
     verbose: bool = False,
     batch_size: int = BATCH_SIZE,
@@ -42,6 +44,14 @@ def adaptive_action_elimination(
     budgets_array = np.empty(signals.shape[0], dtype=np.int64)
     for signal_idx in range(signals.shape[0]):
         signal = signals[signal_idx]
+
+        # Some signals of a crypto pairs dataset can be small (most of the values around 0.001, for example),
+        # making it hard to eliminate bad atoms.
+        # Adjust maxmin according to the median value of the signal (There can be a more sophisticated way)
+        if var_proxy_override:
+            signal_median = np.median(signal)
+            var_proxy = 1 / 4 * ((maxmin[0] - maxmin[1]) * signal_median) ** 2
+
         D = atoms.shape[0]  # Number of atoms
         d = atoms.shape[1]  # Dimension of atoms/signal
         t = 0  # time step

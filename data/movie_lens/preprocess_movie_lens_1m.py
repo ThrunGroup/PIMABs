@@ -19,7 +19,10 @@ def main1():
     np.save(os.path.join(cur_dir, "global_mean.npy"), trainset.global_mean)
 
 
-def main2():
+def main2(filename: str = "movie_lens_1m_ratings"):
+    """
+    :param filename: Name of the file to store as a dataset
+    """
     cur_dir = os.path.dirname(__file__)
     users_factors = np.load(os.path.join(cur_dir, "movie_lens_1m_users_factors.npy"))
     users_biases = np.load(os.path.join(cur_dir, "movie_lens_1m_users_biases.npy"))
@@ -31,7 +34,7 @@ def main2():
     data += np.expand_dims(item_biases, axis=1)
     data += + np.expand_dims(users_biases, axis=0)
     data += global_mean
-    np.save(os.path.join(cur_dir, "movie_lens_1m_ratings.npy"), data)
+    np.save(os.path.join(cur_dir, f"{filename}.npy"), data)
     print(np.histogram(data))
     print(data.shape)
 

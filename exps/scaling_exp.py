@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 
 from utils.constants import (
+    CRYPTO_PAIRS,
+
     NUMBER_OF_ATOMS,
     DIMENSION_OF_ATOMS,
 
@@ -78,7 +80,8 @@ def scaling_exp(
     is_log: bool = True,
     is_plot: bool = True,
     is_logspace: bool = False,
-    dirname: str = None,
+    dir_name: str = None,
+    verbose: bool = False,
 ) -> float:
     """
     Run the time complexity of the bandit and baseline algorithms as the signal size scales and store them in
@@ -104,7 +107,8 @@ def scaling_exp(
     :param is_log: Whether to log the results
     :param is_plot: Whether to plot the results
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
-    :param dirname: Directory name to log the results
+    :param dir_name: Directory name to log the results
+    :param verbose: Whether to print the number of iterations ran for action elimination
     """
     avg_runtimes = np.zeros((num_experiments, num_seeds))  # Note that the runtime is average over all signals
     budgets = np.zeros((num_experiments, num_seeds, num_signals))
@@ -192,6 +196,8 @@ def scaling_exp(
                     seed=seed,
                     is_experiment=False,
                     with_replacement=with_replacement,
+                    verbose=verbose,
+                    var_proxy_override=(data_type==CRYPTO_PAIRS),
                 )
                 candidates_array, budget_array = bandit_results[:2]  # mips_bandit returns five values
                 runtime = time.time() - start_time
@@ -241,7 +247,7 @@ def scaling_exp(
                     signals=signals_subset,
                     num_best_atoms=num_best_atoms,
                     num_hfunc=SCALING_NUM_HFUNC,
-                    num_tables=SCALING_NUM_TABLES
+                    num_tables=SCALING_NUM_TABLES,
                 )
                 runtime = time.time() - start_time
             elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
@@ -278,7 +284,7 @@ def scaling_exp(
                     G=naive_candidates_array,
                     num_codebooks=NUM_CODEBOOKS,
                     num_codewords=NUM_CODEWORDS,
-                    train_size=num_atoms
+                    train_size=num_atoms,
                 )
                 # includes the time finding recall (other baselines don't)
                 runtime = time.time() - start_time
@@ -335,12 +341,12 @@ def scaling_exp(
 
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(parent_dir, "scaling", "logs") if dirname is None else dirname
+        log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
         filename = os.path.join(
             log_dir,
             mips_alg
             + "_"
-            "SCALING_"
+            + "SCALING_"
             + data_type
             + "_"
             + "atoms"

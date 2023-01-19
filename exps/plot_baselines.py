@@ -1,7 +1,6 @@
 import os
 import glob
 import pandas as pd
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -16,6 +15,7 @@ from utils.constants import (
     NETFLIX_TRANSPOSE,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
+    CRYPTO_PAIRS,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
@@ -98,6 +98,8 @@ def translate_dataset_name(dataset_name: str):
         return "Movie Lens"
     elif dataset_name == COR_NORMAL_CUSTOM:
         return COR_NORMAL_CUSTOM
+    elif dataset_name == CRYPTO_PAIRS:
+        return "Crypto Pairs"
     elif dataset_name == CLEAR_LEADER_HARD:
         return "Clear Leader (Hard)"
     elif dataset_name == CLEAR_LEADER_SOFT:
@@ -156,8 +158,8 @@ def create_scaling_plots(
     caching_type: str = "",
     data_types: List[str] = [],
     alg_names: List[str] = [],
-    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     include_error_bar: bool = False,
+    ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     is_fit: bool = False,
     is_logspace: bool = False,
     is_plot_accuracy: bool = False,
@@ -179,7 +181,7 @@ def create_scaling_plots(
     # get all csv files
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
-    log_dir = os.path.join(parent_dir, log_dir)
+    log_dir = os.path.join(parent_dir, log_dir)  # TODO(@lukeleeai): Is this correct?
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -209,6 +211,7 @@ def create_scaling_plots(
                 y = data["budgets"].tolist()
                 error = data["budgets_std"].tolist()
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+
                 if is_fit:
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
                     if is_logspace:

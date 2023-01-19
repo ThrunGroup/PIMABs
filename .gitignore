@@ -1,4 +1,5 @@
 data/raw_data
+data/crypto_pairs/archive
 data/sift*
 exps/tradeoff/logs/napg_checkpoints
 exps/scaling/logs/napg_checkpoints
