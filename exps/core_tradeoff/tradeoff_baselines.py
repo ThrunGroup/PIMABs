@@ -42,7 +42,7 @@ from utils.constants import (
 )
 
 
-def get_params(data_type):
+def get_tradeoff_params(data_type):
     """
     Function gives the constants for [num_atoms, len_signals] for the specified datatype.
     """
@@ -79,7 +79,7 @@ def tradeoff_baselines():
             PCA_MIPS, NEQ_MIPS, NAPG_MIPS,  # mapping to lower dimensions
             MEDIAN_ELIMINATION, ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION,  # bandit approach
         ]:
-            num_atoms, len_signals = get_params(data_type)
+            num_atoms, len_signals = get_tradeoff_params(data_type)
             parameters = {
                 'num_atoms': num_atoms,
                 'num_experiments': TRADEOFF_NUM_EXPERIMENTS,

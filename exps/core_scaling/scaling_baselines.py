@@ -45,7 +45,7 @@ from utils.constants import (
 )
 
 
-def get_params(data_type):
+def get_scaling_baseline_params(data_type):
     """
     Function gives the constants for [epsilon, delta, size_minmax] for the specified datatype.
     """
@@ -76,14 +76,14 @@ def scaling_baselines():
     """
     # Get data for the scaling experiments for the datasets (not the high-dimensional datasets)
     for data_type in [NORMAL_CUSTOM, UNIFORM_PAPER, CLEAR_LEADER_HARD, NETFLIX, MOVIE_LENS]:
-        for algorithm in [
-            GREEDY_MIPS,  # greedy approach
-            LSH_MIPS, H2ALSH,  # mapping to higher dimensions
-            PCA_MIPS, NEQ_MIPS, NAPG_MIPS,  # mapping to lower dimensions
-            MEDIAN_ELIMINATION, ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION,  # bandit approach
-        ]:
-
-            epsilon, delta, size_minmax = get_params(data_type)
+        # for algorithm in [
+        #     GREEDY_MIPS,  # greedy approach
+        #     LSH_MIPS, H2ALSH,  # mapping to higher dimensions
+        #     PCA_MIPS, NEQ_MIPS, NAPG_MIPS,  # mapping to lower dimensions
+        #     MEDIAN_ELIMINATION, ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION,  # bandit approach
+        # ]:
+        for algorithm in [NAPG_MIPS]:
+            epsilon, delta, size_minmax = get_scaling_baseline_params(data_type)
             scaling_exp(
                 epsilon=epsilon,
                 delta=delta,

@@ -31,8 +31,6 @@ def main():
     generate_scaling_plots()
     print("=> Generating tradeoff plots")
     generate_tradeoff_plots()
-    print("=> Doing large scaling experiments")
-    large_scaling_exps()
 
 
 if __name__ == "__main__":

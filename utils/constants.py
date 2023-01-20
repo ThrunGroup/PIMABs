@@ -105,7 +105,7 @@ SCALING_NUM_TABLES = 5
 # ) Todo: uncomment this
 
 SCALING_SIZE_MINMAX = (
-    100, 10000,
+    100, 1000,
 )
 
 
