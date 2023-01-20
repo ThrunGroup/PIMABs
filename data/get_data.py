@@ -2,7 +2,7 @@ from typing import Tuple
 import numpy as np
 import math
 import os
-import mnist
+#import mnist
 
 from utils.utils import subset_2d
 from data.custom_data import generate_custom_data, create_toy_waves
