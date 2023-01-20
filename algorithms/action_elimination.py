@@ -3,7 +3,6 @@ import numba as nb
 from typing import Tuple
 from numba import typed
 
-
 from utils.constants import (
     BATCH_SIZE,
     ADVERSARIAL_CUSTOM,
@@ -25,7 +24,7 @@ def action_elimination(
     epsilon: float,
     delta: float,
     var_proxy_override: bool = False,
-    maxmin : list = [],
+    maxmin: typed.List = [],
     num_best_atoms: int = 1,
     abs: bool = False,
     verbose: bool = False,

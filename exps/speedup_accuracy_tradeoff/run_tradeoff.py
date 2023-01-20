@@ -74,49 +74,49 @@ def run_tradeoff():
             mips_alg=MEDIAN_ELIMINATION,
             with_replacement=False,
         )
-        speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
-            num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=PCA_MIPS,
-        )
-        speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
-            num_experiments=TRADEOFF_LSH_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=LSH_MIPS,
-            lsh_type=ASYMMETRIC,
-        )
-        speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
-            num_experiments=TRADEOFF_NEQ_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=NEQ_MIPS,
-        )
-        speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=NAPG_MIPS,
-            with_replacement=False,
-        )
-        speedup_precision_exps(
-            num_atoms=TRADEOFF_NUM_ATOMS,
-            num_experiments=TRADEOFF_NUM_EXPERIMENTS,
-            len_signals=len_signals,
-            num_signals=TRADEOFF_NUM_SIGNALS,
-            data_type=data_type,
-            mips_alg=HNSW_MIPS,
-            with_replacement=False,
-        )
+        # speedup_precision_exps(
+        #     num_atoms=TRADEOFF_NUM_ATOMS,
+        #     num_experiments=TRADEOFF_PCA_NUM_EXPERIMENTS,
+        #     len_signals=len_signals,
+        #     num_signals=TRADEOFF_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=PCA_MIPS,
+        # )
+        # speedup_precision_exps(
+        #     num_atoms=TRADEOFF_NUM_ATOMS,
+        #     num_experiments=TRADEOFF_LSH_NUM_EXPERIMENTS,
+        #     len_signals=len_signals,
+        #     num_signals=TRADEOFF_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=LSH_MIPS,
+        #     lsh_type=ASYMMETRIC,
+        # )
+        # speedup_precision_exps(
+        #     num_atoms=TRADEOFF_NUM_ATOMS,
+        #     num_experiments=TRADEOFF_NEQ_NUM_EXPERIMENTS,
+        #     len_signals=len_signals,
+        #     num_signals=TRADEOFF_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=NEQ_MIPS,
+        # )
+        # speedup_precision_exps(
+        #     num_atoms=TRADEOFF_NUM_ATOMS,
+        #     num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+        #     len_signals=len_signals,
+        #     num_signals=TRADEOFF_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=NAPG_MIPS,
+        #     with_replacement=False,
+        # )
+        # speedup_precision_exps(
+        #     num_atoms=TRADEOFF_NUM_ATOMS,
+        #     num_experiments=TRADEOFF_NUM_EXPERIMENTS,
+        #     len_signals=len_signals,
+        #     num_signals=TRADEOFF_NUM_SIGNALS,
+        #     data_type=data_type,
+        #     mips_alg=HNSW_MIPS,
+        #     with_replacement=False,
+        # )
 
 
 if __name__ == "__main__":
