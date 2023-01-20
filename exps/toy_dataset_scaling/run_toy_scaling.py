@@ -27,7 +27,7 @@ def run_toy_scaling(run: bool = True, plot: bool = True):
     Run scaling experiments for the toy datasets
     """
     if run:
-        for data_type in [CLEAR_LEADER_HARD, CLEAR_LEADER_SOFT, NO_CLEAR_LEADER]:
+        for data_type in [NO_CLEAR_LEADER]:  # CLEAR_LEADER_HARD, CLEAR_LEADER_SOFT,
             # Because we expect linear scaling with d in the NO_CLEAR_LEADER dataset, we have to run it on
             # a smaller scale
             size_minmax = (10 ** 2, 10 ** 5) if data_type == NO_CLEAR_LEADER else (10 ** 2, 10 ** 6)
@@ -46,7 +46,6 @@ def run_toy_scaling(run: bool = True, plot: bool = True):
                 dir_name="toy_scaling_logs",
                 num_seeds=3,
             )
-            print(mean_acc)
             # assert mean_acc == 1.0, f"Mean accuracy on dataset {data_type} should be 1.0"
 
     if plot:
@@ -61,4 +60,4 @@ def run_toy_scaling(run: bool = True, plot: bool = True):
 
 
 if __name__ == "__main__":
-    run_toy_scaling(run=True, plot=True)
+    run_toy_scaling(run=True, plot=False)

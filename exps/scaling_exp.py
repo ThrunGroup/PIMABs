@@ -130,6 +130,7 @@ def scaling_exp(
             num_atoms=num_atoms,
             len_signal=sizes[-1],
             num_signals=num_signals,
+            num_best_atoms=num_best_atoms,
             seed=data_generation_seed,
             data_type=data_type,
         )

@@ -100,6 +100,7 @@ def action_elimination(
             # Compute the true inner product of the candidates if we have more samples than dimension d.
             # (i.e. no need to approximate from this point forward)
             if end > d:
+                print("True")
                 sample_indices = permutation[start:]
                 signal_sampled = signal[sample_indices]
                 # Todo: should this also be subset_2d_cached? This would only help naive caching
