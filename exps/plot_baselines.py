@@ -23,6 +23,7 @@ from utils.constants import (
     MNIST_T,
     SIMPLE_SONG,
     SIFT_1M,
+    NORMAL_PAPER,
     UNIFORM_PAPER,
 
     MEDIAN_ELIMINATION,
@@ -94,6 +95,8 @@ def translate_dataset_name(dataset_name: str):
     elif dataset_name == NORMAL_CUSTOM:
         # return "Synthetic Gaussian"
         return NORMAL_CUSTOM
+    elif dataset_name == NORMAL_PAPER:
+        return NORMAL_PAPER
     elif dataset_name == NETFLIX:
         return "Netflix"
     elif dataset_name == NETFLIX_TRANSPOSE:
@@ -119,7 +122,7 @@ def translate_dataset_name(dataset_name: str):
     elif dataset_name == SIFT_1M:
         return "SIFT 1M"
     elif dataset_name == UNIFORM_PAPER:
-        return "Uniform Paper"
+        return UNIFORM_PAPER
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -192,9 +195,12 @@ def create_scaling_plots(
     :param dir_name: directory name of log files
     """
     # get all csv files
-    parent_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.join(parent_dir, dir_name)
-
+    if dir_name is None:
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
+        log_dir = os.path.join(parent_dir, log_dir)  # TODO(@lukeleeai): Is this correct?
+    else:
+        log_dir = dir_name
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
 
@@ -301,7 +307,8 @@ def create_tradeoff_plots(
     top_k: int = 1,
     include_error_bar: bool = False,
     max_speedup: int = None,
-    dir: str = None,
+    log_dir: str = None,
+    is_logspace: bool = True,
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -312,12 +319,10 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    if dir is None:
-        current_file_directory = os.path.dirname(__file__)
-        path = os.path.join(current_file_directory, "logs")
-        path = os.path.join(path, "precision_speed")
-    else:
-        path = dir
+    if log_dir is None:
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join("tradeoff", "logs")
+        log_dir = os.path.join(parent_dir, log_dir)
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -326,7 +331,7 @@ def create_tradeoff_plots(
 
     for datatype in data_types:
         csv_files = glob.glob(
-            os.path.join(path, f"*SPEEDUP_{datatype}*")
+            os.path.join(log_dir, f"*SPEEDUP_{datatype}*")
         )
         plt.figure(figsize=(6, 4.5))
         title = (
@@ -344,13 +349,38 @@ def create_tradeoff_plots(
             ):
                 continue
 
-            budget_data = data["budgets"].tolist()
-            x = data["naive_budget"] / budget_data  # speed is inverse budget
+            budget_data = data["budgets"].to_list()
+            naive_budget = data["naive_budget"].to_list()
+            x = np.array(naive_budget) / np.array(budget_data)  # speed is inverse budget
             y = data["accuracy"].tolist()
+
+            # Delete indices where speedup is less than 1
+            if max_speedup is None:
+                max_speedup = float('inf')
+            del_idcs = np.where((x < 1) | (x > max_speedup))[0]
+            x = np.delete(x, del_idcs)
+            y = np.delete(y, del_idcs)
+
+            if len(x) == 0:
+                print("what")
+                continue
+
             error = data["accuracy_std"].tolist()
-            if max_speedup is not None:
-                x = np.where(x > max_speedup, max_speedup, x)
             x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))
+
+            # Plot (1, 1) on every plots
+            x = np.concatenate(([1], x))
+            y = np.concatenate(([1], y))
+
+            # Plot the moving averages of accuracy
+            window_size = min(5, len(y))  # Hard-coded
+            x = np.concatenate((np.full(window_size-1, x[0]), x, np.full(window_size-1, x[-1])))
+            y = np.concatenate((np.full(window_size - 1, y[0]), y, np.full(window_size - 1, y[-1])))
+            y = np.convolve(y, np.ones(window_size) / window_size, mode='valid')
+            x = x[:-(window_size-1)]
+
+            if is_logspace:
+                x = np.log10(x)
 
             # plot the datapoints
             plt.scatter(
@@ -370,7 +400,7 @@ def create_tradeoff_plots(
                 plt.errorbar(x, y, error, fmt=".", color="black")
 
             plt.title(title)
-            xlabel = "Speedup"
+            xlabel = "Speedup ()" if is_logspace else "Speedup"
             ylabel = f"Precision at {top_k}"
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)

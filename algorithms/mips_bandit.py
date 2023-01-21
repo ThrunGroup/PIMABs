@@ -97,7 +97,7 @@ def mips_bandit(
                 seed=seed,
             )
         elif bandit_alg is ACTION_ELIMINATION:
-            return action_elimination(
+            mips_result = action_elimination(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
@@ -117,6 +117,10 @@ def mips_bandit(
                 cache_map=cache_map,
                 verbose=verbose,
             )
+            if use_cache:
+                return mips_result
+            else:
+                return mips_result[:2]
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
                 atoms=atoms,

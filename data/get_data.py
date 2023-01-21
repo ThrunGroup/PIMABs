@@ -69,6 +69,7 @@ def get_data(
     num_best_atoms: int = SCALING_TOPK,
     seed: int = 0,
     data_type: str = NORMAL_CUSTOM,
+    is_tradeoff: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     if data_type in [ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, NORMAL_PAPER, UNIFORM_PAPER, COR_NORMAL_CUSTOM, CLEAR_LEADER_HARD, CLEAR_LEADER_SOFT, NO_CLEAR_LEADER]:
@@ -152,6 +153,8 @@ def get_data(
 
     atom_idcs = rng.choice(np.setdiff1d(np.arange(data.shape[0]), signal_idcs), num_atoms, replace=False)
     atoms = subset_2d(data, atom_idcs, sample_idcs)
+    if (data_type in [NETFLIX, MOVIE_LENS, NORMAL_CUSTOM, COR_NORMAL_CUSTOM, SIFT_1M]) and is_tradeoff:
+        atoms -= np.mean(atoms + 1)
     signals = subset_2d(data, signal_idcs, sample_idcs)
     del data
     return atoms, signals

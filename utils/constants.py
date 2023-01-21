@@ -128,8 +128,8 @@ SCAlING_SIZE_MINMAX_CRYPTO_PAIRS = (  # crypto pairs dataset has 1M dimensions
 SCALING_H2ALSH_PARAMS = (0.4, 1.5, 0.8, 200) # it records (delta, c0, c, N0)
 
 # Precision-Speed Tradeoff Experiments
-TRADEOFF_NUM_EXPERIMENTS = 12  # corresponds to the number of points on the plot
-TRADEOFF_NUM_ATOMS = 100
+TRADEOFF_NUM_EXPERIMENTS = 24  # corresponds to the number of points on the plot
+TRADEOFF_NUM_ATOMS = 1000
 TRADEOFF_DIMENSION = 10000
 TRADEOFF_DIMENSION_MOVIE = 5000  # movie dataset is only 6000 dimensions
 TRADEOFF_NUM_SIGNALS = 3
@@ -154,8 +154,8 @@ TRADEOFF_PCA_NUM_EXPERIMENTS = 4  # this is consistent with the paper
 TRADEOFF_DEPTH_MINMAX = (0, 4)
 
 TRADEOFF_LSH_NUM_EXPERIMENTS = 24  # this is consistent with the paper
-TRADEOFF_HFUNC_MINMAX = (0, 10)
-TRADEOFF_TABLES_MINMAX = (1, 4)
+TRADEOFF_HFUNC_MINMAX = (1, 10)
+TRADEOFF_TABLES_MINMAX = (10, 1)
 
 SYMMETRIC = "SYMMETRIC"
 ASYMMETRIC = "ASYMMETRIC"
@@ -170,8 +170,8 @@ GREEDY_QUERY_SIZE = [2, 5, 7]
 
 # Real Data params
 NUM_ATOMS_REAL = 1000
-LEN_SIGNAL_NETFLIX = 1000
-LEN_SIGNAL_MOVIE = 1000
+LEN_SIGNAL_NETFLIX = 10000
+LEN_SIGNAL_MOVIE = 5000
 
 MAX_SPEEDUP = 20
 TRADEOFF_DELTA_MINMAX_REAL = (0, 0.5)
@@ -186,10 +186,14 @@ TRADEOFF_MAXMIN_CRYPTO_PAIRS = (10 ** 6, 0)
 CRYPTO_PAIRS_SIGNAL_LENGTH = 10 ** 6
 
 # H2ALSH TRADEOFF PARAMS
-TRADEOFF_H2ALSH = {"powers_delta": (-3, 0), "c0": (1.2, 5), "c": (0.9, 0.2), "N0_ratio": (0.001, 0.001)}
+TRADEOFF_H2ALSH = {"powers_delta": (-3, 0), "c0": (1.2, 5), "c": (0.9, 0.2), "N0": (10, 10)}
 
 # BUCKET ACTION ELIMINATION TRADEOFF PARAMS
-TRADEOFF_BUCKET_ACTION_ELIMINATION = {"deltas": (0.0, 0.5), "epsilons": (0, 0.3), "bucket_num_samples": (5000, 50)}
+TRADEOFF_BUCKET_ACTION_ELIMINATION = {"deltas": (10 ** -10, 0.99), "epsilons": (10 ** -10, 3), "bucket_num_samples": (1000, 10)}
+
+# NEQ TRADEOFF PARAMS
+TRADEOFF_CODEBOOK_MINMAX = (100, 1)
+TRADEOFF_CODEWORD_MINMAX = (100, 1)
 
 # Large Scale params
 LARGE_SIZE_MINMAX = (10, 5 * 10 ** 6)
@@ -202,7 +206,7 @@ LARGE_MAXMIN = (0.5, -0.5)
 
 # Caching params
 CACHING_BUDGET = 0.01
-TEMP_SIZE = 1 # this is to make caching compatible with numba
+TEMP_SIZE = 1  # this is to make caching compatible with numba
 
 RECON_ERROR_THRESHOLD = 0.06
 

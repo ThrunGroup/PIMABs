@@ -14,6 +14,8 @@ from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NETFLIX,
     MOVIE_LENS,
+    CRYPTO_PAIRS,
+
     # algorithms
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -22,10 +24,14 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    NEQ_MIPS,
     SYMMETRIC,
     ASYMMETRIC,
     H2ALSH,
     BUCKET_ACTION_ELIMINATION,
+    HNSW_MIPS,
+    NAPG_MIPS,
+
     # constants
     NUM_SEEDS,
     TRADEOFF_NUM_EXPERIMENTS,
@@ -55,15 +61,24 @@ from utils.constants import (
     EPSILON_MINMAX_MEDIAN,
     GREEDY_BUDGET_BY,
     NORMALIZED_MAXMIN,
+
     TRADEOFF_DELTA_MINMAX_REAL,
     TRADEOFF_MAXMIN_REAL,
     TRADEOFF_VAR_REAL,
     TRADEOFF_DEPTH_MINMAX_REAL,
     TRADEOFF_BATCH_SIZE_REAL,
+    TRADEOFF_MAXMIN_CRYPTO_PAIRS,
     DELTA_POWER_MINMAX,
     DELTA_BINS_AD,
     MAXMIN_AD,
+    TRADEOFF_CODEBOOK_MINMAX,
+    TRADEOFF_CODEWORD_MINMAX,
 )
+from neq_mips.constants import (
+    PARTITION,
+    TRADEOFF_NEQ_NUM_EXPERIMENTS,
+)
+
 from data.get_data import get_data
 
 from algorithms.mips_bandit import mips_bandit
@@ -71,6 +86,11 @@ from algorithms.greedy_mips import greedy_mips, generate_conditer
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
 from algorithms.h2alsh_mips import H2ALSH_MIPS
+from algorithms.quantization.base_pq import PQ
+from algorithms.quantization.residual_pq import ResidualPQ
+from algorithms.quantization.norm_pq import NormPQ
+from algorithms.quantization.utils import execute
+from algorithms.napg import hnsw
 
 
 def get_accuracy_array(
@@ -81,6 +101,7 @@ def get_accuracy_array(
     """
     Returns the average accuracy of the candidates across the signals.
     Note that this is equivalent to recall when the topk atoms is fixed.
+    We return an array of accuracies (one for each signal) so that we can compute both the mean and std.
 
     :param true_candidates: the candidates retrieved naively
     :param mip_candidates: the candidates returned by the mips algorithm
@@ -102,17 +123,18 @@ def speedup_precision_exps(
     num_experiments: int = TRADEOFF_NUM_EXPERIMENTS,
     num_signals: int = TRADEOFF_NUM_SIGNALS,
     num_best_atoms: int = TRADEOFF_TOPK,
+    num_seeds: int = NUM_SEEDS,
     with_replacement: bool = False,
     is_log: bool = True,
     is_plot: bool = False,
-    dirname: str = None,
+    dir_name: str = None,
     lsh_type: str = ASYMMETRIC,
-    num_seeds: int = NUM_SEEDS,
 ):
     """
     Run the precision-speed tradeoff of the bandit and baseline algorithms and store them in the appropriate
     log files. Note that what we're tuning "delta" for the bandit algorithms, "budget" for greedy-mips, "depth"
-    of the pca-tree for pca-mips, and "num_hfunc and num_tables" for lsh-mips.
+    of the pca-tree for pca-mips, "(num_hfunc, num_tables)" for lsh-mips, and "(num_codebook, num_codewords)" for
+    vector quantization.
 
     :param epsilon: A epsilon (an additive error allowed)
     :param data_type: A name of data generating function
@@ -125,7 +147,7 @@ def speedup_precision_exps(
     :param with_replacement: Whether to sample with replacement
     :param is_log: Whether to log the results
     :param is_plot: Whether to plot the results
-    :param dirname: Directory name to log the results
+    :param dir_name: Directory name to log the results
     :param num_seeds: Number of random seeds
     """
     avg_runtime = np.zeros(num_experiments)
@@ -143,7 +165,14 @@ def speedup_precision_exps(
         tradeoff_depth_minmax = TRADEOFF_DEPTH_MINMAX_REAL
         tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
         greedy_budget = num_atoms - 1
-
+    elif data_type is CRYPTO_PAIRS:
+        tradeoff_delta_minmax = TRADEOFF_DELTA_MINMAX_REAL
+        tradeoff_delta_bins = DELTA_BINS_REAL
+        tradeoff_maxmin = TRADEOFF_MAXMIN_CRYPTO_PAIRS
+        tradeoff_var = 10 ** 2
+        tradeoff_depth_minmax = TRADEOFF_DEPTH_MINMAX_REAL
+        tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
+        greedy_budget = num_atoms - 1
     elif data_type is ADVERSARIAL_CUSTOM:
         tradeoff_delta_minmax = TRADEOFF_DELTA_MINMAX_REAL
         tradeoff_delta_bins = DELTA_BINS_AD
@@ -152,7 +181,6 @@ def speedup_precision_exps(
         tradeoff_depth_minmax = TRADEOFF_DEPTH_MINMAX
         tradeoff_batch_size = TRADEOFF_BATCH_SIZE_REAL
         greedy_budget = num_atoms - 1
-
     else:
         tradeoff_delta_minmax = DELTA_MINMAX
         tradeoff_delta_bins = DELTA_BINS
@@ -168,7 +196,13 @@ def speedup_precision_exps(
         num_signals=num_signals,
         seed=0,
         data_type=data_type,
+        is_tradeoff=True,
     )
+    var_proxy = np.var(atoms[:100, :100] * signals[1, :100])
+    print(var_proxy)
+    print("NAIVE: ", np.argsort(-atoms@signals[0])[:num_best_atoms])
+    print("NORM: ", np.argsort(-np.linalg.norm(atoms, axis=1))[:num_best_atoms])
+    print("Intersection: ", np.intersect1d(np.argsort(-atoms@signals[0])[:num_best_atoms], np.argsort(-np.linalg.norm(atoms, axis=1))[:num_best_atoms]))
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
 
@@ -184,100 +218,28 @@ def speedup_precision_exps(
         accuracies = []
         accuracies_std = []
 
-        if mips_alg is ADAPTIVE_ACTION_ELIMINATION or (
-            mips_alg is ACTION_ELIMINATION and data_type in [NETFLIX, MOVIE_LENS]
-        ):
-            # tune bounds and deltas. "epsilon" remains the same default value
-            constants = np.linspace(
-                0, tradeoff_var, num_experiments // tradeoff_delta_bins
-            )
-            deltas = np.linspace(
-                tradeoff_delta_minmax[0], tradeoff_delta_minmax[1], tradeoff_delta_bins
-            )
-            assert len(constants) * len(deltas) == num_experiments
-
-            for constant in constants:
-                for delta in deltas:
-                    new_maxmin = (
-                        tradeoff_maxmin[0] + constant,
-                        tradeoff_maxmin[1] - constant,
-                    )
-                    log_info = "maxmin" + str(new_maxmin) + "_delta" + str(delta)
-                    start_time = time.time()
-                    candidates_array, budget_array = mips_bandit(
-                        atoms=atoms,
-                        signals=signals,
-                        maxmin=new_maxmin,
-                        bandit_alg=mips_alg,
-                        epsilon=epsilon,
-                        delta=delta,
-                        num_best_atoms=num_best_atoms,
-                        seed=seed,
-                        is_experiment=False,
-                        with_replacement=with_replacement,
-                        batch_size=tradeoff_batch_size,
-                    )
-                    runtimes.append(time.time() - start_time)
-                    budgets.append(np.mean(budget_array))
-                    accuracy_array = get_accuracy_array(
-                        naive_candidates_array, candidates_array, num_signals
-                    )
-                    accuracies.append(np.sum(accuracy_array) / num_signals)
-                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
-        elif mips_alg is ACTION_ELIMINATION:
-            epsilons = np.linspace(
-                EPSILON_MINMAX_ACTION[0],
-                EPSILON_MINMAX_ACTION[1],
-                num_experiments // DELTA_BINS_ACTION,
-            )
-            deltas = np.linspace(DELTA_MINMAX[0], DELTA_MINMAX[1], DELTA_BINS_ACTION)
-
-            for epsilon in epsilons:
-                for delta in deltas:
-                    log_info = "epsilon" + str(epsilon) + "_delta" + str(delta)
-                    start_time = time.time()
-                    candidates_array, budget_array = mips_bandit(
-                        atoms=atoms,
-                        signals=signals,
-                        maxmin=NORMALIZED_MAXMIN,
-                        bandit_alg=mips_alg,
-                        epsilon=epsilon,
-                        delta=delta,
-                        num_best_atoms=num_best_atoms,
-                        seed=seed,
-                        is_experiment=False,
-                        with_replacement=with_replacement,
-                    )
-                    runtimes.append(time.time() - start_time)
-                    budgets.append(np.mean(budget_array))
-                    accuracy_array = get_accuracy_array(
-                        naive_candidates_array, candidates_array, num_signals
-                    )
-                    accuracies.append(np.sum(accuracy_array) / num_signals)
-                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-        elif mips_alg is BUCKET_ACTION_ELIMINATION:
+        if mips_alg in [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION, BUCKET_ACTION_ELIMINATION, MEDIAN_ELIMINATION]:
             delta1, delta2 = TRADEOFF_BUCKET_ACTION_ELIMINATION["deltas"]
             epsilon1, epsilon2 = TRADEOFF_BUCKET_ACTION_ELIMINATION["epsilons"]
             (
                 bucket_num_samples1,
                 bucket_num_samples2,
             ) = TRADEOFF_BUCKET_ACTION_ELIMINATION["bucket_num_samples"]
-            deltas = np.linspace(delta1, delta2, num_experiments, True)
-            epsilons = np.linspace(epsilon1, epsilon2, num_experiments, True)
-            bucket_num_samples_list = np.linspace(
+            deltas = np.geomspace(delta1, delta2, num_experiments, True)
+            epsilons = np.geomspace(epsilon1, epsilon2, num_experiments, True)
+            bucket_num_samples_list = np.geomspace(
                 bucket_num_samples1, bucket_num_samples2, num_experiments, True
             )
             for idx in range(num_experiments):
                 delta = deltas[idx]
                 epsilon = epsilons[idx]
-                bucket_num_samples = bucket_num_samples_list[idx]
+                bucket_num_samples = int(bucket_num_samples_list[idx])
                 log_info = "epsilon" + str(epsilon) + "_delta" + str(delta)
                 start_time = time.time()
                 candidates_array, budget_array = mips_bandit(
                     atoms=atoms,
                     signals=signals,
-                    maxmin=NORMALIZED_MAXMIN,
+                    maxmin=(0, np.sqrt(4 *var_proxy)),
                     bandit_alg=mips_alg,
                     epsilon=epsilon,
                     delta=delta,
@@ -294,66 +256,6 @@ def speedup_precision_exps(
                 )
                 accuracies.append(np.sum(accuracy_array) / num_signals)
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
-        elif mips_alg is MEDIAN_ELIMINATION:
-            if data_type in [NETFLIX, MOVIE_LENS]:
-                idx = -1
-                delta_powers = np.linspace(
-                    DELTA_POWER_MINMAX[0], DELTA_POWER_MINMAX[1], num_experiments
-                )
-                for delta_power in delta_powers:
-                    idx += 1
-                    epsilon = 2 + 7 * idx / num_experiments
-                    log_info = (
-                        "epsilon" + str(epsilon) + "delta_power" + str(delta_power)
-                    )
-                    start_time = time.time()
-                    candidates_array, budget_array = mips_bandit(
-                        atoms=atoms,
-                        signals=signals,
-                        maxmin=tradeoff_maxmin,
-                        bandit_alg=mips_alg,
-                        epsilon=epsilon,
-                        delta=1 - 10 ** (-delta_power),
-                        num_best_atoms=num_best_atoms,
-                        seed=seed,
-                        is_experiment=False,
-                        with_replacement=with_replacement,
-                    )
-                    runtimes.append(time.time() - start_time)
-                    budgets.append(np.mean(budget_array))
-                    accuracy_array = get_accuracy_array(
-                        naive_candidates_array, candidates_array, num_signals
-                    )
-                    accuracies.append(np.sum(accuracy_array) / num_signals)
-                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-            else:
-                epsilons = np.linspace(
-                    EPSILON_MINMAX_MEDIAN[0], EPSILON_MINMAX_MEDIAN[1], num_experiments
-                )
-                for epsilon in epsilons:
-                    log_info = "epsilon" + str(epsilon)
-                    start_time = time.time()
-                    candidates_array, budget_array = mips_bandit(
-                        atoms=atoms,
-                        signals=signals,
-                        maxmin=NORMALIZED_MAXMIN,  # this param doesn't matter
-                        bandit_alg=MEDIAN_ELIMINATION,
-                        epsilon=epsilon,
-                        delta=DELTA_MEDIAN,
-                        num_best_atoms=num_best_atoms,
-                        seed=seed,
-                        is_experiment=False,
-                        with_replacement=with_replacement,
-                    )
-                    runtimes.append(time.time() - start_time)
-                    budgets.append(np.mean(budget_array))
-                    accuracy_array = get_accuracy_array(
-                        naive_candidates_array, candidates_array, num_signals
-                    )
-                    accuracies.append(np.sum(accuracy_array) / num_signals)
-                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is GREEDY_MIPS:
             conditer = generate_conditer(atoms)
 
@@ -374,7 +276,6 @@ def speedup_precision_exps(
                 )
                 accuracies.append(np.sum(accuracy_array) / num_signals)
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is PCA_MIPS:
             for depth in np.linspace(
                 tradeoff_depth_minmax[0], tradeoff_depth_minmax[1], num_experiments
@@ -394,65 +295,67 @@ def speedup_precision_exps(
                 )
                 accuracies.append(np.sum(accuracy_array) / num_signals)
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
         elif mips_alg is LSH_MIPS:
-            table_diff = TRADEOFF_TABLES_MINMAX[1] - TRADEOFF_TABLES_MINMAX[0] + 1
+            num_hfunc_minmax = TRADEOFF_HFUNC_MINMAX
+            num_table_minmax = TRADEOFF_TABLES_MINMAX
             num_hfuncs = np.linspace(
-                TRADEOFF_HFUNC_MINMAX[0],
-                TRADEOFF_HFUNC_MINMAX[1],
-                num_experiments // table_diff,
-            ).astype(np.int64)
+                num_hfunc_minmax[0], num_hfunc_minmax[1], num=num_experiments
+            )
             num_tables = np.linspace(
-                TRADEOFF_TABLES_MINMAX[0], TRADEOFF_TABLES_MINMAX[1], table_diff
-            ).astype(np.int64)
-            assert len(num_hfuncs) * len(num_tables) == num_experiments
+                num_table_minmax[0], num_table_minmax[1], num=num_experiments
+            )
 
-            for num_table in num_tables:
-                for num_hfunc in num_hfuncs:
-                    log_info = (
-                        lsh_type
-                        + "_"
-                        + "hfunc"
-                        + str(num_hfunc)
-                        + "_num_table"
-                        + str(num_table)
-                    )
-                    start_time = time.time()
-                    candidates_array, budget_array = run_lsh_mips(
-                        atoms=atoms,
-                        signals=signals,
-                        num_best_atoms=num_best_atoms,
-                        num_hfunc=num_hfunc,
-                        num_tables=num_table,
-                        type=lsh_type,
-                    )
-                    runtimes.append(time.time() - start_time)
-                    budgets.append(np.mean(budget_array))
-                    accuracy_array = get_accuracy_array(
-                        naive_candidates_array, candidates_array, num_signals
-                    )
-                    accuracies.append(np.sum(accuracy_array) / num_signals)
-                    accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-
+            for idx in range(num_experiments):
+                num_hfunc = int(num_hfuncs[idx])
+                num_table = int(num_tables[idx])
+                log_info = (
+                    lsh_type
+                    + "_"
+                    + "hfunc"
+                    + str(num_hfunc)
+                    + "_num_table"
+                    + str(num_table)
+                )
+                start_time = time.time()
+                candidates_array, budget_array = run_lsh_mips(
+                    atoms=atoms,
+                    signals=signals,
+                    num_best_atoms=num_best_atoms,
+                    num_hfunc=num_hfunc,
+                    num_tables=num_table,
+                    type=lsh_type,
+                )
+                runtimes.append(time.time() - start_time)
+                budgets.append(np.mean(budget_array))
+                accuracy_array = get_accuracy_array(
+                    naive_candidates_array, candidates_array, num_signals
+                )
+                accuracies.append(np.sum(accuracy_array) / num_signals)
+                accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
         elif mips_alg is H2ALSH:
-            powers_delta1, powers_delta2 = TRADEOFF_H2ALSH["powers_delta"]
-            c0_1, c0_2 = TRADEOFF_H2ALSH["c0"]
-            c1, c2 = TRADEOFF_H2ALSH["c"]
-            N0_1, N0_2 = TRADEOFF_H2ALSH["N0_ratio"]
+            delta_minmax = TRADEOFF_H2ALSH["powers_delta"]
+            c0_minmax = TRADEOFF_H2ALSH["c0"]
+            c_minmax = TRADEOFF_H2ALSH["c"]
+            N0_minmax = TRADEOFF_H2ALSH["N0"]
             powers_delta = np.linspace(
-                start=powers_delta1,
-                stop=powers_delta2,
+                start=delta_minmax[0],
+                stop=delta_minmax[1],
                 num=num_experiments,
                 endpoint=True,
             )
             deltas = 1 / 2 * 2 ** powers_delta
-            c0_list = np.linspace(
-                start=c0_1, stop=c0_2, num=num_experiments, endpoint=True
+            c0_list = np.geomspace(
+                start=c0_minmax[0],
+                stop=c0_minmax[1],
+                num=num_experiments,
+                endpoint=True,
             )
-            c_list = np.linspace(start=c1, stop=c2, num=num_experiments, endpoint=True)
-            N0s = np.linspace(
-                start=max(N0_2 * num_atoms, 101),
-                stop=max(N0_2 * num_atoms, 101),
+            c_list = np.geomspace(
+                start=c_minmax[0], stop=c_minmax[1], num=num_experiments, endpoint=True
+            )
+            N0s = np.geomspace(
+                start=N0_minmax[0],
+                stop=N0_minmax[1],
                 num=num_experiments,
                 endpoint=True,
             )
@@ -460,7 +363,7 @@ def speedup_precision_exps(
                 delta = deltas[idx]
                 c0 = c0_list[idx]
                 c = c_list[idx]
-                N0 = N0s[idx]
+                N0 = int(N0s[idx])
                 start_time = time.time()
                 h2alsh = H2ALSH_MIPS(atoms=atoms, delta=delta, c=c, c0=c0, N0=N0)
                 candidates_array, budget_array = h2alsh.mip_search_queries(
@@ -473,12 +376,77 @@ def speedup_precision_exps(
                 )
                 accuracies.append(np.sum(accuracy_array) / num_signals)
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-                print(budget_array / (num_atoms * len_signals))
             log_info = "_epsilon" + str(epsilon) + "_delta" + str(delta)
+        elif mips_alg is NEQ_MIPS:
+            num_codewords = np.geomspace(
+                TRADEOFF_CODEWORD_MINMAX[0],
+                TRADEOFF_CODEWORD_MINMAX[1],
+                num_experiments,
+            ).astype(np.int64)
+            num_codebooks = np.linspace(
+                TRADEOFF_CODEBOOK_MINMAX[0],
+                TRADEOFF_CODEBOOK_MINMAX[1],
+                num_experiments,
+            ).astype(np.int64)
 
+            for idx in range(num_experiments):
+                num_codebook = num_codebooks[idx]
+                num_codeword = num_codewords[idx]
+                log_info = (
+                    "_codebook" + str(num_codebook) + "_codeword" + str(num_codeword)
+                )
+                quantizer = NormPQ(n_percentile=num_codeword, quantize=PQ(M=num_codebook, Ks=num_codeword))
+
+                start_time = time.time()
+                accuracy_array, budget_array = execute(
+                    top_k=num_best_atoms,
+                    pq=quantizer,
+                    X=atoms,
+                    Q=signals.astype("float32"),
+                    G=naive_candidates_array,
+                    num_codebooks=num_codebook,
+                    num_codewords=num_codeword,
+                    train_size=num_atoms,
+                    seed=seed,
+                )
+                # includes the time finding recall (other baselines don't)
+                runtime = time.time() - start_time
+                runtimes.append(time.time() - start_time)
+                budgets.append(np.mean(budget_array))
+                accuracies.append(np.sum(accuracy_array))
+                accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+        elif mips_alg is NAPG_MIPS:
+            Ms = np.geomspace(4, 32, num_experiments).astype(np.int64)
+            ef_constructions = np.geomspace(2, num_atoms // 2, num_experiments).astype(np.int64)
+            ef_searches = np.geomspace(2, num_atoms // 2, num_experiments).astype(np.int64)
+
+            for (M, ef_construction, ef_search) in zip(Ms, ef_constructions, ef_searches):
+                log_info = (
+                        "ef_construction"
+                        + str(ef_construction)
+                )
+
+                start_time = time.time()
+                candidates_array, budget_array = hnsw(
+                    atoms=atoms,
+                    signals=signals,
+                    ef_construction=ef_construction,
+                    ef_search=ef_search,
+                    num_links_per_node=M,
+                    num_best_atoms=num_best_atoms,
+                    use_norm_adjusted_factors=True
+                )
+                runtimes.append(time.time() - start_time)
+                budgets.append(np.mean(budget_array))
+                accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array, num_signals)
+                accuracies.append(np.sum(accuracy_array) / num_signals)
+                accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 
+        # Add all the quantities to take their means later by dividing by the number of seeds. This is valid for all
+        # quantities except accuracy_std. Going to leave for now since we don't plot errors bars in tradeoff experiments
+        # TODO(@motiwari): Fix this. See #83
         avg_budget += np.array(budgets)
         avg_accuracy += np.array(accuracies)
         avg_accuracy_std += np.array(accuracies_std)
@@ -488,7 +456,6 @@ def speedup_precision_exps(
     avg_accuracy /= num_seeds
     avg_accuracy_std /= num_seeds
     avg_runtime /= num_seeds
-
     if is_log:
         log_dict = {
             "data_type": data_type,
@@ -499,7 +466,8 @@ def speedup_precision_exps(
             "naive_budget": num_atoms * len_signals,
         }
         log_df = pd.DataFrame(log_dict)
-        log_dir = "logs/precision_speed" if dirname is None else dirname
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join(parent_dir, "tradeoff", "logs") if dir_name is None else dir_name
         filename = os.path.join(
             log_dir,
             mips_alg + "_"
@@ -519,4 +487,5 @@ def speedup_precision_exps(
         )
         os.makedirs(log_dir, exist_ok=True)
         log_df.to_csv(filename, index=False)
+
     print(f"=> Finished {mips_alg} for {data_type} \n")

@@ -65,7 +65,7 @@ def generate_custom_data(
         # Unlike other datasets, try to create a signal that is correlated to a few atoms. Correlation coefficient
         # is drawn from a normal distribution.
         correlations = rng.normal(size=(num_signals + 1, num_atoms))
-        correlations = np.abs(correlations) / np.sum(np.abs(correlations), axis=0, keepdims=True)
+        correlations = correlations / np.sum(np.abs(correlations), axis=0, keepdims=True)
         atoms_array = np.zeros((num_atoms, len_signal))
         signal = rng.normal(loc=rng.normal(), size=(num_signals + 1, len_signal))  # To include independent normal rv
         for idx in range(num_atoms):
