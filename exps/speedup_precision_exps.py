@@ -81,12 +81,11 @@ from algorithms.mips_bandit import mips_bandit
 from algorithms.greedy_mips import greedy_mips, generate_conditer
 from algorithms.lsh_mips import run_lsh_mips
 from algorithms.pca_mips import run_pca_mips
-from algorithms.napg import hnsw
-
-from algorithms.quantization.norm_pq import NormPQ
-from algorithms.quantization.residual_pq import ResidualPQ
 from algorithms.quantization.base_pq import PQ
+from algorithms.quantization.residual_pq import ResidualPQ
+from algorithms.quantization.norm_pq import NormPQ
 from algorithms.quantization.utils import execute
+from algorithms.napg import hnsw
 
 
 def get_accuracy_array(
@@ -129,7 +128,7 @@ def speedup_precision_exps(
     lsh_type: str = ASYMMETRIC,
 ):
     """
-    Run the precision-speed speedup_accuracy_tradeoff of the bandit and baseline algorithms and store them in the appropriate
+    Run the precision-speed tradeoff of the bandit and baseline algorithms and store them in the appropriate
     log files. Note that what we're tuning "delta" for the bandit algorithms, "budget" for greedy-mips, "depth"
     of the pca-tree for pca-mips, "(num_hfunc, num_tables)" for lsh-mips, and "(num_codebook, num_codewords)" for
     vector quantization.
@@ -219,7 +218,7 @@ def speedup_precision_exps(
 
             for constant in constants:
                 for delta in deltas:
-                    new_maxmin = (tradeoff_maxmin[0] + constant, tradeoff_maxmin[1] - constant)
+                    new_maxmin = np.array([tradeoff_maxmin[0] + constant, tradeoff_maxmin[1] - constant])
                     log_info = (
                         "maxmin"
                         + str(new_maxmin)
@@ -241,12 +240,12 @@ def speedup_precision_exps(
                         batch_size=tradeoff_batch_size,
                     )
                     candidates_array, budget_array = bandit_results[:2]  # mips_bandit returns five values
-
                     runtimes.append(time.time() - start_time)
                     budgets.append(np.mean(budget_array))
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         elif mips_alg is ACTION_ELIMINATION:
             epsilons = np.linspace(EPSILON_MINMAX_ACTION[0], EPSILON_MINMAX_ACTION[1], num_experiments // DELTA_BINS_ACTION)
             deltas = np.linspace(DELTA_MINMAX[0], DELTA_MINMAX[1], DELTA_BINS_ACTION)
@@ -263,7 +262,7 @@ def speedup_precision_exps(
                     bandit_results = mips_bandit(
                         atoms=atoms,
                         signals=signals,
-                        maxmin=NORMALIZED_MAXMIN,
+                        maxmin=np.array([NORMALIZED_MAXMIN[0], NORMALIZED_MAXMIN[1]]),
                         bandit_alg=mips_alg,
                         epsilon=epsilon,
                         delta=delta,
@@ -273,12 +272,12 @@ def speedup_precision_exps(
                         with_replacement=with_replacement,
                     )
                     candidates_array, budget_array = bandit_results[:2]  # mips_bandit returns five values
-
                     runtimes.append(time.time() - start_time)
                     budgets.append(np.mean(budget_array))
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         elif mips_alg is MEDIAN_ELIMINATION:
             if data_type in [NETFLIX, MOVIE_LENS]:
                 idx = -1
@@ -296,7 +295,7 @@ def speedup_precision_exps(
                     candidates_array, budget_array = mips_bandit(
                         atoms=atoms,
                         signals=signals,
-                        maxmin=tradeoff_maxmin,
+                        maxmin=np.array([tradeoff_maxmin[0], tradeoff_maxmin[1]]),
                         bandit_alg=mips_alg,
                         epsilon=epsilon,
                         delta=1-10 ** (-delta_power),
@@ -310,6 +309,10 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+                    # print(f"delta_power: {delta_power}, delta: {1 - 10 ** (-delta_power)}, "
+                    #       f"epsilon: {epsilon}, "
+                    #       f"accuracy: {np.sum(accuracy_array)}")
+
             else:
                 epsilons = np.linspace(EPSILON_MINMAX_MEDIAN[0], EPSILON_MINMAX_MEDIAN[1], num_experiments)
                 for epsilon in epsilons:
@@ -321,7 +324,7 @@ def speedup_precision_exps(
                     candidates_array, budget_array = mips_bandit(
                         atoms=atoms,
                         signals=signals,
-                        maxmin=NORMALIZED_MAXMIN,  # this param doesn't matter
+                        maxmin=np.array([NORMALIZED_MAXMIN[0], NORMALIZED_MAXMIN[1]]),  # this param doesn't matter
                         bandit_alg=MEDIAN_ELIMINATION,
                         epsilon=epsilon,
                         delta=DELTA_MEDIAN,
@@ -335,6 +338,7 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         elif mips_alg is GREEDY_MIPS:
             conditer = generate_conditer(atoms)
 
@@ -356,6 +360,7 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         elif mips_alg is PCA_MIPS:
             for depth in np.linspace(
                     tradeoff_depth_minmax[0], tradeoff_depth_minmax[1], num_experiments
@@ -376,6 +381,7 @@ def speedup_precision_exps(
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         elif mips_alg is LSH_MIPS:
             table_diff = TRADEOFF_TABLES_MINMAX[1] - TRADEOFF_TABLES_MINMAX[0] + 1
             num_hfuncs = np.linspace(
@@ -410,6 +416,7 @@ def speedup_precision_exps(
                     accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
             Ms = np.geomspace(4, 32, num_experiments).astype(np.int64)
             ef_constructions = np.geomspace(2, num_atoms//2, num_experiments).astype(np.int64)
@@ -431,12 +438,12 @@ def speedup_precision_exps(
                     num_best_atoms=num_best_atoms,
                     use_norm_adjusted_factors=(mips_alg == NAPG_MIPS)
                 )
-
                 runtimes.append(time.time() - start_time)
                 budgets.append(np.mean(budget_array))
                 accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
+
         elif mips_alg is NEQ_MIPS:
             diff = TRADEOFF_CODEBOOK_MINMAX[1] - TRADEOFF_CODEBOOK_MINMAX[0] + 1
             num_codewords = np.linspace(
@@ -460,7 +467,8 @@ def speedup_precision_exps(
                     quantizer = NormPQ(n_percentile=num_codeword, quantize=quantizer)
 
                     start_time = time.time()
-                    accuracy_array, budget_array = execute(
+                    candidates_array, budget_array = execute(
+                        seed=seed,
                         top_k=num_best_atoms,
                         pq=quantizer,
                         X=atoms,
@@ -468,21 +476,18 @@ def speedup_precision_exps(
                         G=naive_candidates_array,
                         num_codebooks=num_codebook,
                         num_codewords=num_codeword,
-                        train_size=num_atoms,
-                        seed=seed,
+                        train_size=num_atoms
                     )
-
-                    # includes the time finding recall (other baselines don't)
-                    runtime = time.time() - start_time
                     runtimes.append(time.time() - start_time)
                     budgets.append(np.mean(budget_array))
+                    accuracy_array = get_accuracy_array(naive_candidates_array, candidates_array)
                     accuracies.append(np.sum(accuracy_array))
                     accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
         else:
             raise NotImplementedError(f"{mips_alg} is not implemented")
 
         # Add all the quantities to take their means later by dividing by the number of seeds. This is valid for all
-        # quantities except accuracy_std. Going to leave for now since we don't plot errors bars in speedup_accuracy_tradeoff experiments
+        # quantities except accuracy_std. Going to leave for now since we don't plot errors bars in tradeoff experiments
         # TODO(@motiwari): Fix this. See #83
         avg_budget += np.array(budgets)
         avg_accuracy += np.array(accuracies)

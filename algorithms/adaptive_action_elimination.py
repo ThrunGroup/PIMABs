@@ -15,6 +15,7 @@ def adaptive_action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
     var_proxy: np.ndarray,
+    maxmin: np.ndarray,
     epsilon: float,
     delta: float,
     var_proxy_override: bool = False,

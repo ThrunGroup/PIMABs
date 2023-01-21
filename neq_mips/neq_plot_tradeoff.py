@@ -24,7 +24,7 @@ from utils.constants import (
 
 
 if __name__ == '__main__':
-    # speedup_accuracy_tradeoff plots of NEQ
+    # tradeoff plots of NEQ
     create_tradeoff_plots(
         data_types=[NORMAL_CUSTOM, NETFLIX, MOVIE_LENS],
         alg_names=[

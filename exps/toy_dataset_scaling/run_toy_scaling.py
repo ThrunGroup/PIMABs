@@ -55,7 +55,7 @@ def run_toy_scaling(run: bool = True, plot: bool = True):
                 with_replacement=True,
                 is_normalize=False,
                 is_logspace=True,
-                dir_name="toy_scaling_logs",
+                dirname="toy_scaling_logs",
                 num_seeds=3,
             )
             assert mean_acc == 1.0, f"Mean accuracy on dataset {data_type} should be 1.0"
@@ -67,8 +67,8 @@ def run_toy_scaling(run: bool = True, plot: bool = True):
             include_error_bar=True,
             is_fit=True,
             is_logspace=True,
-            dir_name="toy_scaling_logs",
+            dirname="toy_scaling_logs",
         )
 
 if __name__ == "__main__":
-    run_toy_scaling(run=False, plot=True)
+    run_toy_scaling(run=True, plot=True)
