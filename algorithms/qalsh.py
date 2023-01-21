@@ -1,4 +1,5 @@
 import numpy as np
+import numba as nb
 from math import log, sqrt, ceil, log2
 from scipy import stats
 from typing import Tuple
@@ -27,8 +28,8 @@ class QALSH:
         width = sqrt(
             (8 * approx_const ** 2 * log(approx_const)) / (approx_const ** 2 - 1)
         )  # See Lemma 5
-        beta = (
-            100 / atoms.shape[0]
+        beta = min(
+            100 / atoms.shape[0], 0.01
         )  # Beta denotes collision threshold percentage, see 5.3 in the paper
 
         # To see what p1 and p2 denotes and how they are calculated, see 3.2 in the paper
@@ -40,10 +41,10 @@ class QALSH:
             (sqrt(log(2 / beta)) + sqrt(log(1 / delta))) ** 2 / (2 * (p1 - p2) ** 2)
         )
 
-        self.m = num_hash_tables
+        self.m = min(num_hash_tables, len(atoms))  #Todo(@vxbrandon): Hard-coded
         self.delta = delta  # Error probability: QALSH algorithm solves c-ANN search with 1/2 - delta probability
         self.approx_const = approx_const  # The approximation constant c in c-ANN search
-        self.num_fp = beta * atoms.shape[0]  # Number of false positives allowed
+        self.num_fp = min(int(beta * atoms.shape[0]), 1)  # Number of false positives allowed
         self.collision_threshold = int(alpha * self.m)
         self.width = width  # Width of hash bucket
         self.is_generate_hash_table = False
@@ -60,6 +61,9 @@ class QALSH:
 
         self.random_vectors = np.random.normal(size=(self.atoms.shape[1], self.m))
         self.hash_tables = [None] * self.m
+        # hash_values = self.atoms @ self.random_vectors
+        # atoms_sort_idcs = np.argsort(hash_values, axis=0)
+        # sorted_hash_values = hash_values[atoms_sort_idcs]
         for i in range(self.m):
             hash_values = self.atoms @ self.random_vectors[:, i]
             atoms_sort_idcs = np.argsort(

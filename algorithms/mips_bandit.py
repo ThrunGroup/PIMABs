@@ -97,12 +97,12 @@ def mips_bandit(
                 seed=seed,
             )
         elif bandit_alg is ACTION_ELIMINATION:
-            return action_elimination(
+            mips_result = action_elimination(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 var_proxy_override=var_proxy_override,
-                maxmin=list(maxmin),
+                maxmin=list(np.array(maxmin, dtype=np.float32)), # List can store heterogenuous types of elements
                 epsilon=epsilon,
                 delta=delta,
                 abs=abs,
@@ -117,13 +117,17 @@ def mips_bandit(
                 cache_map=cache_map,
                 verbose=verbose,
             )
+            if use_cache:
+                return mips_result
+            else:
+                return mips_result[:2]
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
                 var_proxy_override=var_proxy_override,
-                maxmin=list(maxmin),
+                maxmin=list(np.array(maxmin, dtype=np.float32)),
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,

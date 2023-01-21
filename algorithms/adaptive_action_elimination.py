@@ -112,7 +112,8 @@ def adaptive_action_elimination(
                 break
             ucbs[candidates] = means[candidates] + ci_vec
             lcbs[candidates] = means[candidates] - ci_vec
-            new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
+            lcb_criteria = lcbs[np.argsort(-lcbs)[num_best_atoms]]  # Have to compare ucbs with top_k atom's lcb
+            new_cand_idcs = np.where((ucbs[candidates] >= lcb_criteria))[0]
 
             if (
                 len(new_cand_idcs) < num_best_atoms

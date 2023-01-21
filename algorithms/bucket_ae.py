@@ -68,7 +68,7 @@ def bucket_action_elimination(
         int(N / num_samples_bucket), int(N / num_best_atoms)
     )  # Todo: fix hard-coded
     m = int(N / k)
-    q = min(
+    num_samples_norm = min(
         num_samples_norm, d
     )  # Number of samples from each atom to estimate its norm
 
@@ -81,8 +81,8 @@ def bucket_action_elimination(
     # TODO(vxbrandon): The lines below are not theoretically valid. Have to find a formula for finding the norm of
     #  random vectors from unknown distribution. See the above commented lines for the general idea.
     # Partition the atoms
-    atoms_ub = np.sqrt(np.sum(sampled_atoms_squared, axis=1))
-    signals_ub = np.sqrt(np.sum(sampled_signals_squared, axis=1))
+    atoms_ub = np.sqrt(np.sum(sampled_atoms_squared, axis=1) * d / num_samples_norm)
+    signals_ub = np.sqrt(np.sum(sampled_signals_squared, axis=1) * d / num_samples_norm)
     sort_idcs = np.argsort(atoms_ub)[
         ::-1
     ]  # Sorting indices of atoms in the descending order of their norms

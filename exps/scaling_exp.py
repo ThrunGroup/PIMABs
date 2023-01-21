@@ -77,8 +77,6 @@ def scaling_exp(
     data_generation_seed: int = 0,
     size_minmax: Tuple[int, int] = SCALING_SIZE_MINMAX,
     independent_var: str = DIMENSION_OF_ATOMS,
-    size_minmax: Tuple[int, int] = (10, 10 ** 6),
-    num_atoms: int = 10 ** 3,
     num_atoms: int = 10**3,
     num_signals: int = 1,
     signal_dim: int = 10 ** 2,
@@ -262,7 +260,6 @@ def scaling_exp(
                     signals=signals_subset,
                     num_best_atoms=num_best_atoms,
                     num_hfunc=SCALING_NUM_HFUNC,
-                    num_tables=SCALING_NUM_TABLES,
                     num_tables=SCALING_NUM_TABLES,
                 )
                 runtime = time.time() - start_time

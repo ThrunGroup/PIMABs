@@ -25,9 +25,6 @@ class H2ALSH_MIPS:
         :param c: denotes c in c-AMIP problem. See 2.1 in the paper for the definition of c-AMIP.
         :param N0: Threshold of the size of partition where the MIP atom is searched through linear scanning
         """
-        assert (
-            N0 > 100
-        ), "N0 should be greater than 100 since QALSH can't solve NN for more than 100 atoms"
         # Store parameters as self variables
         self.atoms = atoms
         self.delta = delta
@@ -54,7 +51,10 @@ class H2ALSH_MIPS:
             ub = atoms_norm[sort_idcs[j]]
             current_partition = []
             current_partition_idcs = []
-            while (j <= atoms.shape[0] - 1) and (atoms_norm[sort_idcs[j]] > b * ub):
+            while (
+                (j <= atoms.shape[0] - 1)
+                and ((atoms_norm[sort_idcs[j]] > b * ub) or (len(current_partition_idcs) <= 200))
+            ):
                 transformed_atom = np.concatenate(
                     (
                         atoms[sort_idcs[j]],
