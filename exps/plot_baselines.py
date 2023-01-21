@@ -23,6 +23,7 @@ from utils.constants import (
     MNIST_T,
     SIMPLE_SONG,
     SIFT_1M,
+    UNIFORM_PAPER,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -114,6 +115,8 @@ def translate_dataset_name(dataset_name: str):
         return "Simple Song"
     elif dataset_name == SIFT_1M:
         return "SIFT 1M"
+    elif dataset_name == UNIFORM_PAPER:
+        return "Uniform Paper"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -180,7 +183,7 @@ def create_scaling_plots(
     """
     # get all csv files
     parent_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
+    log_dir = os.path.join(parent_dir, dir_name)
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -279,7 +282,6 @@ def create_scaling_plots(
                         ha="right",
                         va="bottom",
                     )
-
             plt.show()
 
 
@@ -425,7 +427,7 @@ def compare_caching_budgets(
         plt.show()
 
 
-def generate_scaling_plots():
+def generate_scaling_plots(algorithms):
     """
     Generate scaling plots for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.

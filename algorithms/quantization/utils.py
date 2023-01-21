@@ -26,7 +26,6 @@ def chunk_compress(pq, vecs):
     """
     Run pq's .compress function on the vecs in batches to get the codebook approximation. Assumes that pq is fitted.
     By default, the batchsize is the same size as the training set (i.e. compress all at once).
-
     :param pq: the product quantization object
     :param vecs: analogous to the atoms
     """
@@ -60,7 +59,7 @@ def execute(
     np.random.seed(seed)
     pq.fit(X[:train_size].astype(dtype=np.float32), iter=TRAINING_ITERATION)
     compressed = chunk_compress(pq, X)
-    precisions, budgets = BatchSorter(
+    candidates, budgets = BatchSorter(
         compressed=compressed,
         Q=Q,
         G=G,
@@ -68,5 +67,5 @@ def execute(
         num_codebooks=num_codebooks,
         num_codewords=num_codewords,
         batch_size=BATCH_SIZE
-    ).precision()
-    return precisions, budgets
+    ).candidate()
+    return candidates, budgets

@@ -181,3 +181,15 @@ RECON_ERROR_THRESHOLD = 0.06
 # For song dataset
 SECONDS_PER_MINUTE = 60
 SAMPLE_RATE = 44100
+
+# experiment configs
+SCALING_BASELINES_ALGORITHMS = [
+    GREEDY_MIPS,  # greedy approach
+    LSH_MIPS,  # mapping to higher dimension (Todo: include H2LSH after vectorization?)
+    PCA_MIPS, NEQ_MIPS, NAPG_MIPS,  # mapping to lower dimensions
+    MEDIAN_ELIMINATION, ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION,  # bandit approach
+]
+SCALING_BASELINES_DATATYPES = [
+    NORMAL_CUSTOM, UNIFORM_PAPER, CLEAR_LEADER_HARD,  # custom datasets
+    NETFLIX, MOVIE_LENS  # real datasets
+]

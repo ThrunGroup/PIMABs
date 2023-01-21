@@ -505,7 +505,11 @@ def speedup_precision_exps(
         }
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(parent_dir, "speedup_accuracy_tradeoff", "logs") if dir_name is None else dir_name
+        log_dir = (
+            os.path.join(parent_dir, "core_tradeoff", "logs")
+            if dir_name is None
+            else dir_name
+        )
         filename = os.path.join(
             log_dir,
             mips_alg +

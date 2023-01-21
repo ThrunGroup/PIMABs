@@ -25,7 +25,7 @@ def action_elimination(
     epsilon: float,
     delta: float,
     var_proxy_override: bool = False,
-    maxmin : list = [],
+    maxmin : np.ndarray = [],
     num_best_atoms: int = 1,
     abs: bool = False,
     verbose: bool = False,
