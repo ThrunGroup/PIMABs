@@ -66,6 +66,7 @@ from algorithms.quantization.utils import execute
 
 from algorithms.napg import hnsw
 
+
 def scaling_exp(
     epsilon: Optional[float] = SCALING_EPSILON,
     delta: Optional[float] = SCALING_DELTA,
@@ -93,7 +94,6 @@ def scaling_exp(
     Run the time complexity of the bandit and baseline algorithms as the signal size scales and store them in
     the appropriate log files. MEDIAN_ELIMINATION algorithm should satisfy this scaling according to Corollary 3 in
     "https://arxiv.org/pdf/1812.06360.pdf#page=5".
-
     :param epsilon: A epsilon (an additive error allowed)
     :param delta: A delta (an upper bound of failure probability)
     :param maxmin: Maximum and minimum of data
@@ -287,7 +287,7 @@ def scaling_exp(
                 quantizer = NormPQ(n_percentile=NUM_CODEWORDS, quantize=quantizer)
                 start_time = time.time()
 
-                accuracies, budget_array = execute(
+                candidates_array, budget_array = execute(
                     seed=seed,
                     top_k=num_best_atoms,
                     pq=quantizer,
@@ -300,7 +300,6 @@ def scaling_exp(
                 )
                 # includes the time finding recall (other baselines don't)
                 runtime = time.time() - start_time
-                accuracy = np.sum(accuracies)
             elif mips_alg is H2ALSH:
                 log_info = (
                     "_delta"
@@ -341,16 +340,14 @@ def scaling_exp(
                 .argsort(axis=0)[:num_best_atoms]
                 .transpose()
             )
-
-            if mips_alg is not NEQ_MIPS:
-                for signal_idx in range(num_signals):
-                    matches = len(
-                        np.intersect1d(
-                            naive_candidates_array[signal_idx],
-                            candidates_array[signal_idx],
-                        )
+            for signal_idx in range(num_signals):
+                matches = len(
+                    np.intersect1d(
+                        naive_candidates_array[signal_idx],
+                        candidates_array[signal_idx],
                     )
-                    accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
+                )
+                accuracies[size_idx, seed, signal_idx] = matches / num_best_atoms
 
     avg_runtime = np.mean(
         avg_runtimes, axis=1
@@ -395,7 +392,7 @@ def scaling_exp(
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
         log_dir = (
-            os.path.join(parent_dir, "scaling", "logs")
+            os.path.join(parent_dir, "core_scaling", "logs")
             if dir_name is None
             else dir_name
         )

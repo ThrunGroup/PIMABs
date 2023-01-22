@@ -2,8 +2,8 @@ from typing import Tuple
 import numpy as np
 import math
 import os
-import mnist
 
+import data.mnist
 from utils.utils import subset_2d
 from data.custom_data import generate_custom_data, create_toy_waves
 from data.simple_song import create_song, create_note_waves, create_sin_wave
@@ -28,6 +28,7 @@ from utils.constants import (
     SIFT_1M,
     SAMPLE_RATE,
     SECONDS_PER_MINUTE,
+    SCALING_TOPK,
 )
 
 
@@ -65,6 +66,7 @@ def get_data(
     num_atoms: int = 10 ** 3,
     len_signal: int = 10 ** 4,
     num_signals: int = 1,
+    num_best_atoms: int = SCALING_TOPK,
     seed: int = 0,
     data_type: str = NORMAL_CUSTOM,
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -74,6 +76,7 @@ def get_data(
             num_atoms=num_atoms,
             len_signal=len_signal,
             num_signals=num_signals,
+            num_best_atoms=num_best_atoms,
             seed=seed,
             data_type=data_type,
         )

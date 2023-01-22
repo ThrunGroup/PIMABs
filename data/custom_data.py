@@ -12,6 +12,8 @@ from utils.constants import (
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
+
+    SCALING_TOPK,
 )
 
 
@@ -19,15 +21,16 @@ def generate_custom_data(
     num_atoms: int = 10**3,
     len_signal: int = 10**4,
     num_signals: int = 1,
+    num_best_atoms: int = SCALING_TOPK,
     seed: int = 0,
     data_type: str = NORMAL_CUSTOM,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Generate a custom dataset described in a bandit approach to MIPS paper.
-
     :param num_atoms: Number of atoms(arms)
     :param len_signal: A size of signal vector
     :param num_signals: Number of signals
+    :param num_best_atoms: Number of the best atoms
     :param seed: A random seed
     :param data_type: The name of distribution from which data are drawn
     :return: A synthetic dataset
@@ -72,21 +75,16 @@ def generate_custom_data(
         signal = signal[:-1, :]
     elif data_type == CLEAR_LEADER_HARD:
         signal_strength = 10
-        best_atom_idx = np.random.choice(num_atoms)
+        best_atom_indices = np.random.choice(num_atoms, size=num_best_atoms, replace=False)
         signal = signal_strength * np.ones((num_signals, len_signal))
-        atoms_array[best_atom_idx] = signal_strength * np.ones(len_signal)
-
-        if best_atom_idx > 0:
-            atoms_array[:best_atom_idx] = np.zeros((best_atom_idx, len_signal))
-
-        if best_atom_idx < num_atoms - 1:
-            atoms_array[best_atom_idx+1:] = np.zeros((num_atoms-best_atom_idx-1, len_signal))
+        atoms_array = np.zeros((num_atoms, len_signal))
+        atoms_array[best_atom_indices] = signal_strength * np.ones(len_signal)
     elif data_type == CLEAR_LEADER_SOFT:
         signal_strength = 10
-        best_atom_idx = np.random.choice(num_atoms)
+        best_atom_indices = np.random.choice(num_atoms, size=num_best_atoms, replace=False)
         signal = rng.normal(loc=signal_strength, size=(num_signals, len_signal))
         atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))
-        atoms_array[best_atom_idx] = rng.normal(loc=signal_strength, size=len_signal)
+        atoms_array[best_atom_indices] = rng.normal(loc=signal_strength, size=len_signal)
     elif data_type == NO_CLEAR_LEADER:
         signal_strength = 2
         signal = rng.normal(loc=signal_strength, size=(num_signals, len_signal))

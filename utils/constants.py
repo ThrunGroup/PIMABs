@@ -72,7 +72,11 @@ SIMPLE_SONG = "SIMPLE_SONG"
 HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
-NUM_SEEDS = 10
+
+
+# NUM_SEEDS = 10    TODO: uncomment this
+NUM_SEEDS = 1
+
 DEFAULT_MAXMIN = (5, 0)
 CRYPTO_PAIRS_MAXMIN = (10 ** 5, 0)
 DEFAULT_MAXMIN = (2, 0)
@@ -80,7 +84,11 @@ NORMALIZED_MAXMIN = (1, -1)
 DEFAULT_GREEDY_BUDGET = 50
 SCALING_NUM_EXPERIMENTS = 10  # corresponds to the number of points on the plot
 SCALING_NUM_ATOMS_CRYPTO_PAIRS = 100
+
+
 SCALING_NUM_ATOMS = 100
+
+
 SCALING_NUM_SIGNALS = 3  # this is to get the confidence intervals
 SCALING_DELTA = 0.3
 SCALING_EPSILON = 0.0
@@ -90,13 +98,25 @@ SCALING_DEPTH = 2
 SCALING_TOPK = 5
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
+
+
+# SCALING_SIZE_MINMAX = (
+#     10 ** 4, 10 ** 6,
+# ) Todo: uncomment this
+
 SCALING_SIZE_MINMAX = (
+    100, 1000,
+)
+
+
+SCALING_SIZE_MINMAX_MOVIE = (
     450, 2 * 10 ** 4,
 )
 SCALING_H2ALSH_DELTA = 0.1
 SCALING_H2ALSH_C0 = 1.5
 SCALING_H2ALSH_C = 0.8
 SCALING_H2ALSH_N0 = 200
+
 
 SCAlING_SIZE_MINMAX_MOVIE = (   # movie dataset is only 6000 dimensions
     450, 5000,
@@ -181,3 +201,15 @@ RECON_ERROR_THRESHOLD = 0.06
 # For song dataset
 SECONDS_PER_MINUTE = 60
 SAMPLE_RATE = 44100
+
+# experiment configs
+SCALING_BASELINES_ALGORITHMS = [
+    GREEDY_MIPS,  # greedy approach
+    LSH_MIPS,  # mapping to higher dimension (Todo: include H2LSH after vectorization?)
+    PCA_MIPS, NEQ_MIPS, NAPG_MIPS,  # mapping to lower dimensions
+    MEDIAN_ELIMINATION, ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION,  # bandit approach
+]
+SCALING_BASELINES_DATATYPES = [
+    NORMAL_CUSTOM, UNIFORM_PAPER, CLEAR_LEADER_HARD,  # custom datasets
+    NETFLIX, MOVIE_LENS  # real datasets
+]

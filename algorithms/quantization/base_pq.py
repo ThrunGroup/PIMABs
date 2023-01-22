@@ -31,7 +31,7 @@ class PQ(object):
         assert vecs.dtype == np.float32
         assert vecs.ndim == 2
         N, D = vecs.shape
-        assert self.Ks < N, "the number of training vector should be more than Ks"
+        assert self.Ks <= N, "the number of training vector shouldn't be less than Ks"
         self.Dim = D
 
         remainder = D % self.M

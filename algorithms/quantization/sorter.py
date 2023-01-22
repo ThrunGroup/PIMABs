@@ -41,6 +41,9 @@ class Sorter(object):
         self.ranks, budgets = parallel_sort(compressed, Q, top_k, num_codebooks, num_codewords)
         self.budgets = budgets
 
+    def get_candidates(self):
+        return self.ranks[:]
+
     def precision(self, G, T):
         t = min(T, len(self.ranks[0]))
         return t, self.avg_precision(G, T)

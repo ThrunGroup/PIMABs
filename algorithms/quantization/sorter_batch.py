@@ -5,8 +5,9 @@ from algorithms.quantization.sorter import Sorter
 
 
 class BatchSorter(object):
-    def __init__(self, compressed, Q, G, top_k, num_codebooks, num_codewords, batch_size):
+    def __init__(self, compressed, Q, G, top_k, num_codebooks, num_codewords, batch_size, get_precision=False):
         self.Q = Q
+        self.candidates = np.zeros((len(Q), top_k))
         self.precisions = np.zeros(len(Q))
         self.budgets = np.zeros(len(Q))
 
@@ -15,7 +16,13 @@ class BatchSorter(object):
             g = G[i*batch_size: (i + 1) * batch_size, :]
             sorter = Sorter(compressed, q, top_k, num_codebooks, num_codewords)
             self.budgets[i*batch_size: (i + 1) * batch_size] += sorter.budgets
-            self.precisions[i * batch_size: (i + 1) * batch_size] += sorter.avg_precision(g, top_k)
+            #import ipdb; ipdb.set_trace()
+            self.candidates[:, i*batch_size: (i + 1) * batch_size] += sorter.get_candidates()
+            if get_precision:
+                self.precisions[i * batch_size: (i + 1) * batch_size] += sorter.avg_precision(g, top_k)
+
+    def candidate(self):
+        return self.candidates, self.budgets
 
     def precision(self):
         return self.precisions, self.budgets
