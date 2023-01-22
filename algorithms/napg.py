@@ -1,5 +1,5 @@
 import numpy as np
-# import hnswlib
+import hnswlib
 from typing import Tuple
 
 

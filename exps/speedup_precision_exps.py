@@ -415,7 +415,7 @@ def speedup_precision_exps(
                 budgets.append(np.mean(budget_array))
                 accuracies.append(np.sum(accuracy_array))
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
-        elif mips_alg is NAPG_MIPS:
+        elif mips_alg in [HNSW_MIPS, NAPG_MIPS]:
             Ms = np.geomspace(4, 32, num_experiments).astype(np.int64)
             ef_constructions = np.geomspace(2, num_atoms // 2, num_experiments).astype(np.int64)
             ef_searches = np.geomspace(2, num_atoms // 2, num_experiments).astype(np.int64)
