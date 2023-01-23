@@ -172,7 +172,6 @@ def create_scaling_plots(
                 ylabel = "Sample Complexity"
                 plt.ylabel(ylabel)
                 plt.xlabel(xlabel)
-
             else:
                 plt.scatter(
                     x, y,
