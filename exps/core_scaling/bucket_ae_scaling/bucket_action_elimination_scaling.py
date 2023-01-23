@@ -14,6 +14,7 @@ from utils.constants import (
     NETFLIX_TRANSPOSE,
     MOVIE_LENS,
     COR_NORMAL_CUSTOM,
+    CLEAR_LEADER_HARD,
 
     # algorithms
     MEDIAN_ELIMINATION,
@@ -34,83 +35,92 @@ from utils.constants import (
     SCAlING_SIZE_MINMAX_MOVIE,
     SCALING_DELTA_REAL,
     SCALING_EPSILON_REAL,
+    BUCKET_AE_NUM_SEEDS,
 )
 
 
-def bucket_ae_exp():
+def scaling_bucket_ae():
     this_dir = os.path.dirname(os.path.abspath(__file__))
     log_dir = os.path.join(this_dir, "logs")
-    # for dataset in [NORMAL_CUSTOM, ]:
-    #     scaling_exp(
-    #         epsilon=SCALING_EPSILON,
-    #         delta=0.1,
-    #         independent_var=NUMBER_OF_ATOMS,
-    #         signal_dim=1000,
-    #         size_minmax=(5000, 10 ** 5),
-    #         num_best_atoms=1,
-    #         num_experiments=20,
-    #         num_signals=2,
-    #         data_type=dataset,
-    #         mips_alg=BUCKET_ACTION_ELIMINATION,
-    #         with_replacement=False,
-    #         is_normalize=False,
-    #         is_logspace=False,
-    #         dir_name=log_dir,
-    #     )
-    #
-    #     scaling_exp(
-    #         epsilon=SCALING_EPSILON,
-    #         delta=0.1,
-    #         independent_var=NUMBER_OF_ATOMS,
-    #         signal_dim=1000,
-    #         size_minmax=(5000, 10 ** 5),
-    #         num_best_atoms=1,
-    #         num_experiments=20,
-    #         num_signals=2,
-    #         data_type=dataset,
-    #         mips_alg=ACTION_ELIMINATION,
-    #         with_replacement=False,
-    #         is_normalize=False,
-    #         is_logspace=False,
-    #         dir_name=log_dir,
-    #     )
-    # for dataset in [NETFLIX, NORMAL_CUSTOM, COR_NORMAL_CUSTOM]:
-    #     scaling_exp(
-    #         epsilon=SCALING_EPSILON,
-    #         delta=0.1,
-    #         independent_var=DIMENSION_OF_ATOMS,
-    #         num_atoms=1300,
-    #         signal_dim=3000,
-    #         size_minmax=(4000, 30000),
-    #         num_best_atoms=1,
-    #         num_experiments=15,
-    #         num_signals=2,
-    #         data_type=dataset,
-    #         mips_alg=BUCKET_ACTION_ELIMINATION,
-    #         with_replacement=False,
-    #         is_normalize=False,
-    #         is_logspace=False,
-    #         dir_name=log_dir,
-    #     )
-    #
-    #     scaling_exp(
-    #         epsilon=SCALING_EPSILON,
-    #         delta=0.1,
-    #         independent_var=DIMENSION_OF_ATOMS,
-    #         num_atoms=1300,
-    #         signal_dim=3000,
-    #         size_minmax=(1000, 30000),
-    #         num_best_atoms=1,
-    #         num_experiments=15,
-    #         num_signals=2,
-    #         data_type=dataset,
-    #         mips_alg=ACTION_ELIMINATION,
-    #         with_replacement=False,
-    #         is_normalize=False,
-    #         is_logspace=False,
-    #         dir_name=log_dir,
-    #     )
+    for dataset in [NETFLIX_TRANSPOSE, NORMAL_CUSTOM, COR_NORMAL_CUSTOM]:
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=0.1,
+            independent_var=NUMBER_OF_ATOMS,
+            signal_dim=1000,
+            size_minmax=(5000, 10 ** 5),
+            num_best_atoms=1,
+            num_experiments=20,
+            num_signals=2,
+            data_type=dataset,
+            mips_alg=BUCKET_ACTION_ELIMINATION,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=False,
+            dir_name=log_dir,
+            num_seeds=BUCKET_AE_NUM_SEEDS
+        )
 
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=0.1,
+            independent_var=NUMBER_OF_ATOMS,
+            signal_dim=1000,
+            size_minmax=(5000, 10 ** 5),
+            num_best_atoms=1,
+            num_experiments=20,
+            num_signals=2,
+            data_type=dataset,
+            mips_alg=ACTION_ELIMINATION,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=False,
+            dir_name=log_dir,
+            num_seeds=BUCKET_AE_NUM_SEEDS
+        )
+    for dataset in [NETFLIX, NORMAL_CUSTOM, COR_NORMAL_CUSTOM]:
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=0.1,
+            independent_var=DIMENSION_OF_ATOMS,
+            num_atoms=1300,
+            signal_dim=3000,
+            size_minmax=(4000, 10 ** 5),
+            num_best_atoms=1,
+            num_experiments=15,
+            num_signals=2,
+            data_type=dataset,
+            mips_alg=BUCKET_ACTION_ELIMINATION,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=False,
+            dir_name=log_dir,
+            num_seeds=BUCKET_AE_NUM_SEEDS,
+        )
+
+        scaling_exp(
+            epsilon=SCALING_EPSILON,
+            delta=0.1,
+            independent_var=DIMENSION_OF_ATOMS,
+            num_atoms=1300,
+            signal_dim=3000,
+            size_minmax=(4000, 10 ** 5),
+            num_best_atoms=1,
+            num_experiments=15,
+            num_signals=2,
+            data_type=dataset,
+            mips_alg=ACTION_ELIMINATION,
+            with_replacement=False,
+            is_normalize=False,
+            is_logspace=False,
+            dir_name=log_dir,
+            num_seeds=BUCKET_AE_NUM_SEEDS,
+        )
+
+
+def scaling_bucket_ae_plot():
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.join(this_dir, "logs")
     datasets = [NETFLIX, NETFLIX_TRANSPOSE, NORMAL_CUSTOM, COR_NORMAL_CUSTOM]
     create_scaling_plots(
         data_types=datasets,
@@ -145,4 +155,5 @@ def bucket_ae_exp():
 
 
 if __name__ == "__main__":
-    bucket_ae_exp()
+    scaling_bucket_ae()
+    scaling_bucket_ae_plot()

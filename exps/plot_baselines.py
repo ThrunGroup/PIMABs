@@ -380,7 +380,7 @@ def create_tradeoff_plots(
             x = x[:-(window_size-1)]
 
             if is_logspace:
-                x = np.log10(x)
+                plt.xscale("log")
 
             # plot the datapoints
             plt.scatter(
@@ -400,7 +400,7 @@ def create_tradeoff_plots(
                 plt.errorbar(x, y, error, fmt=".", color="black")
 
             plt.title(title)
-            xlabel = "Speedup ()" if is_logspace else "Speedup"
+            xlabel = "Speedup"
             ylabel = f"Precision at {top_k}"
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)

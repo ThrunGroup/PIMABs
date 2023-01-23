@@ -9,7 +9,6 @@ class H2ALSH_MIPS:
     Implementation of Homocentric Hypersphere Asymmetric Locally Sensitive Hashing scheme for MIPS, see
     https://dl.acm.org/doi/pdf/10.1145/3219819.3219971 for the details.
     """
-
     def __init__(
         self,
         atoms: np.ndarray,

@@ -197,12 +197,9 @@ def speedup_precision_exps(
         seed=0,
         data_type=data_type,
         is_tradeoff=True,
+        num_best_atoms=num_best_atoms,
     )
-    var_proxy = np.var(atoms[:100, :100] * signals[1, :100])
-    print(var_proxy)
-    print("NAIVE: ", np.argsort(-atoms@signals[0])[:num_best_atoms])
-    print("NORM: ", np.argsort(-np.linalg.norm(atoms, axis=1))[:num_best_atoms])
-    print("Intersection: ", np.intersect1d(np.argsort(-atoms@signals[0])[:num_best_atoms], np.argsort(-np.linalg.norm(atoms, axis=1))[:num_best_atoms]))
+    var_proxy = np.var(atoms[:, :1000] * signals[1, :1000])
     for seed in range(num_seeds):
         print(f"... running seed {seed}")
 
@@ -398,7 +395,7 @@ def speedup_precision_exps(
                 quantizer = NormPQ(n_percentile=num_codeword, quantize=PQ(M=num_codebook, Ks=num_codeword))
 
                 start_time = time.time()
-                accuracy_array, budget_array = execute(
+                candidates_array, budget_array = execute(
                     top_k=num_best_atoms,
                     pq=quantizer,
                     X=atoms,
@@ -410,10 +407,12 @@ def speedup_precision_exps(
                     seed=seed,
                 )
                 # includes the time finding recall (other baselines don't)
-                runtime = time.time() - start_time
                 runtimes.append(time.time() - start_time)
                 budgets.append(np.mean(budget_array))
-                accuracies.append(np.sum(accuracy_array))
+                accuracy_array = get_accuracy_array(
+                    naive_candidates_array, candidates_array
+                )
+                accuracies.append(np.sum(accuracy_array) / num_signals)
                 accuracies_std.append(np.std(accuracy_array) / np.sqrt(num_signals))
         elif mips_alg is NAPG_MIPS:
             Ms = np.geomspace(4, 32, num_experiments).astype(np.int64)

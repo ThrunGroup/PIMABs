@@ -27,7 +27,7 @@ def bucket_action_elimination(
     with_replacement: bool = True,
     seed=0,
     num_samples_bucket: int = 30,
-    num_samples_norm: int = 1000,
+    num_samples_norm: int = 10000,
     z_score: float = 3,  # Scipy package is normally used for calculating z-score, but it is not compatible with numba
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -133,6 +133,8 @@ def bucket_action_elimination(
                 break
 
             if np.max(lcbs) > temp_ub_buckets[idx + 1]:
+                ip = atoms@signal
+                print(candidates, np.argmax(ip), means, ip.max()/d)
                 break
 
         candidates_array[signal_idx] = candidates
