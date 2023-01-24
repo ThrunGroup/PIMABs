@@ -9,6 +9,7 @@ from utils.constants import (
     BATCH_SIZE,
     # datasets
     SIMPLE_SONG,
+    SONG_MAXMIN,
     # algorithms
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -39,15 +40,16 @@ def song_scaling(run: bool = True, plot: bool = True):
                 epsilon=0.00,
                 delta=0.0001,
                 num_atoms=10,
+                maxmin=SONG_MAXMIN,
                 size_minmax=(1e6, 26e6),
                 num_experiments=10,
                 num_signals=1,
                 data_type=SIMPLE_SONG,
                 mips_alg=ACTION_ELIMINATION,
-                with_replacement=True,
+                with_replacement=False,
                 is_normalize=False,
                 is_logspace=True,
-                dirname="song_scaling_logs",
+                dir_name="song_scaling_logs",
                 num_seeds=10,
             )
             # TODO(@motiwari): Figure out why this is not 100%
@@ -62,9 +64,9 @@ def song_scaling(run: bool = True, plot: bool = True):
             include_error_bar=True,
             is_fit=True,
             is_logspace=True,
-            dirname="song_scaling_logs",
+            dir_name="song_scaling_logs",
         )
 
 
 if __name__ == "__main__":
-    song_scaling(run=True, plot=True)
+    song_scaling(run=False, plot=True)
