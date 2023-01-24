@@ -1,6 +1,6 @@
 from exps.plot_baselines import create_scaling_plots
 from utils.constants import SCALING_BASELINES_DATATYPES, SCALING_BASELINES_ALGORITHMS, ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION
-
+import os
 
 def scaling_fit_plot(algorithms):
     """
@@ -12,7 +12,8 @@ def scaling_fit_plot(algorithms):
             include_error_bar=True,
             data_types=SCALING_BASELINES_DATATYPES,
             alg_names=[algorithm],
-            dir_name="core_scaling/logs"
+            dir_name=os.path.join("core_scaling", "logs"),
+            is_logspace=True,
         )
 
 

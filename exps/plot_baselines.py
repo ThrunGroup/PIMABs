@@ -156,6 +156,17 @@ def power10(array):
 def power10_sqrt(array):
     return np.power(10, array) ** (1 / 2)
 
+def get_x_label(is_logspace: bool = False, independent_var: str = None):
+    x_label = ""
+    if independent_var == "signal_sizes":
+        x_label = "Signal Vector Size ($d$)"
+    else:
+        x_label = "Number of atoms ($N$)"
+
+    if is_logspace:
+        x_label = "Log$_{10}$ " + x_label
+
+    return x_label
 
 def create_scaling_plots(
     caching_type: str = "",
@@ -191,12 +202,12 @@ def create_scaling_plots(
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
+    # import ipdb; ipdb.set_trace()
     for ind_variable in ind_variables:
         for datatype in data_types:
             csv_files = glob.glob(
                 os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
             )
-            plt.figure(figsize=(6, 4.5))
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
             for f in csv_files:
                 alg_name = extract_alg(f)
@@ -237,11 +248,8 @@ def create_scaling_plots(
                         is_logspace=is_logspace,
                     )
                     plt.title(title)
-                    xlabel = (
-                        "Signal Vector Size (d)"
-                        if independent_var == "signal_sizes"
-                        else "Number of atoms (N)"
-                    )
+
+                    xlabel = get_x_label(is_logspace=is_logspace, independent_var=independent_var)
                     ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
@@ -265,9 +273,9 @@ def create_scaling_plots(
                         plt.errorbar(x, y, error, fmt=".", color="black")
                     plt.title(title)
                     xlabel = (
-                        "Signal Vector Size (d)"
+                        "Signal Vector Size ($d$)"
                         if independent_var == "signal_sizes"
-                        else "Number of atoms (N)"
+                        else "Number of atoms ($N$)"
                     )
                     ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)

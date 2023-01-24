@@ -12,6 +12,8 @@ from utils.constants import (
     UNIFORM_PAPER,
     CRYPTO_PAIRS,
     MOVIE_LENS,
+    NORMAL_CUSTOM,
+    COR_NORMAL_CUSTOM,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -26,6 +28,7 @@ from utils.constants import (
     SCALING_EPSILON_REAL,
     DIMENSION_OF_ATOMS,
     LARGE_DELTA,
+    DEFAULT_MAXMIN,
 )
 
 
@@ -33,9 +36,20 @@ def get_scaling_baseline_params(data_type):
     """
     Function gives the constants for [epsilon, delta, size_minmax] for the specified datatype.
     """
+
+    if data_type == NORMAL_CUSTOM:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.001, (5, 0), (10**4, 10**6)
+    elif data_type == COR_NORMAL_CUSTOM:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.001, (5, 0), (10 ** 4, 10 ** 6)
+
+
     if data_type is UNIFORM_PAPER:
         epsilon = SCALING_EPSILON
         delta = SCALING_DELTA
+    elif data_type == NORMAL_CUSTOM:
+        delta = 0.
     else:  # real datasets
         epsilon = SCALING_EPSILON_REAL
         delta = SCALING_DELTA_REAL
@@ -50,7 +64,11 @@ def get_scaling_baseline_params(data_type):
     else:
         size_minmax = SCALING_SIZE_MINMAX
 
-    return epsilon, delta, size_minmax
+    # Max-min for various datasets
+    if data_type == NORMAL_CUSTOM:
+        maxmin = (7, 0)
+
+    return epsilon, delta, maxmin, size_minmax
 
 
 def scaling_baselines(algorithms):
@@ -61,10 +79,11 @@ def scaling_baselines(algorithms):
     # Get data for the scaling experiments for the datasets (not the high-dimensional datasets)
     for data_type in SCALING_BASELINES_DATATYPES:
         for algorithm in algorithms:
-            epsilon, delta, size_minmax = get_scaling_baseline_params(data_type)
+            epsilon, delta, maxmin, size_minmax = get_scaling_baseline_params(data_type)
             scaling_exp(
                 epsilon=epsilon,
                 delta=delta,
+                maxmin=maxmin,
                 num_atoms=SCALING_NUM_ATOMS,
                 size_minmax=size_minmax,
                 num_experiments=SCALING_NUM_EXPERIMENTS,

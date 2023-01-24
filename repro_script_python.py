@@ -22,8 +22,8 @@ def find_absent_algorithms(path, algorithms):
 
 def main():
     path = os.path.join(os.getcwd(), "exps")
-    scaling_path = os.path.join(path, "core_scaling/logs")
-    tradeoff_path = os.path.join(path, "core_tradeoff/logs")
+    scaling_path = os.path.join(path, "core_scaling", "logs")
+    tradeoff_path = os.path.join(path, "core_tradeoff", "logs")
 
     # generate scaling/tradeoff log files
     scaling_baselines_algos = find_absent_algorithms(scaling_path, SCALING_BASELINES_ALGORITHMS)
