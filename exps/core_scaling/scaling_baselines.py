@@ -14,6 +14,7 @@ from utils.constants import (
     MOVIE_LENS,
     NORMAL_CUSTOM,
     COR_NORMAL_CUSTOM,
+    NETFLIX,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -39,10 +40,13 @@ def get_scaling_baseline_params(data_type):
 
     if data_type == NORMAL_CUSTOM:
         # epsilon, delta, maxmin, size_minmax
-        return 0.001, 0.001, (5, 0), (10**4, 10**6)
+        return 0.001, 0.001, (5, 0), (10 ** 4, 10 ** 6)
     elif data_type == COR_NORMAL_CUSTOM:
         # epsilon, delta, maxmin, size_minmax
         return 0.001, 0.001, (5, 0), (10 ** 4, 10 ** 6)
+    elif data_type == NETFLIX:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.001, (2, 0), (10 ** 4, 143458)
 
 
     if data_type is UNIFORM_PAPER:
@@ -67,6 +71,8 @@ def get_scaling_baseline_params(data_type):
     # Max-min for various datasets
     if data_type == NORMAL_CUSTOM:
         maxmin = (7, 0)
+    else:
+        maxmin = DEFAULT_MAXMIN
 
     return epsilon, delta, maxmin, size_minmax
 

@@ -18,4 +18,4 @@ def scaling_fit_plot(algorithms):
 
 
 if __name__ == "__main__":
-    scaling_fit_plot([ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION])
+    scaling_fit_plot([ACTION_ELIMINATION])#, ADAPTIVE_ACTION_ELIMINATION])
