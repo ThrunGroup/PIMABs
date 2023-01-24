@@ -74,7 +74,7 @@ HOEFFDING = "HOEFFDING"
 # Scaling Experiments
 
 
-NUM_SEEDS = 20
+NUM_SEEDS = 10
 # NUM_SEEDS = 1
 
 DEFAULT_MAXMIN = (10, 0)
@@ -212,6 +212,6 @@ SCALING_BASELINES_DATATYPES = [
     # COR_NORMAL_CUSTOM,
     #UNIFORM_PAPER, CLEAR_LEADER_HARD,  # custom datasets
     # real datasets
-    NETFLIX,
-    #MOVIE_LENS,
+    # NETFLIX,
+    MOVIE_LENS,
 ]

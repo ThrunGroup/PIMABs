@@ -47,6 +47,9 @@ def get_scaling_baseline_params(data_type):
     elif data_type == NETFLIX:
         # epsilon, delta, maxmin, size_minmax
         return 0.001, 0.001, (2, 0), (10 ** 4, 143458)
+    elif data_type == MOVIE_LENS:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.01, (1, 0), (1000, 5000)
 
 
     if data_type is UNIFORM_PAPER:
