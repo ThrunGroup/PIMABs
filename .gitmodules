@@ -1,4 +1,4 @@
 [submodule "algorithms/napg"]
 	path = algorithms/napg
-	url = git@github.com:ThrunGroup/napg.git
+	url = https://github.com/nmslib/hnswlib.git
 	branch = master
