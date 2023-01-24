@@ -213,5 +213,6 @@ SCALING_BASELINES_DATATYPES = [
     #UNIFORM_PAPER, CLEAR_LEADER_HARD,  # custom datasets
     # real datasets
     # NETFLIX,
-    MOVIE_LENS,
+    #MOVIE_LENS,
+    NORMAL_PAPER,
 ]

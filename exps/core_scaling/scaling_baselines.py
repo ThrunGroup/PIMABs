@@ -15,6 +15,7 @@ from utils.constants import (
     NORMAL_CUSTOM,
     COR_NORMAL_CUSTOM,
     NETFLIX,
+    NORMAL_PAPER,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -50,6 +51,9 @@ def get_scaling_baseline_params(data_type):
     elif data_type == MOVIE_LENS:
         # epsilon, delta, maxmin, size_minmax
         return 0.001, 0.01, (1, 0), (1000, 5000)
+    elif data_type == NORMAL_PAPER:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.01, (10, 0), (10 ** 3, 10 ** 5)
 
 
     if data_type is UNIFORM_PAPER:
@@ -101,7 +105,7 @@ def scaling_baselines(algorithms):
                 mips_alg=algorithm,
                 with_replacement=False,
                 is_normalize=False,
-                is_logspace=True,
+                is_logspace=False,
             )
 
 

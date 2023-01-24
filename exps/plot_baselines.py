@@ -24,6 +24,7 @@ from utils.constants import (
     SIMPLE_SONG,
     SIFT_1M,
     UNIFORM_PAPER,
+    NORMAL_PAPER,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -117,6 +118,8 @@ def translate_dataset_name(dataset_name: str):
         return "SIFT 1M"
     elif dataset_name == UNIFORM_PAPER:
         return "Uniform Paper"
+    elif dataset_name == NORMAL_PAPER:
+        return "Synthetic Normal"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 

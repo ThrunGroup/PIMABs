@@ -13,7 +13,7 @@ def scaling_fit_plot(algorithms):
             data_types=SCALING_BASELINES_DATATYPES,
             alg_names=[algorithm],
             dir_name=os.path.join("core_scaling", "logs"),
-            is_logspace=True,
+            is_logspace=False,
         )
 
 
