@@ -9,6 +9,7 @@ from utils.constants import (
     NORMAL_PAPER,
     UNIFORM_PAPER,
     COR_NORMAL_CUSTOM,
+    POSITIVE_COR_NORMAL_CUSTOM,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
@@ -60,11 +61,14 @@ def generate_custom_data(
             atoms_array[idx] = rng.normal(loc=means[idx], size=len_signal)
         signal = rng.normal(loc=rng.normal(), size=(num_signals, len_signal))
     elif (
-            data_type is COR_NORMAL_CUSTOM
+            data_type in [COR_NORMAL_CUSTOM, POSITIVE_COR_NORMAL_CUSTOM]
     ):  # Hardcode so that variance proxy(sub-gaussian distribution) is 1
         # Unlike other datasets, try to create a signal that is correlated to a few atoms. Correlation coefficient
         # is drawn from a normal distribution.
         correlations = rng.normal(size=(num_signals + 1, num_atoms))
+        if data_type is POSITIVE_COR_NORMAL_CUSTOM:
+            correlations = np.abs(correlations)
+
         correlations = correlations / np.sum(np.abs(correlations), axis=0, keepdims=True)
         atoms_array = np.zeros((num_atoms, len_signal))
         signal = rng.normal(loc=rng.normal(), size=(num_signals + 1, len_signal))  # To include independent normal rv

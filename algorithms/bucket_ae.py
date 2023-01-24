@@ -104,6 +104,7 @@ def bucket_action_elimination(
         candidates = np.empty(0)
         budgets = 0
         for idx in range(k):
+            best_k_lcbs = lcbs[num_best_atoms-1] if idx != 0 else -float('inf')
             (
                 bucket_candidates,
                 bucket_means,
@@ -120,6 +121,7 @@ def bucket_action_elimination(
                 batch_size,
                 with_replacement,
                 seed,
+                best_k_lcbs
             )
             concatenated_means = np.concatenate((means, bucket_means))
             best_k_idcs = np.argsort(concatenated_means)[::-1][:num_best_atoms]
@@ -130,11 +132,11 @@ def bucket_action_elimination(
             lcbs = np.concatenate((lcbs, bucket_lcbs))[best_k_idcs]
             budgets += bucket_budgets
             if idx == k - 1:
+                print(f"num_atoms: {len(atoms)}/ idx: {idx}/ budget: {budgets}")
                 break
 
             if np.max(lcbs) > temp_ub_buckets[idx + 1]:
-                ip = atoms@signal
-                print(candidates, np.argmax(ip), means, ip.max()/d)
+                print(f"num_atoms: {len(atoms)}/ idx: {idx}/ budget: {budgets}")
                 break
 
         candidates_array[signal_idx] = candidates
@@ -155,6 +157,7 @@ def bucket_action_elimination_helper(
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
     seed=0,
+    prev_lcbs: float = 0,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, int]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -240,7 +243,7 @@ def bucket_action_elimination_helper(
 
         ucbs[candidates] = means[candidates] + ci
         lcbs[candidates] = means[candidates] - ci
-        new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
+        new_cand_idcs = np.where((ucbs[candidates] >= max(prev_lcbs, lcbs[candidates].max())))[0]
 
         if 4 * ci < epsilon:
             sort_idcs = np.argsort(-means[candidates])

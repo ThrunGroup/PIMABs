@@ -17,6 +17,7 @@ from utils.constants import (
     MOVIE_LENS,
     CRYPTO_PAIRS,
     COR_NORMAL_CUSTOM,
+    POSITIVE_COR_NORMAL_CUSTOM,
     NETFLIX_TRANSPOSE,
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
@@ -53,11 +54,11 @@ def choose_signal_and_atoms(data: np.ndarray):
     signals = data[signal_idx].reshape(1, -1)
 
     if signal_idx == 0:
-        atoms = data[signal_idx + 1:]
+        atoms = data[signal_idx + 1 :]
     elif signal_idx == N - 1:
         atoms = data[:signal_idx]
     else:
-        atoms = np.vstack([data[:signal_idx], data[signal_idx + 1:]])  # TODO: Boundary
+        atoms = np.vstack([data[:signal_idx], data[signal_idx + 1 :]])  # TODO: Boundary
 
     return signals, atoms
 
@@ -72,7 +73,17 @@ def get_data(
     is_tradeoff: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
-    if data_type in [ADVERSARIAL_CUSTOM, NORMAL_CUSTOM, NORMAL_PAPER, UNIFORM_PAPER, COR_NORMAL_CUSTOM, CLEAR_LEADER_HARD, CLEAR_LEADER_SOFT, NO_CLEAR_LEADER]:
+    if data_type in [
+        ADVERSARIAL_CUSTOM,
+        NORMAL_CUSTOM,
+        NORMAL_PAPER,
+        UNIFORM_PAPER,
+        COR_NORMAL_CUSTOM,
+        CLEAR_LEADER_HARD,
+        CLEAR_LEADER_SOFT,
+        NO_CLEAR_LEADER,
+        POSITIVE_COR_NORMAL_CUSTOM,
+    ]:
         return generate_custom_data(
             num_atoms=num_atoms,
             len_signal=len_signal,
@@ -126,7 +137,11 @@ def get_data(
         atoms = np.vstack([C0, E0, G0, C1, E1, G1])
         for i in range(7, num_atoms):
             note_freq = math.floor(G1_freq * 2 ** ((i - 6) / 12))
-            extraneous_note = create_sin_wave(frequency_multiplier=note_freq, sampling_frequency=SAMPLE_RATE, num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE*num_mins)
+            extraneous_note = create_sin_wave(
+                frequency_multiplier=note_freq,
+                sampling_frequency=SAMPLE_RATE,
+                num_samples=SAMPLE_RATE * SECONDS_PER_MINUTE * num_mins,
+            )
             atoms = np.vstack([atoms, extraneous_note])
 
         sample_idcs = rng.choice(signals.shape[1], len_signal, replace=False)
@@ -151,10 +166,15 @@ def get_data(
     signal_idcs = rng.choice(np.arange(data.shape[0]), num_signals, replace=False)
     sample_idcs = rng.choice(data.shape[1], len_signal, replace=False)
 
-    atom_idcs = rng.choice(np.setdiff1d(np.arange(data.shape[0]), signal_idcs), num_atoms, replace=False)
+    atom_idcs = rng.choice(
+        np.setdiff1d(np.arange(data.shape[0]), signal_idcs), num_atoms, replace=False
+    )
     atoms = subset_2d(data, atom_idcs, sample_idcs)
-    if (data_type in [NETFLIX, MOVIE_LENS, NORMAL_CUSTOM, COR_NORMAL_CUSTOM, SIFT_1M]) and is_tradeoff:
+    if (
+        data_type in [NETFLIX, MOVIE_LENS, NORMAL_CUSTOM, COR_NORMAL_CUSTOM, SIFT_1M]
+    ) and is_tradeoff:
         atoms -= np.mean(atoms + 1)
+        print("what!!")
     signals = subset_2d(data, signal_idcs, sample_idcs)
     del data
     return atoms, signals

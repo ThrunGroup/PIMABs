@@ -25,6 +25,7 @@ from utils.constants import (
     SIFT_1M,
     NORMAL_PAPER,
     UNIFORM_PAPER,
+    POSITIVE_COR_NORMAL_CUSTOM,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -123,6 +124,8 @@ def translate_dataset_name(dataset_name: str):
         return "SIFT 1M"
     elif dataset_name == UNIFORM_PAPER:
         return UNIFORM_PAPER
+    elif dataset_name == POSITIVE_COR_NORMAL_CUSTOM:
+        return "Positive Correlated Normal Custom"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
