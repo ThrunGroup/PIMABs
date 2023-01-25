@@ -7,6 +7,7 @@ import numpy as np
 from pandas import read_csv
 from typing import List, Any
 from utils.constants import (
+    NUM_SEEDS,
     COLORS,
     ALG_TO_COLOR,
     NORMAL_CUSTOM,
@@ -35,6 +36,7 @@ from utils.constants import (
     HNSW_MIPS,
     NAPG_MIPS,
 
+    SCALING_LOG_BUFFER,
     MAX_SPEEDUP,
     NEQ_MIPS,
 
@@ -262,22 +264,23 @@ def create_scaling_plots(
                     plt.title(title)
 
                     xlabel = get_x_label(is_logspace=is_logspace, independent_var=independent_var)
-                    ylabel = "Sample Complexity"
+                    if is_logspace_y:
+                        ylabel = "log_10 Sample Complexity"
+                    else:
+                        ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
                 else:
                     if is_logspace_y:
-                        norm = "log"
-                    else:
-                        norm = "linear"
-
+                        y = np.log10(y)
+                        error = np.where(np.array(error) < SCALING_LOG_BUFFER, SCALING_LOG_BUFFER, np.array(error))
+                        error = np.log10(error) / (y * np.sqrt(NUM_SEEDS))
 
                     plt.scatter(
                         x,
                         y,
                         color=ALG_TO_COLOR[alg_name],
                         label=f"{translate_alg_name(alg_name)}",
-                        norm=norm,
                     )
                     plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
@@ -289,14 +292,19 @@ def create_scaling_plots(
                     plt.legend(handles, labels, loc="upper left")
 
                     if include_error_bar:
-                        plt.errorbar(x, y, error, fmt=".", color="black")
+                        plt.errorbar(x, y, yerr=error, fmt=".", color="black")
                     plt.title(title)
                     xlabel = (
                         "Signal Vector Size ($d$)"
                         if independent_var == "signal_sizes"
                         else "Number of atoms ($N$)"
                     )
-                    ylabel = "Sample Complexity"
+
+                    if is_logspace_y:
+                        ylabel = "log_10 Sample Complexity"
+                    else:
+                        ylabel = "Sample Complexity"
+
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
 
