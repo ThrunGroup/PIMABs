@@ -271,7 +271,7 @@ def create_scaling_plots(
                     else:
                         norm = "linear"
 
-                    
+
                     plt.scatter(
                         x,
                         y,
