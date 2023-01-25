@@ -293,6 +293,7 @@ def create_scaling_plots(
 
                     if include_error_bar:
                         plt.errorbar(x, y, yerr=error, fmt=".", color="black")
+
                     plt.title(title)
                     xlabel = (
                         "Signal Vector Size ($d$)"
