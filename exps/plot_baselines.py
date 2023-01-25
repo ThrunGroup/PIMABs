@@ -180,7 +180,8 @@ def create_scaling_plots(
     include_error_bar: bool = False,
     ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     is_fit: bool = False,
-    is_logspace: bool = False,
+    is_logspace_x: bool = False,
+    is_logspace_y: bool = False,
     is_plot_accuracy: bool = False,
     dir_name: str = None,
 ):
@@ -193,7 +194,8 @@ def create_scaling_plots(
     :param ind_variables: Independent variables (N or D)
     :param include_error_bar: shows the standard deviation
     :param is_fit: whether to fit the plots or not
-    :param is_logspace: whether to plot in logspace or not
+    :param is_logspace_x: whether to plot x-axis in logspace or not
+    :param is_logspace_y: whether to plot y-axis in logspace or not
     :param is_plot_accuracy: whether to annotate accuracy in the graph
     :param dir_name: directory name of log files
     """
@@ -232,10 +234,9 @@ def create_scaling_plots(
                 error = data["budgets_std"].tolist()
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
 
-
                 if is_fit:
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
-                    if is_logspace:
+                    if is_logspace_x:
                         functions = [np.array, power10_sqrt, power10]
                         function_names = [
                             "$y \propto log x$",
@@ -243,6 +244,9 @@ def create_scaling_plots(
                             "$y \propto x$",
                         ]
                         x = np.log10(x)
+                    elif is_logspace_y:
+                        y = np.log10(y)
+
                     else:
                         functions = [np.array, np.sqrt, np.log]
                         function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
@@ -262,11 +266,18 @@ def create_scaling_plots(
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
                 else:
+                    if is_logspace_y:
+                        norm = "log"
+                    else:
+                        norm = "linear"
+
+                    
                     plt.scatter(
                         x,
                         y,
                         color=ALG_TO_COLOR[alg_name],
                         label=f"{translate_alg_name(alg_name)}",
+                        norm=norm,
                     )
                     plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
 
