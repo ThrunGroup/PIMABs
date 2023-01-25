@@ -345,9 +345,14 @@ def fit_and_plot(
     :param function_name_list: List of function name
     :param ys_std: Standard Deviation of Output array (used for error bar plot)
     """
-    plt.figure(figsize=(6, 4.5))
-    plt.ticklabel_format(style="sci", axis='y', scilimits=(0, 0))
-    plt.ticklabel_format(style="sci", axis='x', scilimits=(0, 0))
+
+    # plt.figure(figsize=(6, 4.5))
+
+    # plt.ticklabel_format(style="sci", axis='y', scilimits=(0, 0))
+    # plt.ticklabel_format(style="sci", axis='x', scilimits=(0, 0))
+    fig, ax = plt.subplots()
+    ax.semilogx()
+
 
     # if is_logspace:
     #     max_power = int(xs[-1])
@@ -360,18 +365,24 @@ def fit_and_plot(
         for idx in range(len(function_list)):
             function = function_list[idx]
             function_name = function_name_list[idx]
-            lr.fit(function(xs).reshape(-1, 1), ys)  # Fit xs, ys into function
 
-            xs_predict = lr.predict(function(xs).reshape(-1, 1))
-            hashes_predict = lr.predict(function(hashes).reshape(-1, 1))
+            if function == np.mean:
+                hashes_predict = np.array([np.mean(ys)] * len(hashes))
+            else:
+                lr.fit(function(xs).reshape(-1, 1), ys)  # Fit xs, ys into function
+                xs_predict = lr.predict(function(xs).reshape(-1, 1))
+                hashes_predict = lr.predict(function(hashes).reshape(-1, 1))
+
             mean_ys = np.mean(ys)
+
             if ((ys - mean_ys) ** 2).sum() < 1e-10:
                 # Gracefully handle the case where ys is a constant
                 r2 = 1
             else:
                 r2 = 1 - ((xs_predict - ys) ** 2).sum() / ((ys - mean_ys) ** 2).sum()
+
             plt.plot(
-                hashes,
+                10**hashes,
                 hashes_predict,
                 color=COLORS[idx],
                 label=f"{function_name},  $R^2 = {r2:.4f}$",
@@ -379,9 +390,11 @@ def fit_and_plot(
             plt.legend(loc="upper left")
 
     if ys_std is None:
-        plt.scatter(xs, ys, color="black")
+        plt.scatter(10**xs, ys, color="black")
     else:
-        plt.errorbar(xs, ys, ys_std, fmt="o", color="black")
+        plt.errorbar(10**xs, ys, ys_std, fmt="o", color="black")
+
+
 
 
 def get_sizes_arr(

@@ -163,8 +163,8 @@ def get_x_label(is_logspace: bool = False, independent_var: str = None):
     else:
         x_label = "Number of atoms ($N$)"
 
-    if is_logspace:
-        x_label = "Log$_{10}$ " + x_label
+    # if is_logspace:
+    #     x_label = "Log$_{10}$ " + x_label
 
     return x_label
 
@@ -228,17 +228,19 @@ def create_scaling_plots(
                 if is_fit:
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
                     if is_logspace:
-                        functions = [np.array, power10_sqrt, power10]
+                        functions = [np.array, power10_sqrt, power10] #, np.mean]
                         function_names = [
-                            "$y \propto log x$",
-                            "$y \propto x^{1/2}$",
-                            "$y \propto x$",
+                            "$y \propto log x$ (Log fit)",
+                            "$y \propto x^{1/2}$ (Sqrt fit)",
+                            "$y \propto x$ (Linear fit)",
+                            # "$y \propto c$ (Constant fit)",
                         ]
                         x = np.log10(x)
                     else:
-                        functions = [np.array, np.sqrt, np.log]
-                        function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
+                        functions = [np.array, np.sqrt, np.log] #, np.mean]
+                        function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"] #, "Constant fit"]
 
+                    print("HERE")
                     fit_and_plot(
                         xs=x,
                         ys=y,
@@ -426,6 +428,7 @@ def compare_caching_budgets(
 
             if include_error_bar:
                 plt.errorbar(x, y, error, fmt=".", color="black")
+
             plt.title(title)
             xlabel = "Signal Vector Size (d)"
             ylabel = "Sample Complexity"
