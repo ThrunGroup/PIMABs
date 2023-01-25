@@ -189,5 +189,5 @@ def tradeoff_baselines_plot():
 
 
 if __name__ == "__main__":
-    tradeoff_baselines()
+    # tradeoff_baselines()
     tradeoff_baselines_plot()
