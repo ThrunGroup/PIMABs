@@ -267,19 +267,18 @@ def create_scaling_plots(
                     plt.xlabel(xlabel)
                 else:
                     if is_logspace_y:
-                        norm = "log"
-                    else:
-                        norm = "linear"
-
+                        y = np.log10(y)
+                        error = np.log10(error) / y
 
                     plt.scatter(
                         x,
                         y,
                         color=ALG_TO_COLOR[alg_name],
                         label=f"{translate_alg_name(alg_name)}",
-                        norm=norm,
                     )
                     plt.plot(x, y, color=ALG_TO_COLOR[alg_name])
+
+
 
                     # Sort the legend entries (labels and handles) by labels
                     handles, labels = plt.gca().get_legend_handles_labels()
@@ -288,8 +287,9 @@ def create_scaling_plots(
                     )
                     plt.legend(handles, labels, loc="upper left")
 
-                    if include_error_bar:
-                        plt.errorbar(x, y, error, fmt=".", color="black")
+                    # if include_error_bar:
+                    #     plt.errorbar(x, y, list(error), fmt=".", color="black")
+
                     plt.title(title)
                     xlabel = (
                         "Signal Vector Size ($d$)"
