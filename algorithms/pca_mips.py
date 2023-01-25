@@ -124,7 +124,6 @@ def run_pca_mips(
     """
     pca_object = PCA_MIPS(delta=delta)
     W, mu = pca_object.preprocess_data(atoms)
-
     candidates_array = []
     budgets_array = []
     for signal in signals:

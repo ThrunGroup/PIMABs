@@ -1,4 +1,0 @@
-[submodule "algorithms/napg"]
-	path = algorithms/napg
-	url = https://github.com/nmslib/hnswlib.git
-	branch = master

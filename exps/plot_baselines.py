@@ -159,6 +159,7 @@ def power10(array):
 def power10_sqrt(array):
     return np.power(10, array) ** (1 / 2)
 
+
 def get_x_label(is_logspace: bool = False, independent_var: str = None):
     x_label = ""
     if independent_var == "signal_sizes":
@@ -170,6 +171,7 @@ def get_x_label(is_logspace: bool = False, independent_var: str = None):
         x_label = "Log$_{10}$ " + x_label
 
     return x_label
+
 
 def create_scaling_plots(
     caching_type: str = "",
@@ -209,8 +211,10 @@ def create_scaling_plots(
     for ind_variable in ind_variables:
         for datatype in data_types:
             csv_files = glob.glob(
-                os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+                # os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+                os.path.join(log_dir, f"*SCALING_{datatype}*")
             )
+
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
             for f in csv_files:
                 alg_name = extract_alg(f)
@@ -227,6 +231,7 @@ def create_scaling_plots(
                 y = data["budgets"].tolist()
                 error = data["budgets_std"].tolist()
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+
 
                 if is_fit:
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"

@@ -36,7 +36,7 @@ def hnsw(
     num_atoms, num_dimensions = atoms.shape
 
     # Initialise a graph
-    index = hnswlib.Index(space="ip", dim=num_dimensions, use_NormFactor_=use_norm_adjusted_factors)
+    index = hnswlib.Index(space="ip", dim=num_dimensions, useNormFactor_=use_norm_adjusted_factors)
     index.init_index(max_elements=num_atoms, ef_construction=ef_construction, M=num_links_per_node)
 
     # Data insertion

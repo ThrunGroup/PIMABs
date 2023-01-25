@@ -72,11 +72,7 @@ SIMPLE_SONG = "SIMPLE_SONG"
 HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
-
-
 NUM_SEEDS = 10
-# NUM_SEEDS = 1
-
 DEFAULT_MAXMIN = (10, 0)
 CRYPTO_PAIRS_MAXMIN = (10 ** 5, 0)
 NORMALIZED_MAXMIN = (1, -1)
@@ -95,18 +91,8 @@ SCALING_DEPTH = 2
 SCALING_TOPK = 5
 SCALING_NUM_HFUNC = 3
 SCALING_NUM_TABLES = 5
-
 SCALING_SIZE_MINMAX = (
     10 ** 4, 10 ** 6,
-)
-
-# SCALING_SIZE_MINMAX = (
-#     100, 1000,
-# )
-
-
-SCALING_SIZE_MINMAX_MOVIE = (
-    450, 2 * 10 ** 4,
 )
 SCALING_H2ALSH_DELTA = 0.1
 SCALING_H2ALSH_C0 = 1.5
@@ -200,21 +186,21 @@ SAMPLE_RATE = 44100
 
 # experiment configs
 SCALING_BASELINES_ALGORITHMS = [
-    # GREEDY_MIPS,  # greedy approach
-    # LSH_MIPS,  # mapping to higher dimension (Todo: include H2LSH after vectorization?)
-    # PCA_MIPS,
-    # NEQ_MIPS,
-    NAPG_MIPS,  
+    #GREEDY_MIPS,  # greedy approach
+    LSH_MIPS,  # mapping to higher dimension (Todo: include H2LSH after vectorization?)
+    PCA_MIPS,
+    NEQ_MIPS,
+    NAPG_MIPS,
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
     ADAPTIVE_ACTION_ELIMINATION,  # bandit approach
 ]
 SCALING_BASELINES_DATATYPES = [
-    # NORMAL_CUSTOM,
-    COR_NORMAL_CUSTOM,
+    NORMAL_CUSTOM,
+    #COR_NORMAL_CUSTOM,
     #UNIFORM_PAPER,
-    # CLEAR_LEADER_HARD,
-    # NETFLIX,
-    #MOVIE_LENS,
+    #CLEAR_LEADER_HARD,
+    NETFLIX,
+    MOVIE_LENS,
     # NORMAL_PAPER,
 ]

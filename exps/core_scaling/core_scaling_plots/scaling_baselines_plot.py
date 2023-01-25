@@ -13,6 +13,7 @@ def scaling_baselines_plot(algorithms):
         data_types=SCALING_BASELINES_DATATYPES,
         alg_names=SCALING_BASELINES_ALGORITHMS,
         dir_name="core_scaling/logs",
+        is_logspace=True,
     )
 
 
