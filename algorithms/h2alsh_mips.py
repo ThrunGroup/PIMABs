@@ -3,12 +3,20 @@ from math import sqrt, log
 from algorithms.qalsh import QALSH
 from typing import Tuple
 
+
 class H2ALSH_MIPS:
     """
     Implementation of Homocentric Hypersphere Asymmetric Locally Sensitive Hashing scheme for MIPS, see
     https://dl.acm.org/doi/pdf/10.1145/3219819.3219971 for the details.
     """
-    def __init__(self, atoms: np.ndarray, delta: float = 0.1, c0: float = 2.0, c: float = 0.9,  N0: int = 500):
+    def __init__(
+        self,
+        atoms: np.ndarray,
+        delta: float = 0.1,
+        c0: float = 2.0,
+        c: float = 0.9,
+        N0: int = 500,
+    ):
         """
         :param atoms: Atoms that we consider in MIPS problem
         :param delta: Error probability (QALSH solves c-ANN problem with 1/2 - delta probability)
@@ -16,7 +24,6 @@ class H2ALSH_MIPS:
         :param c: denotes c in c-AMIP problem. See 2.1 in the paper for the definition of c-AMIP.
         :param N0: Threshold of the size of partition where the MIP atom is searched through linear scanning
         """
-        assert N0 > 100, "N0 should be greater than 100 since QALSH can solve NN for more than 100 atoms"
         # Store parameters as self variables
         self.atoms = atoms
         self.delta = delta
@@ -25,7 +32,9 @@ class H2ALSH_MIPS:
         self.N0 = N0
 
         # Partitioning atoms
-        b = sqrt(1 - (1-c)/(c0 ** 4 - c))  # Partition ratio, see 3.3 in the paper for the formula
+        b = sqrt(
+            1 - (1 - c) / (c0 ** 4 - c)
+        )  # Partition ratio, see 3.3 in the paper for the formula
         atoms_norm = np.linalg.norm(atoms, axis=1)
         sort_idcs = np.argsort(atoms_norm)[::-1]  # Sort in ascending order
         j = 0
@@ -34,13 +43,23 @@ class H2ALSH_MIPS:
         partitions_norms = []  # List of maximum norm of partitions
         partitions_idcs = []
         linear_scan_mask = []
-        self.qalsh_dict = {}  # Build hash tables for partition whose size is greater than N0
+        self.qalsh_dict = (
+            {}
+        )  # Build hash tables for partition whose size is greater than N0
         while j <= atoms.shape[0] - 1:  # atoms.shape[0] is the # of atoms
             ub = atoms_norm[sort_idcs[j]]
             current_partition = []
             current_partition_idcs = []
-            while (j <= atoms.shape[0] - 1) and (atoms_norm[sort_idcs[j]] > b * ub):
-                transformed_atom = np.concatenate((atoms[sort_idcs[j]], [sqrt(ub ** 2 - atoms_norm[sort_idcs[j]] ** 2)]))
+            while (
+                (j <= atoms.shape[0] - 1)
+                and ((atoms_norm[sort_idcs[j]] > b * ub) or (len(current_partition_idcs) <= 200))
+            ):
+                transformed_atom = np.concatenate(
+                    (
+                        atoms[sort_idcs[j]],
+                        [sqrt(ub ** 2 - atoms_norm[sort_idcs[j]] ** 2)],
+                    )
+                )
                 current_partition.append(transformed_atom)
                 current_partition_idcs.append(sort_idcs[j])
                 j += 1
@@ -78,7 +97,7 @@ class H2ALSH_MIPS:
         query_norm = np.linalg.norm(query)
         candidates = []
         candidates_ip = []  # Inner product between candidates and the query
-        mip_value = -float('inf')
+        mip_value = -float("inf")
         sample_complexity = 0
         for i in range(len(self.S)):
             ub = self.M[i] * query_norm
@@ -94,18 +113,30 @@ class H2ALSH_MIPS:
             else:
                 alpha = self.M[i] / query_norm
                 transformed_query = np.concatenate((alpha * query, [0]))
-                current_candidates_idcs, current_sample_complexity = self.qalsh_dict[i].nn_search(transformed_query, top_k)
+                current_candidates_idcs, current_sample_complexity = self.qalsh_dict[
+                    i
+                ].nn_search(transformed_query, top_k)
                 current_candidates = self.partitions_idcs[i][current_candidates_idcs]
                 current_candidates_ip = self.atoms[current_candidates] @ query
-                sample_complexity += current_sample_complexity + len(current_candidates) * len(query)
+                sample_complexity += current_sample_complexity + len(
+                    current_candidates
+                ) * len(query)
 
-            new_candidates_idcs = np.argsort(np.concatenate((candidates_ip, current_candidates_ip)))[::-1][:top_k]
-            candidates = np.concatenate((candidates, current_candidates))[new_candidates_idcs]
-            candidates_ip = np.concatenate((candidates_ip, current_candidates_ip))[new_candidates_idcs]
+            new_candidates_idcs = np.argsort(
+                np.concatenate((candidates_ip, current_candidates_ip))
+            )[::-1][:top_k]
+            candidates = np.concatenate((candidates, current_candidates))[
+                new_candidates_idcs
+            ]
+            candidates_ip = np.concatenate((candidates_ip, current_candidates_ip))[
+                new_candidates_idcs
+            ]
             mip_value = candidates_ip[-1]
         return np.array(candidates, dtype=np.int64), sample_complexity
 
-    def mip_search_queries(self, queries: np.ndarray, top_k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
+    def mip_search_queries(
+        self, queries: np.ndarray, top_k: int = 1
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Vectorized version of self.mip_search function.
 
@@ -131,17 +162,19 @@ def toy_experiment_h2alsh(seed: int = 0) -> None:
     """
     np.random.seed(seed)
     atoms = np.random.normal(size=(300000, 10))
-    query = np.random.normal(size=10)
+    queries = np.random.normal(size=(5, 10))
     top_k = 5
-    dot_products_sorted = np.argsort(atoms@query)[::-1]
+    dot_products_sorted = np.argsort(-atoms @ queries.transpose(), axis=0)
     naive_ans = dot_products_sorted[:top_k]
 
     h2alsh = H2ALSH_MIPS(atoms=atoms, c0=2.0, delta=0.4)
-    mips = h2alsh.mip_search(query, top_k=5)
-    speedup_ratio = (atoms.shape[0] * atoms.shape[1]) / mips[1]
+    mips_ans, sample_complexity = h2alsh.mip_search_queries(queries, top_k=5)
+    speedup_ratio = (
+        atoms.shape[0] * atoms.shape[1] * queries.shape[0]
+    ) / sample_complexity.sum()
     print(
-        f"Accuracy: {len(np.intersect1d(mips[0], naive_ans))/ top_k * 100}%. "
-        f"The speedup ratio: {speedup_ratio } times quicker"
+        f"Accuracy: {len(np.intersect1d(mips_ans, naive_ans))/ (top_k * queries.shape[0]) * 100}%. "
+        f"The speedup ratio: {speedup_ratio} times quicker"
     )
 
 

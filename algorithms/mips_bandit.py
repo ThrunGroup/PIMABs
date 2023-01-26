@@ -37,6 +37,7 @@ def mips_bandit(
     cache: np.ndarray = None,
     cache_tracker: np.ndarray = None,
     cache_map: list = None,
+    bucket_num_samples: int = 30,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Solve MIPS(Maximum Inner Product Search) problem using a multi-armed bandit algorithm with fixed confidence setting.
@@ -59,6 +60,7 @@ def mips_bandit(
     :param var_proxy_override: Whether to override the given var proxy (Used for adjusting the var proxy according to
                                 the median value of a signal for a crypto pairs dataset)
     :param batch_size: Number of coordinates of an atom to sample at each iteration
+    :param bucket_num_samples: number of elements in each bucket for bucket action elimination algorithm
     :return: Indices of best atom that have maximum inner product with a signal vector and the budget (total number of
             calculations)
     """
@@ -95,7 +97,7 @@ def mips_bandit(
                 seed=seed,
             )
         elif bandit_alg is ACTION_ELIMINATION:
-            return action_elimination(
+            mips_result = action_elimination(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
@@ -115,6 +117,10 @@ def mips_bandit(
                 cache_map=cache_map,
                 verbose=verbose,
             )
+            if use_cache:
+                return mips_result
+            else:
+                return mips_result[:2]
         elif bandit_alg is ADAPTIVE_ACTION_ELIMINATION:
             return adaptive_action_elimination(
                 atoms=atoms,
@@ -132,6 +138,7 @@ def mips_bandit(
                 atoms=atoms,
                 signals=signals,
                 var_proxy=1 / 4 * (maxmin[0] - maxmin[1]) ** 2,
+                num_samples_bucket=bucket_num_samples,
                 epsilon=epsilon,
                 delta=delta,
                 num_best_atoms=num_best_atoms,

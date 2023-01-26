@@ -24,8 +24,9 @@ from utils.constants import (
     MNIST_T,
     SIMPLE_SONG,
     SIFT_1M,
-    UNIFORM_PAPER,
     NORMAL_PAPER,
+    UNIFORM_PAPER,
+    POSITIVE_COR_NORMAL_CUSTOM,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -33,6 +34,7 @@ from utils.constants import (
     GREEDY_MIPS,
     LSH_MIPS,
     PCA_MIPS,
+    H2ALSH,
     HNSW_MIPS,
     NAPG_MIPS,
 
@@ -77,6 +79,8 @@ def translate_alg_name(alg_name: str):
         return "NEQ_MIPS"
     elif alg_name == BUCKET_ACTION_ELIMINATION:
         return "Bucket_AE"
+    elif alg_name == H2ALSH:
+        return "H2ALSH"
     else:
         raise Exception("Bad algorithm name")
 
@@ -94,6 +98,8 @@ def translate_dataset_name(dataset_name: str):
     elif dataset_name == NORMAL_CUSTOM:
         # return "Synthetic Gaussian"
         return NORMAL_CUSTOM
+    elif dataset_name == NORMAL_PAPER:
+        return NORMAL_PAPER
     elif dataset_name == NETFLIX:
         return "Netflix"
     elif dataset_name == NETFLIX_TRANSPOSE:
@@ -120,6 +126,8 @@ def translate_dataset_name(dataset_name: str):
         return "SIFT 1M"
     elif dataset_name == UNIFORM_PAPER:
         return "Uniform Paper"
+    elif dataset_name == POSITIVE_COR_NORMAL_CUSTOM:
+        return "Positive Correlated Normal Custom"
     elif dataset_name == NORMAL_PAPER:
         return "Synthetic Normal"
     else:
@@ -130,7 +138,12 @@ def extract_alg(filename: str):
     """
     Extracts algorithm name from given filename. Used to search for specific algorithms in the log files.
     """
-    if ADAPTIVE_ACTION_ELIMINATION in filename:
+    if (
+        BUCKET_ACTION_ELIMINATION in filename
+    ):  # Order matters as if BUCKET_ACTION_ELIMINATION is in filename,
+        # ACTION_ELIMINATION is also in filename
+        return BUCKET_ACTION_ELIMINATION
+    elif ADAPTIVE_ACTION_ELIMINATION in filename:
         return ADAPTIVE_ACTION_ELIMINATION
     elif ACTION_ELIMINATION in filename:
         return ACTION_ELIMINATION
@@ -150,6 +163,8 @@ def extract_alg(filename: str):
         return NEQ_MIPS
     elif BUCKET_ACTION_ELIMINATION in filename:
         return BUCKET_ACTION_ELIMINATION
+    elif H2ALSH in filename:
+        return H2ALSH
     else:
         raise Exception("No algorithm was able to be extracted from " + filename)
 
@@ -202,9 +217,12 @@ def create_scaling_plots(
     :param dir_name: directory name of log files
     """
     # get all csv files
-    parent_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.join(parent_dir, dir_name)
-
+    if dir_name is None:
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join(parent_dir, "scaling", "logs") if dir_name is None else dir_name
+        log_dir = os.path.join(parent_dir, log_dir)  # TODO(@lukeleeai): Is this correct?
+    else:
+        log_dir = dir_name
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
 
@@ -327,6 +345,8 @@ def create_tradeoff_plots(
     top_k: int = 1,
     include_error_bar: bool = False,
     max_speedup: int = None,
+    log_dir: str = None,
+    is_logspace: bool = True,
 ):
     """
     Plot the tradeoff experiments from the data stored in the logs file.
@@ -337,11 +357,10 @@ def create_tradeoff_plots(
     :max_speedup: only displays speedup up to max_speedup
     """
     # get all csv files
-    parent_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.join("tradeoff", "logs")
-    log_dir = os.path.join(parent_dir, log_dir)
-
-    csv_files = glob.glob(os.path.join(log_dir, "*SPEEDUP*"))
+    if log_dir is None:
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join("tradeoff", "logs")
+        log_dir = os.path.join(parent_dir, log_dir)
 
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
@@ -349,6 +368,9 @@ def create_tradeoff_plots(
         raise Exception("At least one algorithm must be specified")
 
     for datatype in data_types:
+        csv_files = glob.glob(
+            os.path.join(log_dir, f"*SPEEDUP_{datatype}*")
+        )
         plt.figure(figsize=(6, 4.5))
         title = (
             f"Precision-Speed Tradeoff Baselines: {translate_dataset_name(datatype)}"
@@ -365,13 +387,38 @@ def create_tradeoff_plots(
             ):
                 continue
 
-            budget_data = data["budgets"].tolist()
-            x = data["naive_budget"] / budget_data  # speed is inverse budget
+            budget_data = data["budgets"].to_list()
+            naive_budget = data["naive_budget"].to_list()
+            x = np.array(naive_budget) / np.array(budget_data)  # speed is inverse budget
             y = data["accuracy"].tolist()
+
+            # Delete indices where speedup is less than 1
+            if max_speedup is None:
+                max_speedup = float('inf')
+            del_idcs = np.where((x < 1) | (x > max_speedup))[0]
+            x = np.delete(x, del_idcs)
+            y = np.delete(y, del_idcs)
+
+            if len(x) == 0:
+                print("what")
+                continue
+
             error = data["accuracy_std"].tolist()
-            if max_speedup is not None:
-                x = np.where(x > max_speedup, max_speedup, x)
             x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))
+
+            # Plot (1, 1) on every plots
+            x = np.concatenate(([1], x))
+            y = np.concatenate(([1], y))
+
+            # Plot the moving averages of accuracy
+            window_size = min(5, len(y))  # Hard-coded
+            x = np.concatenate((np.full(window_size-1, x[0]), x, np.full(window_size-1, x[-1])))
+            y = np.concatenate((np.full(window_size - 1, y[0]), y, np.full(window_size - 1, y[-1])))
+            y = np.convolve(y, np.ones(window_size) / window_size, mode='valid')
+            x = x[:-(window_size-1)]
+
+            if is_logspace:
+                plt.xscale("log")
 
             # plot the datapoints
             plt.scatter(
@@ -491,6 +538,7 @@ def generate_scaling_plots(algorithms):
             LSH_MIPS,
             NEQ_MIPS,
             BUCKET_ACTION_ELIMINATION,
+            H2ALSH,
         ],
     )
 
@@ -524,6 +572,8 @@ def generate_tradeoff_plots(top_k: int = 10):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            BUCKET_ACTION_ELIMINATION,
+            H2ALSH,
             HNSW_MIPS,
             NAPG_MIPS,
             NEQ_MIPS,
@@ -540,6 +590,8 @@ def generate_tradeoff_plots(top_k: int = 10):
             GREEDY_MIPS,
             PCA_MIPS,
             LSH_MIPS,
+            BUCKET_ACTION_ELIMINATION,
+            H2ALSH,
             NEQ_MIPS,
             HNSW_MIPS,
             NAPG_MIPS,
