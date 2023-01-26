@@ -12,6 +12,10 @@ from utils.constants import (
     UNIFORM_PAPER,
     CRYPTO_PAIRS,
     MOVIE_LENS,
+    NORMAL_CUSTOM,
+    COR_NORMAL_CUSTOM,
+    NETFLIX,
+    NORMAL_PAPER,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,
@@ -26,31 +30,34 @@ from utils.constants import (
     SCALING_EPSILON_REAL,
     DIMENSION_OF_ATOMS,
     LARGE_DELTA,
+    DEFAULT_MAXMIN,
 )
 
 
 def get_scaling_baseline_params(data_type):
     """
     Function gives the constants for [epsilon, delta, size_minmax] for the specified datatype.
+    This is for bandit-MIPS ONLY!!!
     """
-    if data_type is UNIFORM_PAPER:
-        epsilon = SCALING_EPSILON
-        delta = SCALING_DELTA
-    else:  # real datasets
-        epsilon = SCALING_EPSILON_REAL
-        delta = SCALING_DELTA_REAL
-
-    # Crypto-pairs requires a very small delta since variance is big
-    if data_type is CRYPTO_PAIRS:
-        delta = LARGE_DELTA
-
-    # movie_lens dataset has a smaller size than the rest
-    if data_type is MOVIE_LENS:
-        size_minmax = SCAlING_SIZE_MINMAX_MOVIE
+    if data_type == NORMAL_CUSTOM:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.001, (5, 0), (10 ** 4, 10 ** 6)
+    elif data_type == COR_NORMAL_CUSTOM:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.001, (5, 0), (10 ** 4, 10 ** 6)
+    elif data_type == NETFLIX:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.001, (2, 0), (10 ** 4, 143458)
+    elif data_type == MOVIE_LENS:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.01, (1, 0), (1000, 5000)
+    elif data_type == NORMAL_PAPER:
+        # epsilon, delta, maxmin, size_minmax
+        return 0.001, 0.01, (10, 0), (10 ** 3, 10 ** 5)
     else:
-        size_minmax = SCALING_SIZE_MINMAX
+        print(f"{data_type} shouldn't be generated here")
 
-    return epsilon, delta, size_minmax
+    return epsilon, delta, maxmin, size_minmax
 
 
 def scaling_baselines(algorithms):
@@ -60,11 +67,14 @@ def scaling_baselines(algorithms):
     """
     # Get data for the scaling experiments for the datasets (not the high-dimensional datasets)
     for data_type in SCALING_BASELINES_DATATYPES:
+        print(f"=> Creating Scaling log files for {algorithms}")
+
         for algorithm in algorithms:
-            epsilon, delta, size_minmax = get_scaling_baseline_params(data_type)
+            epsilon, delta, maxmin, size_minmax = get_scaling_baseline_params(data_type)
             scaling_exp(
                 epsilon=epsilon,
                 delta=delta,
+                maxmin=maxmin,
                 num_atoms=SCALING_NUM_ATOMS,
                 size_minmax=size_minmax,
                 num_experiments=SCALING_NUM_EXPERIMENTS,
@@ -73,7 +83,7 @@ def scaling_baselines(algorithms):
                 mips_alg=algorithm,
                 with_replacement=False,
                 is_normalize=False,
-                is_logspace=True,
+                is_logspace=False,
             )
 
 

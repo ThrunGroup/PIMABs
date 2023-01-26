@@ -7,6 +7,7 @@ import numpy as np
 from pandas import read_csv
 from typing import List, Any
 from utils.constants import (
+    NUM_SEEDS,
     COLORS,
     ALG_TO_COLOR,
     NORMAL_CUSTOM,
@@ -37,6 +38,7 @@ from utils.constants import (
     HNSW_MIPS,
     NAPG_MIPS,
 
+    SCALING_LOG_BUFFER,
     MAX_SPEEDUP,
     NEQ_MIPS,
 
@@ -123,9 +125,11 @@ def translate_dataset_name(dataset_name: str):
     elif dataset_name == SIFT_1M:
         return "SIFT 1M"
     elif dataset_name == UNIFORM_PAPER:
-        return UNIFORM_PAPER
+        return "Uniform Paper"
     elif dataset_name == POSITIVE_COR_NORMAL_CUSTOM:
         return "Positive Correlated Normal Custom"
+    elif dataset_name == NORMAL_PAPER:
+        return "Synthetic Normal"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -173,6 +177,19 @@ def power10_sqrt(array):
     return np.power(10, array) ** (1 / 2)
 
 
+def get_x_label(is_logspace: bool = False, independent_var: str = None):
+    x_label = ""
+    if independent_var == "signal_sizes":
+        x_label = "Signal Vector Size ($d$)"
+    else:
+        x_label = "Number of atoms ($N$)"
+
+    if is_logspace:
+        x_label = "Log$_{10}$ " + x_label
+
+    return x_label
+
+
 def create_scaling_plots(
     caching_type: str = "",
     data_types: List[str] = [],
@@ -180,7 +197,8 @@ def create_scaling_plots(
     include_error_bar: bool = False,
     ind_variables: List[str] = [DIMENSION_OF_ATOMS],
     is_fit: bool = False,
-    is_logspace: bool = False,
+    is_logspace_x: bool = False,
+    is_logspace_y: bool = False,
     is_plot_accuracy: bool = False,
     dir_name: str = None,
 ):
@@ -193,7 +211,8 @@ def create_scaling_plots(
     :param ind_variables: Independent variables (N or D)
     :param include_error_bar: shows the standard deviation
     :param is_fit: whether to fit the plots or not
-    :param is_logspace: whether to plot in logspace or not
+    :param is_logspace_x: whether to plot x-axis in logspace or not
+    :param is_logspace_y: whether to plot y-axis in logspace or not
     :param is_plot_accuracy: whether to annotate accuracy in the graph
     :param dir_name: directory name of log files
     """
@@ -210,12 +229,14 @@ def create_scaling_plots(
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
+    # import ipdb; ipdb.set_trace()
     for ind_variable in ind_variables:
         for datatype in data_types:
             csv_files = glob.glob(
-                os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+                # os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
+                os.path.join(log_dir, f"*SCALING_{datatype}*")
             )
-            plt.figure(figsize=(6, 4.5))
+
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
             for f in csv_files:
                 alg_name = extract_alg(f)
@@ -235,7 +256,7 @@ def create_scaling_plots(
 
                 if is_fit:
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
-                    if is_logspace:
+                    if is_logspace_x:
                         functions = [np.array, power10_sqrt, power10]
                         function_names = [
                             "$y \propto log x$",
@@ -243,6 +264,9 @@ def create_scaling_plots(
                             "$y \propto x$",
                         ]
                         x = np.log10(x)
+                    elif is_logspace_y:
+                        y = np.log10(y)
+
                     else:
                         functions = [np.array, np.sqrt, np.log]
                         function_names = ["Linear fit", "Sqrt fit", "Logarithmic fit"]
@@ -256,15 +280,20 @@ def create_scaling_plots(
                         is_logspace=is_logspace,
                     )
                     plt.title(title)
-                    xlabel = (
-                        "Signal Vector Size (d)"
-                        if independent_var == "signal_sizes"
-                        else "Number of atoms (N)"
-                    )
-                    ylabel = "Sample Complexity"
+
+                    xlabel = get_x_label(is_logspace=is_logspace, independent_var=independent_var)
+                    if is_logspace_y:
+                        ylabel = "log_10 Sample Complexity"
+                    else:
+                        ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
                 else:
+                    if is_logspace_y:
+                        y = np.log10(y)
+                        error = np.where(np.array(error) < SCALING_LOG_BUFFER, SCALING_LOG_BUFFER, np.array(error))
+                        error = np.log10(error) / (y * np.sqrt(NUM_SEEDS))
+
                     plt.scatter(
                         x,
                         y,
@@ -281,14 +310,20 @@ def create_scaling_plots(
                     plt.legend(handles, labels, loc="upper left")
 
                     if include_error_bar:
-                        plt.errorbar(x, y, error, fmt=".", color="black")
+                        plt.errorbar(x, y, yerr=error, fmt=".", color="black")
+
                     plt.title(title)
                     xlabel = (
-                        "Signal Vector Size (d)"
+                        "Signal Vector Size ($d$)"
                         if independent_var == "signal_sizes"
-                        else "Number of atoms (N)"
+                        else "Number of atoms ($N$)"
                     )
-                    ylabel = "Sample Complexity"
+
+                    if is_logspace_y:
+                        ylabel = "log_10 Sample Complexity"
+                    else:
+                        ylabel = "Sample Complexity"
+
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
 

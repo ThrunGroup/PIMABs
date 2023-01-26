@@ -23,8 +23,8 @@ def find_absent_algorithms(path, algorithms):
 
 def main():
     path = os.path.join(os.getcwd(), "exps")
-    scaling_path = os.path.join(path, "core_scaling/logs")
-    tradeoff_path = os.path.join(path, "core_tradeoff/logs")
+    scaling_path = os.path.join(path, "core_scaling", "logs")
+    tradeoff_path = os.path.join(path, "core_tradeoff", "logs")
 
     # generate scaling/tradeoff log files
     scaling_baselines_algos = find_absent_algorithms(scaling_path, SCALING_BASELINES_ALGORITHMS)
@@ -33,9 +33,9 @@ def main():
     tradeoff_baselines_algos = find_absent_algorithms(tradeoff_path, SCALING_BASELINES_ALGORITHMS)
 
     # Todo @jey, @luke: need to add each of your scaling experiments here!
-    print(f"=> Creating Scaling log files for {scaling_baselines_algos}")
-    scaling_baselines(scaling_baselines_algos)
-    scaling_bucket_ae()
+    # print(f"=> Creating Scaling log files for {scaling_baselines_algos}")
+    # scaling_baselines(scaling_baselines_algos)
+    scaling_baselines(SCALING_BASELINES_ALGORITHMS)
 
     # Todo @jey, @luke: need to add each of your tradeoff experiments here (included example below)!
     print(f"=> Creating Precision-Speed log files for {tradeoff_baselines_algos}")
