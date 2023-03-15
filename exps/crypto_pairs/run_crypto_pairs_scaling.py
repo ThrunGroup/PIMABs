@@ -14,6 +14,7 @@ from utils.constants import (
     SCALING_NUM_EXPERIMENTS,
     SCALING_NUM_SIGNALS,
     SCALING_NUM_ATOMS_CRYPTO_PAIRS,
+    SCAlING_SIZE_MINMAX_CRYPTO_PAIRS,
     SCALING_EPSILON,
     SCALING_SIZE_MINMAX,
 )
@@ -38,8 +39,9 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
                 epsilon=SCALING_EPSILON,
                 delta=delta,
                 num_atoms=SCALING_NUM_ATOMS_CRYPTO_PAIRS,
-                size_minmax=SCALING_SIZE_MINMAX,
+                size_minmax=SCAlING_SIZE_MINMAX_CRYPTO_PAIRS,
                 maxmin=CRYPTO_PAIRS_MAXMIN,
+                num_best_atoms=1,
                 num_experiments=SCALING_NUM_EXPERIMENTS,
                 num_signals=SCALING_NUM_SIGNALS,
                 data_type=CRYPTO_PAIRS,
@@ -78,4 +80,4 @@ def run_crypto_pairs_scaling(run: bool = True, plot: bool = True):
 
 
 if __name__ == "__main__":
-    run_crypto_pairs_scaling(run=False)
+    run_crypto_pairs_scaling()
