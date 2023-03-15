@@ -358,7 +358,7 @@ def scaling_exp(
     avg_budget = np.mean(budgets, axis=(1, 2))  # Average over seeds and signals
     avg_budget_std = np.std(
         budgets, axis=(1, 2)
-    )  # Std over seeds and signals for given size
+    ) / np.sqrt(num_signals * num_seeds)  # Std over seeds and signals for given size
     avg_accuracy = np.mean(accuracies, axis=(1, 2))  # Average over seeds and signals
 
     assert (

@@ -27,7 +27,7 @@ def bucket_action_elimination(
     with_replacement: bool = True,
     seed=0,
     num_samples_bucket: int = 30,
-    num_samples_norm: int = 1000,
+    num_samples_norm: int = 10000,
     z_score: float = 3,  # Scipy package is normally used for calculating z-score, but it is not compatible with numba
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -63,11 +63,12 @@ def bucket_action_elimination(
     set_seed(seed)
     N = atoms.shape[0]  # Number of atoms
     d = atoms.shape[1]  # Dimension of atoms
+    num_samples_bucket = min(N, num_samples_bucket)
     k = min(
         int(N / num_samples_bucket), int(N / num_best_atoms)
     )  # Todo: fix hard-coded
     m = int(N / k)
-    q = min(
+    num_samples_norm = min(
         num_samples_norm, d
     )  # Number of samples from each atom to estimate its norm
 
@@ -80,8 +81,8 @@ def bucket_action_elimination(
     # TODO(vxbrandon): The lines below are not theoretically valid. Have to find a formula for finding the norm of
     #  random vectors from unknown distribution. See the above commented lines for the general idea.
     # Partition the atoms
-    atoms_ub = np.sqrt(np.sum(sampled_atoms_squared, axis=1))
-    signals_ub = np.sqrt(np.sum(sampled_signals_squared, axis=1))
+    atoms_ub = np.sqrt(np.sum(sampled_atoms_squared, axis=1) * d / num_samples_norm)
+    signals_ub = np.sqrt(np.sum(sampled_signals_squared, axis=1) * d / num_samples_norm)
     sort_idcs = np.argsort(atoms_ub)[
         ::-1
     ]  # Sorting indices of atoms in the descending order of their norms
@@ -103,6 +104,7 @@ def bucket_action_elimination(
         candidates = np.empty(0)
         budgets = 0
         for idx in range(k):
+            best_k_lcbs = lcbs[num_best_atoms-1] if idx != 0 else -float('inf')
             (
                 bucket_candidates,
                 bucket_means,
@@ -119,19 +121,22 @@ def bucket_action_elimination(
                 batch_size,
                 with_replacement,
                 seed,
+                best_k_lcbs
             )
             concatenated_means = np.concatenate((means, bucket_means))
             best_k_idcs = np.argsort(concatenated_means)[::-1][:num_best_atoms]
-            means = concatenated_means
+            means = concatenated_means[best_k_idcs]
             candidates = np.concatenate(
                 (candidates, bucket_idcs[idx][bucket_candidates])
             )[best_k_idcs]
             lcbs = np.concatenate((lcbs, bucket_lcbs))[best_k_idcs]
             budgets += bucket_budgets
             if idx == k - 1:
+                print(f"num_atoms: {len(atoms)}/ idx: {idx}/ budget: {budgets}")
                 break
 
             if np.max(lcbs) > temp_ub_buckets[idx + 1]:
+                print(f"num_atoms: {len(atoms)}/ idx: {idx}/ budget: {budgets}")
                 break
 
         candidates_array[signal_idx] = candidates
@@ -152,6 +157,7 @@ def bucket_action_elimination_helper(
     batch_size: int = BATCH_SIZE,
     with_replacement: bool = True,
     seed=0,
+    prev_lcbs: float = 0,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, int]:
     """
     A best-arm identification algorithm that eliminates the arms whose upper bound is less than the lower bound of the
@@ -237,7 +243,7 @@ def bucket_action_elimination_helper(
 
         ucbs[candidates] = means[candidates] + ci
         lcbs[candidates] = means[candidates] - ci
-        new_cand_idcs = np.where((ucbs[candidates] >= lcbs[candidates].max()))[0]
+        new_cand_idcs = np.where((ucbs[candidates] >= max(prev_lcbs, lcbs[candidates].max())))[0]
 
         if 4 * ci < epsilon:
             sort_idcs = np.argsort(-means[candidates])
