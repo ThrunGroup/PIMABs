@@ -208,17 +208,12 @@ def create_scaling_plots(
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
 
-    if len(alg_names) == 0:
-        raise Exception("At least one algorithm must be specified")
-
-    # import ipdb; ipdb.set_trace()
     for ind_variable in ind_variables:
         for datatype in data_types:
             csv_files = glob.glob(
                 # os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
                 os.path.join(log_dir, f"*SCALING_{datatype}*")
             )
-
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
             for f in csv_files:
                 alg_name = extract_alg(f)
@@ -245,9 +240,9 @@ def create_scaling_plots(
                             "$y \propto x^{1/2}$",
                             "$y \propto x$",
                         ]
-                        x = np.log10(x)
+                        x = np.log(x)
                     elif is_logspace_y:
-                        y = np.log10(y)
+                        y = np.log(y)
 
                     else:
                         functions = [np.array, np.sqrt, np.log]
@@ -265,16 +260,16 @@ def create_scaling_plots(
 
                     xlabel = get_x_label(is_logspace=is_logspace, independent_var=independent_var)
                     if is_logspace_y:
-                        ylabel = "log_10 Sample Complexity"
+                        ylabel = "$\ln{(Sample Complexity)}$"
                     else:
                         ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
                 else:
                     if is_logspace_y:
-                        y = np.log10(y)
+                        y = np.log(y)
                         error = np.where(np.array(error) < SCALING_LOG_BUFFER, SCALING_LOG_BUFFER, np.array(error))
-                        error = np.log10(error) / (y * np.sqrt(NUM_SEEDS))
+                        error = np.log(error) / (y * np.sqrt(NUM_SEEDS))
 
                     plt.scatter(
                         x,
@@ -302,7 +297,7 @@ def create_scaling_plots(
                     )
 
                     if is_logspace_y:
-                        ylabel = "log_10 Sample Complexity"
+                        ylabel = "ln(Sample Complexity)"
                     else:
                         ylabel = "Sample Complexity"
 

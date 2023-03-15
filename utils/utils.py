@@ -423,3 +423,13 @@ def get_recon_error(
             (signals - np.sum(coeffs * candidates, axis=0))
         ) / np.sum(np.abs(signals))
     )
+
+
+def add_eps_noise(atoms, max=2.0, p=0.1):
+    """
+    Given a dictionary of atoms, add max * p noise to each atom.
+    This is to create dictionary of atoms to emulate epsilon noise in real datasets
+    """
+    n, d = atoms.shape
+    # max = np.max(atoms)
+    return atoms + np.random.normal(0, max * p, size=(n, d))
