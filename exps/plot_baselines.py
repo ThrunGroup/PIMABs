@@ -223,8 +223,12 @@ def create_scaling_plots(
         log_dir = os.path.join(parent_dir, log_dir)  # TODO(@lukeleeai): Is this correct?
     else:
         log_dir = dir_name
+
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
+
+    if len(alg_names) == 0:
+        raise Exception("At least one algorithm must be specified")
 
     for ind_variable in ind_variables:
         for datatype in data_types:
@@ -273,11 +277,11 @@ def create_scaling_plots(
                         function_list=functions,
                         function_name_list=function_names,
                         ys_std=error,
-                        is_logspace=is_logspace,
+                        is_logspace=is_logspace_x,
                     )
                     plt.title(title)
 
-                    xlabel = get_x_label(is_logspace=is_logspace, independent_var=independent_var)
+                    xlabel = get_x_label(is_logspace=is_logspace_x, independent_var=independent_var)
                     if is_logspace_y:
                         ylabel = "$\ln{(Sample Complexity)}$"
                     else:
@@ -505,7 +509,7 @@ def compare_caching_budgets(
         plt.show()
 
 
-def generate_scaling_plots(algorithms):
+def generate_scaling_plots():
     """
     Generate scaling plots for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
@@ -515,41 +519,41 @@ def generate_scaling_plots(algorithms):
         is_fit=False,
         include_error_bar=True,
         data_types=[
-            NORMAL_CUSTOM,
-            ADVERSARIAL_CUSTOM,
+            # NORMAL_CUSTOM,
+            # ADVERSARIAL_CUSTOM,
             NETFLIX,
-            MOVIE_LENS,
+            # MOVIE_LENS,
             # COR_NORMAL_CUSTOM,
         ],
         alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
+            # ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
+            # MEDIAN_ELIMINATION,
             # GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS,
-            HNSW_MIPS,
-            NAPG_MIPS,
-            LSH_MIPS,
-            NEQ_MIPS,
-            BUCKET_ACTION_ELIMINATION,
-            H2ALSH,
+            # PCA_MIPS,
+            # LSH_MIPS,
+            # HNSW_MIPS,
+            # NAPG_MIPS,
+            # LSH_MIPS,
+            # NEQ_MIPS,
+            # BUCKET_ACTION_ELIMINATION,
+            # H2ALSH,
         ],
     )
 
     # # fit the bandit algorithms, and greedy-mips for better comparison
-    # create_scaling_plots(
-    #     is_fit=True,
-    #     is_logspace=True,
-    #     include_error_bar=True,
-    #     data_types=[NETFLIX, MOVIE_LENS],
-    #     alg_names=[
-    #         ADAPTIVE_ACTION_ELIMINATION,
-    #         ACTION_ELIMINATION,
-    #         MEDIAN_ELIMINATION,
-    #         GREEDY_MIPS,
-    #     ],
-    # )
+    create_scaling_plots(
+        is_fit=True,
+        is_logspace_x=True,
+        include_error_bar=True,
+        data_types=[NETFLIX, MOVIE_LENS],
+        alg_names=[
+            # ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            # MEDIAN_ELIMINATION,
+            # GREEDY_MIPS,
+        ],
+    )
 
 
 def generate_tradeoff_plots(top_k: int = 10):
@@ -599,6 +603,6 @@ def generate_tradeoff_plots(top_k: int = 10):
 
 if __name__ == "__main__":
     generate_scaling_plots()
-    generate_tradeoff_plots()
+    # generate_tradeoff_plots()
     # generate_tradeoff_plots(top_k=5)
     # generate_tradeoff_plots(top_k=20)

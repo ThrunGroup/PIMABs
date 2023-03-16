@@ -46,8 +46,7 @@ def get_scaling_baseline_params(data_type):
         # epsilon, delta, maxmin, size_minmax
         return 0.001, 0.001, (5, 0), (10 ** 4, 10 ** 6)
     elif data_type == NETFLIX:
-        # epsilon, delta, maxmin, size_minmax
-        return 0.1, 0.1, (2, 0), (10 ** 4, 143458)  # this used to be 0.001, 0.01... WHY? (@Mo)
+        return 0.01, 0.01, (2, 0), (10 ** 4, 143458)
     elif data_type == MOVIE_LENS:
         # epsilon, delta, maxmin, size_minmax
         return 0.001, 0.01, (1, 0), (1000, 5000)
@@ -84,6 +83,7 @@ def scaling_baselines(algorithms):
                 with_replacement=False,
                 is_normalize=False,
                 is_logspace=False,
+                num_best_atoms=1,
             )
 
 
