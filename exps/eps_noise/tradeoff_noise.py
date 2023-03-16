@@ -19,7 +19,7 @@ def tradeoff_noise(is_plot: bool = False):
     By default, the algorithm tested is BanditMIPS.
     """
     # Get data for the scaling experiments for the datasets (three synthetic datasets)
-    algorithms = [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION]
+    algorithms = [ACTION_ELIMINATION]
     for top_k in (1, 5, 10):
         parent_dir = os.path.dirname(os.path.abspath(__file__))
         log_dir = os.path.join(parent_dir, "normalized_logs", f"topk_{top_k}")
