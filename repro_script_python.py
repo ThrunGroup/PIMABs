@@ -1,5 +1,6 @@
 import os
 import glob
+import sys
 
 from exps.core_scaling.scaling_baselines import scaling_baselines
 from exps.core_scaling.bucket_ae_scaling.bucket_action_elimination_scaling import scaling_bucket_ae, scaling_bucket_ae_plot
@@ -8,7 +9,19 @@ from exps.core_scaling.scaling_fit_plot import scaling_fit_plot
 from exps.core_tradeoff.tradeoff_baselines import tradeoff_baselines, tradeoff_baselines_plot
 from exps.plot_baselines import generate_scaling_plots, generate_tradeoff_plots
 from exps.large_scaling.large_scaling_exps import large_scaling_exps
-from utils.constants import SCALING_BASELINES_ALGORITHMS
+from exps.eps_noise.scaling_noise import scaling_noise
+from exps.eps_noise.scaling_noise_plot import scaling_noise_plot
+from exps.eps_noise.tradeoff_noise import tradeoff_noise
+from exps.eps_noise.tradeoff_noise_plot import tradeoff_noise_plot
+from utils.constants import SCALING_BASELINES_ALGORITHMS, ACTION_ELIMINATION, NETFLIX
+
+def tranlate_experiment(experiment):
+    if experiment == "noise":
+        return 0
+
+    else:
+        print("=> add experiment index here!")
+        return 1
 
 
 def find_absent_algorithms(path, algorithms):
@@ -21,37 +34,53 @@ def find_absent_algorithms(path, algorithms):
     return absent
 
 
-def main():
+def main(experiment):
     path = os.path.join(os.getcwd(), "exps")
-    scaling_path = os.path.join(path, "core_scaling", "logs")
-    tradeoff_path = os.path.join(path, "core_tradeoff", "logs")
+    idx = tranlate_experiment(experiment)
 
-    # generate scaling/tradeoff log files
-    scaling_baselines_algos = find_absent_algorithms(scaling_path, SCALING_BASELINES_ALGORITHMS)
+    if idx == 0:
+        print("experiments for noise robustness")
+        scaling_path = os.path.join(path, "eps_noise", "logs")
+        scaling_algos = find_absent_algorithms(scaling_path, [ACTION_ELIMINATION])
+        scaling_noise(scaling_algos)
+        scaling_noise_plot()
 
-    # Todo @jey, @luke: use this function accordingly... this is just an example.
-    tradeoff_baselines_algos = find_absent_algorithms(tradeoff_path, SCALING_BASELINES_ALGORITHMS)
+        tradeoff_path = os.path.join(path, "eps_noise", "normalized_logs", "topk*")
+        tradeoff_algos = find_absent_algorithms(tradeoff_path, [ACTION_ELIMINATION])
+        print(tradeoff_path)
+        tradeoff_noise(tradeoff_algos)
+        tradeoff_noise_plot()
 
-    # Todo @jey, @luke: need to add each of your scaling experiments here!
-    # print(f"=> Creating Scaling log files for {scaling_baselines_algos}")
-    # scaling_baselines(scaling_baselines_algos)
-    scaling_baselines(SCALING_BASELINES_ALGORITHMS)
+    else:
+        scaling_path = os.path.join(path, "core_scaling", "logs")
+        tradeoff_path = os.path.join(path, "core_tradeoff", "logs")
 
-    # Todo @jey, @luke: need to add each of your tradeoff experiments here (included example below)!
-    print(f"=> Creating Precision-Speed log files for {tradeoff_baselines_algos}")
-    tradeoff_baselines()
+        # generate scaling/tradeoff log files
+        scaling_baselines_algos = find_absent_algorithms(scaling_path, SCALING_BASELINES_ALGORITHMS)
 
-    # generate the relative plots
-    # Todo @jey, @luke: add scaling plot code here
-    print("=> Generating scaling plots")
-    scaling_baselines_plot(SCALING_BASELINES_ALGORITHMS)
-    scaling_fit_plot(SCALING_BASELINES_ALGORITHMS)
-    scaling_bucket_ae_plot()
+        # Todo @jey, @luke: use this function accordingly... this is just an example.
+        tradeoff_baselines_algos = find_absent_algorithms(tradeoff_path, SCALING_BASELINES_ALGORITHMS)
 
-    # Todo @jey, @luke: add tradeoff plot code here
-    print("=> Generating tradeoff plots")
-    tradeoff_baselines_plot()
+        # Todo @jey, @luke: need to add each of your scaling experiments here!
+        print(f"=> Creating Scaling log files for {scaling_baselines_algos}")
+        scaling_baselines(scaling_baselines_algos)
+
+
+        # Todo @jey, @luke: need to add each of your tradeoff experiments here (included example below)!
+        print(f"=> Creating Precision-Speed log files for {tradeoff_baselines_algos}")
+        tradeoff_baselines()
+
+        # generate the relative plots
+        # Todo @jey, @luke: add scaling plot code here
+        print("=> Generating scaling plots")
+        scaling_baselines_plot(SCALING_BASELINES_ALGORITHMS)
+        scaling_fit_plot(SCALING_BASELINES_ALGORITHMS)
+        scaling_bucket_ae_plot()
+
+        # Todo @jey, @luke: add tradeoff plot code here
+        print("=> Generating tradeoff plots")
+        tradeoff_baselines_plot()
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])

@@ -13,10 +13,11 @@ def scaling_fit_plot(
 
     if dir_name is None:
         parent_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(os.path.dirname(parent_dir), "logs")
+        log_dir = os.path.join(parent_dir, "logs")
     else:
         log_dir = dir_name
 
+    print(log_dir)
     for algorithm in algorithms:
         create_scaling_plots(
             is_fit=True,

@@ -59,7 +59,7 @@ def get_scaling_baseline_params(data_type):
     return epsilon, delta, maxmin, size_minmax
 
 
-def scaling_baselines(algorithms):
+def scaling_baselines(algorithms, add_noise=False):
     """
     Run scaling experiments for the 5 datasets (2 synthetic, 3 real) on 9 baseline MIPS algorithms.
     This function is called by repro_script_python.py.
@@ -84,6 +84,7 @@ def scaling_baselines(algorithms):
                 is_normalize=False,
                 is_logspace=False,
                 num_best_atoms=1,
+                add_noise=add_noise
             )
 
 
