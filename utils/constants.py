@@ -223,4 +223,4 @@ SCALING_BASELINES_DATATYPES = [
 ]
 
 # eps-noise robustness
-NOISE_VAR = 0.2
+NOISE_VAR = 0.0

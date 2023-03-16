@@ -13,7 +13,7 @@ def scaling_noise_plot():
     dir_name = os.path.join(parent_dir, "logs")
     print(dir_name)
     scaling_fit_plot(
-        [ACTION_ELIMINATION, ADAPTIVE_ACTION_ELIMINATION],
+        [ACTION_ELIMINATION],
         [NETFLIX],
         dir_name,
     )
