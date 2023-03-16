@@ -3,8 +3,8 @@ import glob
 
 from exps.core_scaling.scaling_baselines import scaling_baselines
 from exps.core_scaling.bucket_ae_scaling.bucket_action_elimination_scaling import scaling_bucket_ae, scaling_bucket_ae_plot
-from exps.core_scaling.core_scaling_plots.scaling_baselines_plot import scaling_baselines_plot
-from exps.core_scaling.core_scaling_plots.scaling_fit_plot import scaling_fit_plot
+from exps.core_scaling.scaling_baselines_plot import scaling_baselines_plot
+from exps.core_scaling.scaling_fit_plot import scaling_fit_plot
 from exps.core_tradeoff.tradeoff_baselines import tradeoff_baselines, tradeoff_baselines_plot
 from exps.plot_baselines import generate_scaling_plots, generate_tradeoff_plots
 from exps.large_scaling.large_scaling_exps import large_scaling_exps

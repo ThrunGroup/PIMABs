@@ -250,6 +250,7 @@ def create_scaling_plots(
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
 
                 if is_fit:
+                    is_logspace = (is_logspace_x and is_logspace_y)
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
                     if is_logspace_x:
                         functions = [np.array, power10_sqrt, power10]
@@ -395,7 +396,6 @@ def create_tradeoff_plots(
             y = np.delete(y, del_idcs)
 
             if len(x) == 0:
-                print("what")
                 continue
 
             error = data["accuracy_std"].tolist()

@@ -117,6 +117,7 @@ def get_accuracy_array(
 def speedup_precision_exps(
     epsilon: Optional[float] = TRADEOFF_DEFAULT_EPSILON,
     data_type: str = NORMAL_CUSTOM,
+    add_noise: bool = False,
     mips_alg: str = MEDIAN_ELIMINATION,
     len_signals: int = TRADEOFF_DIMENSION,
     num_atoms: int = TRADEOFF_NUM_ATOMS,
@@ -196,6 +197,7 @@ def speedup_precision_exps(
         num_signals=num_signals,
         seed=0,
         data_type=data_type,
+        add_noise=add_noise,
         is_tradeoff=True,
         num_best_atoms=num_best_atoms,
     )

@@ -42,6 +42,8 @@ from utils.constants import (
     SCALING_H2ALSH_C0,
     SCALING_H2ALSH_C,
     SCALING_H2ALSH_N0,
+
+    NOISE_VAR,
 )
 
 from neq_mips.constants import (
@@ -396,8 +398,10 @@ def scaling_exp(
         parent_dir = os.path.dirname(os.path.abspath(__file__))
         if add_noise:
             experiment = "eps_noise"
+            noise_factor = str(NOISE_VAR)
         else:
             experiment = "core_scaling"
+            noise_factor = ""
 
         log_dir = (
             os.path.join(parent_dir, experiment, "logs")
@@ -415,6 +419,8 @@ def scaling_exp(
             + str(num_atoms)
             + "_"
             + log_info
+            + "_noise"
+            + noise_factor
             + ".csv",
         )
         os.makedirs(log_dir, exist_ok=True)

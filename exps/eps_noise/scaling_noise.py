@@ -1,7 +1,14 @@
 import numpy as np
 from exps.core_scaling.scaling_baselines import get_scaling_baseline_params
-from utils.constants import NETFLIX, ACTION_ELIMINATION, SCALING_NUM_ATOMS, SCALING_NUM_EXPERIMENTS, SCALING_NUM_SIGNALS
 from exps.scaling_exp import scaling_exp
+from utils.constants import (
+    NETFLIX,
+    ACTION_ELIMINATION,
+    ADAPTIVE_ACTION_ELIMINATION,
+    SCALING_NUM_ATOMS,
+    SCALING_NUM_EXPERIMENTS,
+    SCALING_NUM_SIGNALS,
+)
 
 
 def scaling_noise(algorithms):
@@ -22,7 +29,7 @@ def scaling_noise(algorithms):
             num_experiments=SCALING_NUM_EXPERIMENTS,
             num_signals=SCALING_NUM_SIGNALS,
             data_type=NETFLIX,
-            add_noise=True,
+            add_noise=True,  # note this parameter
             mips_alg=algorithm,
             with_replacement=False,
             is_normalize=False,

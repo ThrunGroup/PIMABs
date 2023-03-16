@@ -221,3 +221,6 @@ SCALING_BASELINES_DATATYPES = [
     MOVIE_LENS,
     # NORMAL_PAPER,
 ]
+
+# eps-noise robustness
+NOISE_VAR = 0.2

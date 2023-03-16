@@ -47,7 +47,7 @@ def get_scaling_baseline_params(data_type):
         return 0.001, 0.001, (5, 0), (10 ** 4, 10 ** 6)
     elif data_type == NETFLIX:
         # epsilon, delta, maxmin, size_minmax
-        return 0.001, 0.001, (2, 0), (10 ** 4, 143458)
+        return 0.1, 0.1, (2, 0), (10 ** 4, 143458)  # this used to be 0.001, 0.01... WHY? (@Mo)
     elif data_type == MOVIE_LENS:
         # epsilon, delta, maxmin, size_minmax
         return 0.001, 0.01, (1, 0), (1000, 5000)

@@ -12,7 +12,8 @@ from utils.constants import (
     COLORS,
     SCALING_SIZE_MINMAX,
     SCALING_NUM_EXPERIMENTS,
-    CACHING_BUDGET
+    CACHING_BUDGET,
+    NOISE_VAR
 )
 
 
@@ -425,7 +426,7 @@ def get_recon_error(
     )
 
 
-def add_eps_noise(atoms, max=2.0, p=0.1):
+def add_eps_noise(atoms, max=2.0, p=NOISE_VAR):
     """
     Given a dictionary of atoms, add max * p noise to each atom.
     This is to create dictionary of atoms to emulate epsilon noise in real datasets
