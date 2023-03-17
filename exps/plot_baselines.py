@@ -280,6 +280,7 @@ def create_scaling_plots(
                         is_logspace=is_logspace_x,
                     )
                     plt.title(title)
+                    plt.ylim(3200, 4300)
 
                     xlabel = get_x_label(is_logspace=is_logspace_x, independent_var=independent_var)
                     if is_logspace_y:
@@ -441,6 +442,7 @@ def create_tradeoff_plots(
             ylabel = f"Precision at {top_k}"
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
+            plt.ylim(0.5, 1.2)
 
         fig = plt.gcf()
         fig.set_size_inches(6, 4.5)

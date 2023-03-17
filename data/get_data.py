@@ -174,7 +174,6 @@ def get_data(
         data_type in [NETFLIX, MOVIE_LENS, NORMAL_CUSTOM, COR_NORMAL_CUSTOM, SIFT_1M]
     ) and is_tradeoff:
         atoms -= np.mean(atoms + 1)
-        print("what!!")
     signals = subset_2d(data, signal_idcs, sample_idcs)
     del data
 

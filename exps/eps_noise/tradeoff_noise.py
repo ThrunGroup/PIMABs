@@ -34,7 +34,7 @@ def tradeoff_noise(algorithms, is_plot: bool = False):
                 with_replacement=False,
                 dir_name=log_dir,
                 num_best_atoms=top_k,
-                num_seeds=1,
+                num_seeds=10,
             )
         if is_plot:
             create_tradeoff_plots(
