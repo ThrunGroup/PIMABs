@@ -15,14 +15,6 @@ from exps.eps_noise.tradeoff_noise import tradeoff_noise
 from exps.eps_noise.tradeoff_noise_plot import tradeoff_noise_plot
 from utils.constants import SCALING_BASELINES_ALGORITHMS, ACTION_ELIMINATION, NETFLIX
 
-def tranlate_experiment(experiment):
-    if experiment == "noise":
-        return 0
-
-    else:
-        print("=> add experiment index here!")
-        return 1
-
 
 def find_absent_algorithms(path, algorithms):
     absent = []
@@ -38,7 +30,7 @@ def main(experiment):
     path = os.path.join(os.getcwd(), "exps")
     idx = tranlate_experiment(experiment)
 
-    if idx == 0:
+    if experiment == "noise":
         print("experiments for noise robustness")
         scaling_path = os.path.join(path, "eps_noise", "logs")
         scaling_algos = find_absent_algorithms(scaling_path, [ACTION_ELIMINATION])
@@ -50,7 +42,6 @@ def main(experiment):
         print(tradeoff_path)
         tradeoff_noise(tradeoff_algos)
         tradeoff_noise_plot()
-
     else:
         scaling_path = os.path.join(path, "core_scaling", "logs")
         tradeoff_path = os.path.join(path, "core_tradeoff", "logs")

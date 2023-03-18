@@ -1,4 +1,5 @@
 import os
+
 from exps.plot_baselines import create_tradeoff_plots
 from utils.constants import (
     ACTION_ELIMINATION,
@@ -13,7 +14,6 @@ def tradeoff_noise_plot():
     for top_k in (1, 5, 10):
         parent_dir = os.path.dirname(os.path.abspath(__file__))
         log_dir = os.path.join(parent_dir, "normalized_logs", f"topk_{top_k}")
-        print(log_dir)
         create_tradeoff_plots(
             alg_names=algorithms,
             data_types=data_types,

@@ -180,5 +180,6 @@ def get_data(
     # add noise to data for epsilon-noise robustness experiments
     if add_noise:
         atoms = add_eps_noise(atoms)
+
     return atoms, signals
 

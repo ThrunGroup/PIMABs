@@ -17,7 +17,6 @@ def scaling_fit_plot(
     else:
         log_dir = dir_name
 
-    print(log_dir)
     for algorithm in algorithms:
         create_scaling_plots(
             is_fit=True,
