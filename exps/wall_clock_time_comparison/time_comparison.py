@@ -76,5 +76,5 @@ def plot_time_comparison():
 
 
 if __name__ == "__main__":
-    run_time_comparison()
+    # run_time_comparison()
     plot_time_comparison()
