@@ -9,7 +9,6 @@ class BanditMIPSAdd:
     """
 
     def __init__(self):
-        self.top_k_indices = None
         self.top_k_atoms = None
 
     def search_top_k(self,
@@ -71,4 +70,4 @@ class BanditMIPSAdd:
         if save_top_k:
             self.top_k_atoms = top_k_atoms
 
-        return top_k_atoms, mips_results[0]
+        return top_k_atoms
