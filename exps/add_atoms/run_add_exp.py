@@ -19,7 +19,7 @@ def are_same_arrays(A, B):
     return np.array_equal(a_flat, b_flat)
 
 
-def add_exp(seed: int = 0):
+def run_single_add_experiment(seed: int = 0):
     """
     An experiment to show that BanditMIPS supports a correct addition feature
 
@@ -82,7 +82,7 @@ def add_exp(seed: int = 0):
     return are_same_arrays(best_atoms_from_entire_dataset, best_atoms_after_addition)
 
 
-def run_exp(num_experiments: int = 100):
+def run_experiments(num_experiments: int = 100):
     """
     Run the addition experiment multiple times
 
@@ -90,11 +90,11 @@ def run_exp(num_experiments: int = 100):
     """
     exp_results = []
     for seed in tqdm(range(num_experiments)):
-        exp_results += add_exp(seed),
+        exp_results += run_single_add_experiment(seed),
 
     num_correct = np.sum(exp_results)
     print("Correct experiments (%): ", num_correct / num_correct * 100)
 
 
 if __name__ == "__main__":
-    run_exp()
+    run_experiments()
