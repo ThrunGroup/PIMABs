@@ -9,7 +9,7 @@ def scaling_baselines_plot(algorithms):
     """
     create_scaling_plots(
         is_fit=False,
-        include_error_bar=True,
+        include_error_bar=False,
         data_types=SCALING_BASELINES_DATATYPES,
         alg_names=SCALING_BASELINES_ALGORITHMS,
         dir_name="core_scaling/logs",

@@ -73,6 +73,8 @@ from utils.constants import (
     MAXMIN_AD,
     TRADEOFF_CODEBOOK_MINMAX,
     TRADEOFF_CODEWORD_MINMAX,
+
+    NOISE_VAR,
 )
 from neq_mips.constants import (
     PARTITION,
@@ -117,6 +119,7 @@ def get_accuracy_array(
 def speedup_precision_exps(
     epsilon: Optional[float] = TRADEOFF_DEFAULT_EPSILON,
     data_type: str = NORMAL_CUSTOM,
+    add_noise: bool = False,
     mips_alg: str = MEDIAN_ELIMINATION,
     len_signals: int = TRADEOFF_DIMENSION,
     num_atoms: int = TRADEOFF_NUM_ATOMS,
@@ -196,6 +199,7 @@ def speedup_precision_exps(
         num_signals=num_signals,
         seed=0,
         data_type=data_type,
+        add_noise=add_noise,
         is_tradeoff=True,
         num_best_atoms=num_best_atoms,
     )
@@ -455,6 +459,12 @@ def speedup_precision_exps(
     avg_accuracy /= num_seeds
     avg_accuracy_std /= num_seeds
     avg_runtime /= num_seeds
+
+    if add_noise:
+        noise_factor = NOISE_VAR
+    else:
+        noise_factor = 0.0
+
     if is_log:
         log_dict = {
             "data_type": data_type,
@@ -482,6 +492,8 @@ def speedup_precision_exps(
             + str(num_best_atoms)
             + "_"
             + log_info
+            + "_noise_factor"
+            + str(noise_factor)
             + ".csv",
         )
         os.makedirs(log_dir, exist_ok=True)
