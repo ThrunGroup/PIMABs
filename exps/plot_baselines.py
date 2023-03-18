@@ -37,7 +37,6 @@ from utils.constants import (
     H2ALSH,
     HNSW_MIPS,
     NAPG_MIPS,
-    NAIVE,
 
     SCALING_LOG_BUFFER,
     MAX_SPEEDUP,
@@ -82,8 +81,6 @@ def translate_alg_name(alg_name: str):
         return "Bucket_AE"
     elif alg_name == H2ALSH:
         return "H2ALSH"
-    elif alg_name == NAIVE:
-        return "Naive_MIPS"
     else:
         raise Exception("Bad algorithm name")
 
@@ -168,8 +165,6 @@ def extract_alg(filename: str):
         return BUCKET_ACTION_ELIMINATION
     elif H2ALSH in filename:
         return H2ALSH
-    elif NAIVE in filename:
-        return NAIVE
     else:
         raise Exception("No algorithm was able to be extracted from " + filename)
 
@@ -201,7 +196,6 @@ def create_scaling_plots(
     alg_names: List[str] = [],
     include_error_bar: bool = False,
     ind_variables: List[str] = [DIMENSION_OF_ATOMS],
-    is_plot_runtime: bool = False,
     is_fit: bool = False,
     is_logspace_x: bool = False,
     is_logspace_y: bool = False,
@@ -216,7 +210,6 @@ def create_scaling_plots(
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
     :param ind_variables: Independent variables (N or D)
     :param include_error_bar: shows the standard deviation
-    :param is_plot_runtime: whether to plot runtime
     :param is_fit: whether to fit the plots or not
     :param is_logspace_x: whether to plot x-axis in logspace or not
     :param is_logspace_y: whether to plot y-axis in logspace or not
@@ -257,12 +250,7 @@ def create_scaling_plots(
                     continue
 
                 x = data[independent_var].tolist()
-                if is_plot_runtime:
-                    y = data["runtime"] * 1000
-                    ylabel = "Runtime (ms)"
-                else:
-                    y = data["budgets"].tolist()
-                    ylabel = "Sample Complexity"
+                y = data["budgets"].tolist()
                 error = data["budgets_std"].tolist()
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
 
@@ -289,13 +277,15 @@ def create_scaling_plots(
                         function_list=functions,
                         function_name_list=function_names,
                         ys_std=error,
-                        is_logspace=is_logspace_x,
+                        is_logspace=is_logspace,
                     )
                     plt.title(title)
 
-                    xlabel = get_x_label(is_logspace=is_logspace_x, independent_var=independent_var)
+                    xlabel = get_x_label(is_logspace=is_logspace, independent_var=independent_var)
                     if is_logspace_y:
-                        ylabel = "log_10 " + ylabel
+                        ylabel = "log_10 Sample Complexity"
+                    else:
+                        ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
                 else:
@@ -330,7 +320,9 @@ def create_scaling_plots(
                     )
 
                     if is_logspace_y:
-                        ylabel = "log_10 " + ylabel
+                        ylabel = "log_10 Sample Complexity"
+                    else:
+                        ylabel = "Sample Complexity"
 
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)

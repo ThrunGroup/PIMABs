@@ -24,7 +24,6 @@ from utils.constants import (
     NEQ_MIPS,
     H2ALSH,
     BUCKET_ACTION_ELIMINATION,
-    NAIVE,
 
     NUM_SEEDS,
     SCALING_NUM_EXPERIMENTS,
@@ -86,6 +85,7 @@ def scaling_exp(
     with_replacement: bool = False,
     is_normalize: bool = False,
     is_log: bool = True,
+    is_plot: bool = True,
     is_logspace: bool = False,
     dir_name: str = None,
     verbose: bool = False,
@@ -111,6 +111,7 @@ def scaling_exp(
     :param with_replacement: Whether to sample with replacement
     :param is_normalize: Whether to normalize atoms and signal
     :param is_log: Whether to log the results
+    :param is_plot: Whether to plot the results
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
     :param dir_name: Directory name to log the results
     :param verbose: Whether to print the number of iterations ran for action elimination
@@ -322,16 +323,7 @@ def scaling_exp(
                     queries=signals_subset, top_k=num_best_atoms
                 )
                 runtime = time.time() - start_time
-            elif mips_alg is NAIVE:
-                start_time = time.time()
-                candidates_array = (
-                    np.matmul(-atoms_subset, signals_subset.transpose())
-                    .argsort(axis=0)[:num_best_atoms]
-                    .transpose()
-                )
-                budget_array = len(signals_subset) * len(signals_subset[0])
-                runtime = time.time() - start_time
-                log_info = ""
+
             else:
                 raise NotImplementedError(f"{mips_alg} is not implemented")
 
