@@ -75,7 +75,7 @@ HOEFFDING = "HOEFFDING"
 
 # Scaling Experiments
 
-NUM_SEEDS = 10
+NUM_SEEDS = 30
 BUCKET_AE_NUM_SEEDS = 5
 
 DEFAULT_MAXMIN = (10, 0)
@@ -203,21 +203,24 @@ SAMPLE_RATE = 44100
 
 # experiment configs
 SCALING_BASELINES_ALGORITHMS = [
-    #GREEDY_MIPS,  # greedy approach
-    LSH_MIPS,  # mapping to higher dimension (Todo: include H2LSH after vectorization?)
-    PCA_MIPS,
-    NEQ_MIPS,
-    NAPG_MIPS,
-    MEDIAN_ELIMINATION,
+    # GREEDY_MIPS,  # greedy approach
+    # LSH_MIPS,  # mapping to higher dimension (Todo: include H2LSH after vectorization?)
+    # PCA_MIPS,
+    # NEQ_MIPS,
+    # NAPG_MIPS,
+    # MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
-    ADAPTIVE_ACTION_ELIMINATION,  # bandit approach
+    # ADAPTIVE_ACTION_ELIMINATION,  # bandit approach
 ]
 SCALING_BASELINES_DATATYPES = [
-    NORMAL_CUSTOM,
-    COR_NORMAL_CUSTOM,
+    # NORMAL_CUSTOM,
+    # COR_NORMAL_CUSTOM,
     #UNIFORM_PAPER,
     #CLEAR_LEADER_HARD,
     NETFLIX,
-    MOVIE_LENS,
+    # MOVIE_LENS,
     # NORMAL_PAPER,
 ]
+
+# eps-noise robustness
+NOISE_VAR = 0.2

@@ -223,20 +223,19 @@ def create_scaling_plots(
         log_dir = os.path.join(parent_dir, log_dir)  # TODO(@lukeleeai): Is this correct?
     else:
         log_dir = dir_name
+
     if len(data_types) == 0:
         raise Exception("At least one dataset must be specified")
 
     if len(alg_names) == 0:
         raise Exception("At least one algorithm must be specified")
 
-    # import ipdb; ipdb.set_trace()
     for ind_variable in ind_variables:
         for datatype in data_types:
             csv_files = glob.glob(
                 # os.path.join(log_dir, f"*SCALING_{datatype}*ind_var{ind_variable}*")
                 os.path.join(log_dir, f"*SCALING_{datatype}*")
             )
-
             title = f"Scaling Baselines: {translate_dataset_name(datatype)}"
             for f in csv_files:
                 alg_name = extract_alg(f)
@@ -255,6 +254,7 @@ def create_scaling_plots(
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
 
                 if is_fit:
+                    is_logspace = (is_logspace_x and is_logspace_y)
                     title = f"{translate_alg_name(alg_name)} on {translate_dataset_name(datatype)}"
                     if is_logspace_x:
                         functions = [np.array, power10_sqrt, power10]
@@ -263,9 +263,9 @@ def create_scaling_plots(
                             "$y \propto x^{1/2}$",
                             "$y \propto x$",
                         ]
-                        x = np.log10(x)
+                        x = np.log(x)
                     elif is_logspace_y:
-                        y = np.log10(y)
+                        y = np.log(y)
 
                     else:
                         functions = [np.array, np.sqrt, np.log]
@@ -277,22 +277,23 @@ def create_scaling_plots(
                         function_list=functions,
                         function_name_list=function_names,
                         ys_std=error,
-                        is_logspace=is_logspace,
+                        is_logspace=is_logspace_x,
                     )
                     plt.title(title)
+                    plt.ylim(3200, 4300)
 
-                    xlabel = get_x_label(is_logspace=is_logspace, independent_var=independent_var)
+                    xlabel = get_x_label(is_logspace=is_logspace_x, independent_var=independent_var)
                     if is_logspace_y:
-                        ylabel = "log_10 Sample Complexity"
+                        ylabel = "$\ln{(Sample Complexity)}$"
                     else:
                         ylabel = "Sample Complexity"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
                 else:
                     if is_logspace_y:
-                        y = np.log10(y)
+                        y = np.log(y)
                         error = np.where(np.array(error) < SCALING_LOG_BUFFER, SCALING_LOG_BUFFER, np.array(error))
-                        error = np.log10(error) / (y * np.sqrt(NUM_SEEDS))
+                        error = np.log(error) / (y * np.sqrt(NUM_SEEDS))
 
                     plt.scatter(
                         x,
@@ -320,7 +321,7 @@ def create_scaling_plots(
                     )
 
                     if is_logspace_y:
-                        ylabel = "log_10 Sample Complexity"
+                        ylabel = "ln(Sample Complexity)"
                     else:
                         ylabel = "Sample Complexity"
 
@@ -400,7 +401,6 @@ def create_tradeoff_plots(
             y = np.delete(y, del_idcs)
 
             if len(x) == 0:
-                print("what")
                 continue
 
             error = data["accuracy_std"].tolist()
@@ -442,6 +442,7 @@ def create_tradeoff_plots(
             ylabel = f"Precision at {top_k}"
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
+            plt.ylim(0.5, 1.2)
 
         fig = plt.gcf()
         fig.set_size_inches(6, 4.5)
@@ -510,7 +511,7 @@ def compare_caching_budgets(
         plt.show()
 
 
-def generate_scaling_plots(algorithms):
+def generate_scaling_plots():
     """
     Generate scaling plots for the two synthetic datasets (normal custom, adversarial custom) and
     the two real-world datsets (netflix and movie lens). This function is called by repro_script_python.py.
@@ -520,41 +521,41 @@ def generate_scaling_plots(algorithms):
         is_fit=False,
         include_error_bar=True,
         data_types=[
-            NORMAL_CUSTOM,
-            ADVERSARIAL_CUSTOM,
+            # NORMAL_CUSTOM,
+            # ADVERSARIAL_CUSTOM,
             NETFLIX,
-            MOVIE_LENS,
+            # MOVIE_LENS,
             # COR_NORMAL_CUSTOM,
         ],
         alg_names=[
-            ADAPTIVE_ACTION_ELIMINATION,
+            # ADAPTIVE_ACTION_ELIMINATION,
             ACTION_ELIMINATION,
-            MEDIAN_ELIMINATION,
+            # MEDIAN_ELIMINATION,
             # GREEDY_MIPS,
-            PCA_MIPS,
-            LSH_MIPS,
-            HNSW_MIPS,
-            NAPG_MIPS,
-            LSH_MIPS,
-            NEQ_MIPS,
-            BUCKET_ACTION_ELIMINATION,
-            H2ALSH,
+            # PCA_MIPS,
+            # LSH_MIPS,
+            # HNSW_MIPS,
+            # NAPG_MIPS,
+            # LSH_MIPS,
+            # NEQ_MIPS,
+            # BUCKET_ACTION_ELIMINATION,
+            # H2ALSH,
         ],
     )
 
     # # fit the bandit algorithms, and greedy-mips for better comparison
-    # create_scaling_plots(
-    #     is_fit=True,
-    #     is_logspace=True,
-    #     include_error_bar=True,
-    #     data_types=[NETFLIX, MOVIE_LENS],
-    #     alg_names=[
-    #         ADAPTIVE_ACTION_ELIMINATION,
-    #         ACTION_ELIMINATION,
-    #         MEDIAN_ELIMINATION,
-    #         GREEDY_MIPS,
-    #     ],
-    # )
+    create_scaling_plots(
+        is_fit=True,
+        is_logspace_x=True,
+        include_error_bar=True,
+        data_types=[NETFLIX, MOVIE_LENS],
+        alg_names=[
+            # ADAPTIVE_ACTION_ELIMINATION,
+            ACTION_ELIMINATION,
+            # MEDIAN_ELIMINATION,
+            # GREEDY_MIPS,
+        ],
+    )
 
 
 def generate_tradeoff_plots(top_k: int = 10):
@@ -604,6 +605,6 @@ def generate_tradeoff_plots(top_k: int = 10):
 
 if __name__ == "__main__":
     generate_scaling_plots()
-    generate_tradeoff_plots()
+    # generate_tradeoff_plots()
     # generate_tradeoff_plots(top_k=5)
     # generate_tradeoff_plots(top_k=20)

@@ -42,6 +42,8 @@ from utils.constants import (
     SCALING_H2ALSH_C0,
     SCALING_H2ALSH_C,
     SCALING_H2ALSH_N0,
+
+    NOISE_VAR,
 )
 
 from neq_mips.constants import (
@@ -72,6 +74,7 @@ def scaling_exp(
     delta: Optional[float] = SCALING_DELTA,
     maxmin: Tuple[float, float] = DEFAULT_MAXMIN,
     data_type: str = NORMAL_CUSTOM,
+    add_noise: bool = False,
     mips_alg: str = MEDIAN_ELIMINATION,
     num_experiments: int = SCALING_NUM_EXPERIMENTS,
     num_seeds: int = NUM_SEEDS,
@@ -132,6 +135,7 @@ def scaling_exp(
             num_signals=num_signals,
             seed=data_generation_seed,
             data_type=data_type,
+            add_noise=add_noise,
         )
     elif independent_var == NUMBER_OF_ATOMS:
         sizes = get_sizes_arr(is_logspace, size_minmax, num_experiments=num_experiments)
@@ -143,6 +147,7 @@ def scaling_exp(
             num_signals=num_signals,
             seed=data_generation_seed,
             data_type=data_type,
+            add_noise=add_noise,
         )
     else:
         raise NotImplementedError(
@@ -391,8 +396,15 @@ def scaling_exp(
 
         log_df = pd.DataFrame(log_dict)
         parent_dir = os.path.dirname(os.path.abspath(__file__))
+        if add_noise:
+            experiment = "eps_noise"
+            noise_factor = str(NOISE_VAR)
+        else:
+            experiment = "core_scaling"
+            noise_factor = ""
+
         log_dir = (
-            os.path.join(parent_dir, "core_scaling", "logs")
+            os.path.join(parent_dir, experiment, "logs")
             if dir_name is None
             else dir_name
         )
@@ -407,6 +419,8 @@ def scaling_exp(
             + str(num_atoms)
             + "_"
             + log_info
+            + "_noise"
+            + noise_factor
             + ".csv",
         )
         os.makedirs(log_dir, exist_ok=True)

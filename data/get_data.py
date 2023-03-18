@@ -4,10 +4,9 @@ import math
 import os
 
 import data.mnist
-from utils.utils import subset_2d
+from utils.utils import subset_2d, add_eps_noise
 from data.custom_data import generate_custom_data, create_toy_waves
 from data.simple_song import create_song, create_note_waves, create_sin_wave
-from utils.utils import subset_2d
 from utils.constants import (
     ADVERSARIAL_CUSTOM,
     NORMAL_CUSTOM,
@@ -70,6 +69,7 @@ def get_data(
     num_best_atoms: int = SCALING_TOPK,
     seed: int = 0,
     data_type: str = NORMAL_CUSTOM,
+    add_noise: bool = False,
     is_tradeoff: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
@@ -174,7 +174,11 @@ def get_data(
         data_type in [NETFLIX, MOVIE_LENS, NORMAL_CUSTOM, COR_NORMAL_CUSTOM, SIFT_1M]
     ) and is_tradeoff:
         atoms -= np.mean(atoms + 1)
-        print("what!!")
     signals = subset_2d(data, signal_idcs, sample_idcs)
     del data
+
+    # add noise to data for epsilon-noise robustness experiments
+    if add_noise:
+        atoms = add_eps_noise(atoms)
     return atoms, signals
+

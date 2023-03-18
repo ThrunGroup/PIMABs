@@ -46,8 +46,7 @@ def get_scaling_baseline_params(data_type):
         # epsilon, delta, maxmin, size_minmax
         return 0.001, 0.001, (5, 0), (10 ** 4, 10 ** 6)
     elif data_type == NETFLIX:
-        # epsilon, delta, maxmin, size_minmax
-        return 0.001, 0.001, (2, 0), (10 ** 4, 143458)
+        return 0.01, 0.01, (2, 0), (10 ** 4, 143458)
     elif data_type == MOVIE_LENS:
         # epsilon, delta, maxmin, size_minmax
         return 0.001, 0.01, (1, 0), (1000, 5000)
@@ -60,7 +59,7 @@ def get_scaling_baseline_params(data_type):
     return epsilon, delta, maxmin, size_minmax
 
 
-def scaling_baselines(algorithms):
+def scaling_baselines(algorithms, add_noise=False):
     """
     Run scaling experiments for the 5 datasets (2 synthetic, 3 real) on 9 baseline MIPS algorithms.
     This function is called by repro_script_python.py.
@@ -84,6 +83,8 @@ def scaling_baselines(algorithms):
                 with_replacement=False,
                 is_normalize=False,
                 is_logspace=False,
+                num_best_atoms=1,
+                add_noise=add_noise
             )
 
 
