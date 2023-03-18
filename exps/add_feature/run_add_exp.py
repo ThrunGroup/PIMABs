@@ -82,7 +82,7 @@ def add_exp(seed: int = 0):
     return are_same_arrays(best_atoms_from_entire_dataset, best_atoms_after_addition)
 
 
-def run_exp(num_experiments: int = 1000):
+def run_exp(num_experiments: int = 100):
     """
     Run the addition experiment multiple times
 
