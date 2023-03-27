@@ -13,7 +13,18 @@ from exps.eps_noise.scaling_noise import scaling_noise
 from exps.eps_noise.scaling_noise_plot import scaling_noise_plot
 from exps.eps_noise.tradeoff_noise import tradeoff_noise
 from exps.eps_noise.tradeoff_noise_plot import tradeoff_noise_plot
+from exps.add_atoms.run_add_exp import run_experiments
 from utils.constants import SCALING_BASELINES_ALGORITHMS, ACTION_ELIMINATION, NETFLIX
+
+
+def tranlate_experiment(experiment):
+    if experiment == "noise":
+        return 0
+    elif experiment == "add_atoms":
+        return 1
+    else:
+        print("=> add experiment index here!")
+        return 2
 
 
 def find_absent_algorithms(path, algorithms):
@@ -42,6 +53,9 @@ def main(experiment):
         print(tradeoff_path)
         tradeoff_noise(tradeoff_algos)
         tradeoff_noise_plot()
+    elif idx == 1:
+        print("experiments for adding new atoms")
+        run_experiments()
     else:
         scaling_path = os.path.join(path, "core_scaling", "logs")
         tradeoff_path = os.path.join(path, "core_tradeoff", "logs")
@@ -55,7 +69,6 @@ def main(experiment):
         # Todo @jey, @luke: need to add each of your scaling experiments here!
         print(f"=> Creating Scaling log files for {scaling_baselines_algos}")
         scaling_baselines(scaling_baselines_algos)
-
 
         # Todo @jey, @luke: need to add each of your tradeoff experiments here (included example below)!
         print(f"=> Creating Precision-Speed log files for {tradeoff_baselines_algos}")
