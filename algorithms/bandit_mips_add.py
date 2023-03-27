@@ -64,7 +64,10 @@ class BanditMIPSAdd:
                                    verbose=verbose,
                                    )
 
-        candidates_array, _ = mips_results[:2]  # mips_bandit returns up to five values
+        # mips_bandit returns up to five values
+        # The first two return values are candidates and budgets.
+        # The other three are for caching which are not important here.
+        candidates_array, _ = mips_results[:2]
         top_k_atoms = atoms[candidates_array].reshape(-1, signals.shape[-1])
 
         if save_top_k:

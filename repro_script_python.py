@@ -3,8 +3,7 @@ import glob
 import sys
 
 from exps.core_scaling.scaling_baselines import scaling_baselines
-from exps.core_scaling.bucket_ae_scaling.bucket_action_elimination_scaling import scaling_bucket_ae, \
-    scaling_bucket_ae_plot
+from exps.core_scaling.bucket_ae_scaling.bucket_action_elimination_scaling import scaling_bucket_ae, scaling_bucket_ae_plot
 from exps.core_scaling.scaling_baselines_plot import scaling_baselines_plot
 from exps.core_scaling.scaling_fit_plot import scaling_fit_plot
 from exps.core_tradeoff.tradeoff_baselines import tradeoff_baselines, tradeoff_baselines_plot
@@ -42,7 +41,7 @@ def main(experiment):
     path = os.path.join(os.getcwd(), "exps")
     idx = tranlate_experiment(experiment)
 
-    if idx == 0:
+    if experiment == "noise":
         print("experiments for noise robustness")
         scaling_path = os.path.join(path, "eps_noise", "logs")
         scaling_algos = find_absent_algorithms(scaling_path, [ACTION_ELIMINATION])

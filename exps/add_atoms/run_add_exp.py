@@ -6,7 +6,7 @@ from utils.constants import NETFLIX, ACTION_ELIMINATION
 from algorithms.bandit_mips_add import BanditMIPSAdd
 
 
-def are_same_arrays(A, B):
+def are_same_arrays(A: np.ndarray, B: np.ndarray):
     """
     Check if two arrays share the same elements
 
