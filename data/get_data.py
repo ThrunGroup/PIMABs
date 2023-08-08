@@ -21,6 +21,7 @@ from utils.constants import (
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
+    HIGHLY_SYMMETRIC,
     TOY_SINE,
     TOY_DISCRETE,
     MNIST_T,
@@ -83,6 +84,7 @@ def get_data(
         CLEAR_LEADER_SOFT,
         NO_CLEAR_LEADER,
         POSITIVE_COR_NORMAL_CUSTOM,
+        HIGHLY_SYMMETRIC,
     ]:
         return generate_custom_data(
             num_atoms=num_atoms,

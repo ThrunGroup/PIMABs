@@ -16,6 +16,7 @@ from utils.constants import (
     COR_NORMAL_CUSTOM,
     NETFLIX,
     NORMAL_PAPER,
+    HIGHLY_SYMMETRIC,
 
     # scaling specific constants
     SCALING_NUM_EXPERIMENTS,

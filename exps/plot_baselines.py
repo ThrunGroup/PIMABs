@@ -27,6 +27,7 @@ from utils.constants import (
     NORMAL_PAPER,
     UNIFORM_PAPER,
     POSITIVE_COR_NORMAL_CUSTOM,
+    HIGHLY_SYMMETRIC,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -133,6 +134,8 @@ def translate_dataset_name(dataset_name: str):
         return "Positive Correlated Normal Custom"
     elif dataset_name == NORMAL_PAPER:
         return "Synthetic Normal"
+    elif dataset_name == HIGHLY_SYMMETRIC:
+        return "Highly Symmetric Normal"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 

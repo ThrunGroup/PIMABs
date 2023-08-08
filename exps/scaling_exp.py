@@ -92,6 +92,7 @@ def scaling_exp(
     is_logspace: bool = False,
     dir_name: str = None,
     verbose: bool = False,
+    log_dirname: str = "",
 ) -> float:
     """
     Run the time complexity of the bandit and baseline algorithms as the signal size scales and store them in
@@ -117,6 +118,7 @@ def scaling_exp(
     :param is_logspace: Whether to construct sizes of signal spaced evenly on a log scale
     :param dir_name: Directory name to log the results
     :param verbose: Whether to print the number of iterations ran for action elimination
+    :param log_dirname: log filename
     """
     avg_runtimes = np.zeros(
         (num_experiments, num_seeds)
@@ -407,6 +409,9 @@ def scaling_exp(
         if add_noise:
             experiment = "eps_noise"
             noise_factor = str(NOISE_VAR)
+        elif log_dirname != "":
+            experiment = log_dirname
+            noise_factor = ""
         else:
             experiment = "core_scaling"
             noise_factor = ""
