@@ -28,6 +28,8 @@ from utils.constants import (
     UNIFORM_PAPER,
     POSITIVE_COR_NORMAL_CUSTOM,
     HIGHLY_SYMMETRIC,
+    GPT2_LM_HEAD,
+    OPT_LM_HEAD,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -136,6 +138,10 @@ def translate_dataset_name(dataset_name: str):
         return "Synthetic Normal"
     elif dataset_name == HIGHLY_SYMMETRIC:
         return "Highly Symmetric Normal"
+    elif dataset_name == GPT2_LM_HEAD:
+        return "GPT2 Final Layer"
+    elif dataset_name == OPT_LM_HEAD:
+        return "OPT3 Final Layer"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -262,11 +268,23 @@ def create_scaling_plots(
                 if is_plot_runtime:
                     y = data["runtime"] * 1000
                     ylabel = "Runtime (ms)"
+
+                    # First experiment contains compiling time for numba
+                    x = x[1:]
+                    y = y[1:]
+                    error = data["budgets_std"].tolist()[1:]
                 else:
                     y = data["budgets"].tolist()
                     ylabel = "Sample Complexity"
-                error = data["budgets_std"].tolist()
+                    error = data["budgets_std"].tolist()
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+
+                # if is_plot_runtime:
+                #     diff = max(y) - min(y)
+                #     plt.ylim(min(y) - diff / 2, max(y) + diff / 2)
+
+                if not include_error_bar:
+                    error = np.zeros_like(error)
 
                 if is_fit:
                     is_logspace = (is_logspace_x and is_logspace_y)
@@ -295,8 +313,8 @@ def create_scaling_plots(
                         is_logspace=is_logspace_x,
                     )
                     plt.title(title)
-                    if not is_plot_runtime:
-                        plt.ylim(3200, 4300)
+                    # if not is_plot_runtime:
+                    #     plt.ylim(3200, 4300)
 
                     xlabel = get_x_label(is_logspace=is_logspace_x, independent_var=independent_var)
                     if is_logspace_y:
@@ -454,7 +472,7 @@ def create_tradeoff_plots(
             ylabel = f"Precision at {top_k}"
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
-            plt.ylim(0.5, 1.2)
+            # plt.ylim(0.5, 1.2)
 
         fig = plt.gcf()
         fig.set_size_inches(6, 4.5)

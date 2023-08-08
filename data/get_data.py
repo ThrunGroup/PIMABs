@@ -2,6 +2,7 @@ from typing import Tuple
 import numpy as np
 import math
 import os
+import torch
 
 import data.mnist
 from utils.utils import subset_2d, add_eps_noise
@@ -22,6 +23,8 @@ from utils.constants import (
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
     HIGHLY_SYMMETRIC,
+    GPT2_LM_HEAD,
+    OPT_LM_HEAD,
     TOY_SINE,
     TOY_DISCRETE,
     MNIST_T,
@@ -94,6 +97,34 @@ def get_data(
             seed=seed,
             data_type=data_type,
         )
+    elif data_type == GPT2_LM_HEAD:
+        assert len_signal <= 1600, f"GPT2-XL embedding dimension is 1600 which is less than {len_signal}"
+        queries_filename = os.path.join(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "mips_gpt2"), "GPT2_QUERIES.pt"
+        )
+        atoms_filename = os.path.join(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "mips_gpt2"), "GPT2_LM_HEAD_WEIGHT.pt"
+        )
+        queries = torch.load(queries_filename).detach().numpy().astype('float64')
+        atoms = torch.load(atoms_filename).detach().numpy().astype('float64')
+        sample_idcs = rng.choice(queries.shape[1], len_signal, replace=False)
+        signals = queries[:num_signals, sample_idcs]
+        atoms = atoms[:num_atoms, sample_idcs]
+        return atoms, signals
+    elif data_type == OPT_LM_HEAD:
+        assert len_signal <= 4096, f"GPT2-XL embedding dimension is 1600 which is less than {len_signal}"
+        queries_filename = os.path.join(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "mips_opt"), "OPT_QUERIES.pt"
+        )
+        atoms_filename = os.path.join(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "mips_opt"), "OPT_LM_HEAD_WEIGHT.pt"
+        )
+        queries = torch.load(queries_filename).detach().numpy().astype('float64')
+        atoms = torch.load(atoms_filename).detach().numpy().astype('float64')
+        sample_idcs = rng.choice(queries.shape[1], len_signal, replace=False)
+        signals = queries[:num_signals, sample_idcs]
+        atoms = atoms[:num_atoms, sample_idcs]
+        return atoms, signals
     elif data_type == NETFLIX:
         filename = os.path.join(
             os.path.join(os.path.dirname(__file__), "netflix"), "Movie_ratings.npy"
@@ -185,3 +216,8 @@ def get_data(
 
     return atoms, signals
 
+
+if __name__ == "__main__":
+    atoms, queries = get_data(num_atoms=10000, len_signal=1000, data_type=GPT2_LM_HEAD)
+    print(atoms.shape, queries.shape)
+    print(atoms.dtype)

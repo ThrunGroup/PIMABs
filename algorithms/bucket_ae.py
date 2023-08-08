@@ -1,6 +1,7 @@
 import numpy as np
 import numba as nb
 import math
+import cmath
 from typing import Tuple
 
 from utils.constants import (
@@ -15,6 +16,7 @@ from utils.utils import subset_2d, fit_and_plot, set_seed
 from utils.bandit_utils import get_ci
 
 
+@nb.njit
 def bucket_action_elimination(
     atoms: np.ndarray,
     signals: np.ndarray,
@@ -73,7 +75,9 @@ def bucket_action_elimination(
     )  # Number of samples from each atom to estimate its norm
 
     sample_idcs = np.random.randint(
-        low=0, high=d, size=num_samples_norm, dtype=np.int64
+        low=0,
+        high=d,
+        size=num_samples_norm,  # dtype=np.int64
     )
     sampled_atoms_squared = atoms[:, sample_idcs] * atoms[:, sample_idcs]
     sampled_signals_squared = signals[:, sample_idcs] * signals[:, sample_idcs]
@@ -104,7 +108,7 @@ def bucket_action_elimination(
         candidates = np.empty(0)
         budgets = 0
         for idx in range(k):
-            best_k_lcbs = lcbs[num_best_atoms-1] if idx != 0 else -float('inf')
+            best_k_lcbs = lcbs[num_best_atoms - 1] if idx != 0 else -cmath.inf
             (
                 bucket_candidates,
                 bucket_means,
@@ -121,7 +125,7 @@ def bucket_action_elimination(
                 batch_size,
                 with_replacement,
                 seed,
-                best_k_lcbs
+                best_k_lcbs,
             )
             concatenated_means = np.concatenate((means, bucket_means))
             best_k_idcs = np.argsort(concatenated_means)[::-1][:num_best_atoms]
@@ -131,13 +135,13 @@ def bucket_action_elimination(
             )[best_k_idcs]
             lcbs = np.concatenate((lcbs, bucket_lcbs))[best_k_idcs]
             budgets += bucket_budgets
-            if idx == k - 1:
-                print(f"num_atoms: {len(atoms)}/ idx: {idx}/ budget: {budgets}")
-                break
-
-            if np.max(lcbs) > temp_ub_buckets[idx + 1]:
-                print(f"num_atoms: {len(atoms)}/ idx: {idx}/ budget: {budgets}")
-                break
+            # if idx == k - 1:
+            #     print(f"num_atoms: {len(atoms)}/ idx: {idx}/ budget: {budgets}")
+            #     break
+            #
+            # if np.max(lcbs) > temp_ub_buckets[idx + 1]:
+            #     print(f"num_atoms: {len(atoms)}/ idx: {idx}/ budget: {budgets}")
+            #     break
 
         candidates_array[signal_idx] = candidates
         budgets_array[signal_idx] = budgets
@@ -243,7 +247,9 @@ def bucket_action_elimination_helper(
 
         ucbs[candidates] = means[candidates] + ci
         lcbs[candidates] = means[candidates] - ci
-        new_cand_idcs = np.where((ucbs[candidates] >= max(prev_lcbs, lcbs[candidates].max())))[0]
+        new_cand_idcs = np.where(
+            (ucbs[candidates] >= max(prev_lcbs, lcbs[candidates].max()))
+        )[0]
 
         if 4 * ci < epsilon:
             sort_idcs = np.argsort(-means[candidates])

@@ -9,7 +9,7 @@ def eps_suboptimal_exp():
     epsilon = 0.5
     delta = 0.5
     maxmin = (1, -1)
-    num_experiments = 10
+    num_experiments = 15
     num_signals = 3
     size_minmax = (10**3, 10**5)
     mips_alg = ACTION_ELIMINATION
@@ -44,6 +44,7 @@ def plot_eps_suboptimal():
         alg_names=[ACTION_ELIMINATION],
         include_error_bar=True,
         dir_name=dir_name,
+        is_fit=True,
     )
 
 
