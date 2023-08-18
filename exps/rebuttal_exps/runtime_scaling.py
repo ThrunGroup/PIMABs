@@ -160,8 +160,12 @@ def get_speedups():
             for idx in range(len(x)):
                 print(f"signal size: {x[idx]} / speedup: {y[idx]}x")
 
-if __name__ == "__main__":
+def exp_runtime_scaling():
     for data_type in [OPT_LM_HEAD, NETFLIX, MOVIE_LENS]:
         runtime_scaling_exp(data_type=data_type)
     plot_runtime_scaling(is_plot_runtime=True)
     get_speedups()
+
+
+if __name__ == "__main__":
+    exp_runtime_scaling()

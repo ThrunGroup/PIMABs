@@ -49,5 +49,5 @@ def plot_eps_suboptimal():
 
 
 if __name__ == "__main__":
-    # eps_suboptimal_exp()
+    eps_suboptimal_exp()
     plot_eps_suboptimal()
