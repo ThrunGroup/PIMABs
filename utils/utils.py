@@ -378,7 +378,6 @@ def fit_and_plot(
                 label=f"{function_name},  $R^2 = {r2:.4f}$",
             )
             plt.legend(loc="upper left")
-
     if ys_std is None:
         plt.scatter(xs, ys, color="black")
     else:

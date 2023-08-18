@@ -27,6 +27,9 @@ from utils.constants import (
     NORMAL_PAPER,
     UNIFORM_PAPER,
     POSITIVE_COR_NORMAL_CUSTOM,
+    HIGHLY_SYMMETRIC,
+    GPT2_LM_HEAD,
+    OPT_LM_HEAD,
 
     MEDIAN_ELIMINATION,
     ACTION_ELIMINATION,
@@ -37,6 +40,7 @@ from utils.constants import (
     H2ALSH,
     HNSW_MIPS,
     NAPG_MIPS,
+    NAIVE,
 
     SCALING_LOG_BUFFER,
     MAX_SPEEDUP,
@@ -81,6 +85,8 @@ def translate_alg_name(alg_name: str):
         return "Bucket_AE"
     elif alg_name == H2ALSH:
         return "H2ALSH"
+    elif alg_name == NAIVE:
+        return "Naive_MIPS"
     else:
         raise Exception("Bad algorithm name")
 
@@ -130,6 +136,12 @@ def translate_dataset_name(dataset_name: str):
         return "Positive Correlated Normal Custom"
     elif dataset_name == NORMAL_PAPER:
         return "Synthetic Normal"
+    elif dataset_name == HIGHLY_SYMMETRIC:
+        return "Highly Symmetric Normal"
+    elif dataset_name == GPT2_LM_HEAD:
+        return "GPT2 Final Layer"
+    elif dataset_name == OPT_LM_HEAD:
+        return "OPT3 Final Layer"
     else:
         raise Exception("Bad dataset name {}".format(dataset_name))
 
@@ -165,6 +177,8 @@ def extract_alg(filename: str):
         return BUCKET_ACTION_ELIMINATION
     elif H2ALSH in filename:
         return H2ALSH
+    elif NAIVE in filename:
+        return NAIVE
     else:
         raise Exception("No algorithm was able to be extracted from " + filename)
 
@@ -196,6 +210,7 @@ def create_scaling_plots(
     alg_names: List[str] = [],
     include_error_bar: bool = False,
     ind_variables: List[str] = [DIMENSION_OF_ATOMS],
+    is_plot_runtime: bool = False,
     is_fit: bool = False,
     is_logspace_x: bool = False,
     is_logspace_y: bool = False,
@@ -210,6 +225,7 @@ def create_scaling_plots(
     :param alg_names: the algorithms that you want to plot. If empty, warning is triggered.
     :param ind_variables: Independent variables (N or D)
     :param include_error_bar: shows the standard deviation
+    :param is_plot_runtime: whether to plot runtime
     :param is_fit: whether to fit the plots or not
     :param is_logspace_x: whether to plot x-axis in logspace or not
     :param is_logspace_y: whether to plot y-axis in logspace or not
@@ -249,9 +265,26 @@ def create_scaling_plots(
                     continue
 
                 x = data[independent_var].tolist()
-                y = data["budgets"].tolist()
-                error = data["budgets_std"].tolist()
+                if is_plot_runtime:
+                    y = data["runtime"] * 1000
+                    ylabel = "Runtime (ms)"
+
+                    # First experiment contains compiling time for numba
+                    x = x[1:]
+                    y = y[1:]
+                    error = data["budgets_std"].tolist()[1:]
+                else:
+                    y = data["budgets"].tolist()
+                    ylabel = "Sample Complexity"
+                    error = data["budgets_std"].tolist()
                 x, y = zip(*sorted(zip(x, y), key=lambda pair: pair[0]))  # sort
+
+                # if is_plot_runtime:
+                #     diff = max(y) - min(y)
+                #     plt.ylim(min(y) - diff / 2, max(y) + diff / 2)
+
+                if not include_error_bar:
+                    error = np.zeros_like(error)
 
                 if is_fit:
                     is_logspace = (is_logspace_x and is_logspace_y)
@@ -280,13 +313,12 @@ def create_scaling_plots(
                         is_logspace=is_logspace_x,
                     )
                     plt.title(title)
-                    plt.ylim(3200, 4300)
+                    # if not is_plot_runtime:
+                    #     plt.ylim(3200, 4300)
 
                     xlabel = get_x_label(is_logspace=is_logspace_x, independent_var=independent_var)
                     if is_logspace_y:
-                        ylabel = "$\ln{(Sample Complexity)}$"
-                    else:
-                        ylabel = "Sample Complexity"
+                        ylabel = "$\ln" + ylabel + "$"
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
                 else:
@@ -321,9 +353,7 @@ def create_scaling_plots(
                     )
 
                     if is_logspace_y:
-                        ylabel = "ln(Sample Complexity)"
-                    else:
-                        ylabel = "Sample Complexity"
+                        ylabel = "$\ln" + ylabel + "$"
 
                     plt.ylabel(ylabel)
                     plt.xlabel(xlabel)
@@ -442,7 +472,7 @@ def create_tradeoff_plots(
             ylabel = f"Precision at {top_k}"
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
-            plt.ylim(0.5, 1.2)
+            # plt.ylim(0.5, 1.2)
 
         fig = plt.gcf()
         fig.set_size_inches(6, 4.5)

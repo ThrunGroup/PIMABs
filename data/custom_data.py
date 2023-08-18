@@ -13,6 +13,7 @@ from utils.constants import (
     CLEAR_LEADER_HARD,
     CLEAR_LEADER_SOFT,
     NO_CLEAR_LEADER,
+    HIGHLY_SYMMETRIC,
 
     SCALING_TOPK,
 )
@@ -91,6 +92,10 @@ def generate_custom_data(
         atoms_array[best_atom_indices] = rng.normal(loc=signal_strength, size=len_signal)
     elif data_type == NO_CLEAR_LEADER:
         signal_strength = 2
+        signal = rng.normal(loc=signal_strength, size=(num_signals, len_signal))
+        atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))
+    elif data_type == HIGHLY_SYMMETRIC:
+        signal_strength = 0
         signal = rng.normal(loc=signal_strength, size=(num_signals, len_signal))
         atoms_array = rng.normal(loc=0, size=(num_atoms, len_signal))
     else:
